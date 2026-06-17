@@ -6,7 +6,7 @@
     <div class="mx-auto max-w-md">
         <div class="rounded-2xl border border-safety/20 bg-navy-light/80 p-8">
             <h1 class="text-2xl font-bold text-white">Welcome back</h1>
-            <p class="mt-2 text-sm text-slate-400">Continue your NREMT adaptive practice.</p>
+            <p class="mt-2 text-sm text-slate-400">Continue your NREMT® adaptive practice.</p>
 
             <form method="POST" action="{{ route('login') }}" class="mt-6 space-y-4">
                 @csrf

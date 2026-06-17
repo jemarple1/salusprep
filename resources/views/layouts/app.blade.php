@@ -28,8 +28,8 @@
         #platform-switcher-menu { background-color: #1e293b; }
     </style>
 </head>
-<body class="min-h-screen bg-navy text-slate-100 antialiased">
-    <div class="relative min-h-screen">
+<body class="flex min-h-screen flex-col bg-navy text-slate-100 antialiased">
+    <div class="relative flex flex-1 flex-col">
         <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(22,163,74,0.08),_transparent_50%)]"></div>
         <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,_rgba(0,107,182,0.12),_transparent_45%)]"></div>
 
@@ -73,7 +73,7 @@
                             <p class="text-sm font-bold tracking-wide text-white">SalusPrep</p>
                             <p class="text-xs font-medium text-medic-light">
                                 @isset($sectionLabel)
-                                    {{ $sectionLabel }} {{ $sectionHeaderTag ?? 'NREMT' }}
+                                    {{ $sectionLabel }} {{ $sectionHeaderTag ?? \App\Support\CertificationLevel::NREMT_MARK }}
                                 @else
                                     Adaptive Practice
                                 @endisset
@@ -102,7 +102,7 @@
             </div>
         </header>
 
-        <main class="relative z-0 mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
+        <main class="relative z-0 mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
             @if (session('success'))
                 <div class="mb-6 rounded-xl border border-medic/40 bg-medic/10 px-4 py-3 text-sm font-medium text-medic-light">
                     {{ session('success') }}
@@ -121,6 +121,16 @@
 
             @yield('content')
         </main>
+
+        <footer class="relative z-10 border-t border-white/10 bg-[#1e293b]">
+            <div class="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-4 py-6 text-sm text-slate-500 sm:flex-row sm:px-6">
+                <p>&copy; {{ date('Y') }} SalusPrep. All rights reserved.</p>
+                <nav class="flex items-center gap-4">
+                    <a href="{{ route('legal.terms') }}" class="hover:text-medic-light">Terms of Service</a>
+                    <a href="{{ route('legal.privacy') }}" class="hover:text-medic-light">Privacy Policy</a>
+                </nav>
+            </div>
+        </footer>
     </div>
 
     @isset($platformSections)

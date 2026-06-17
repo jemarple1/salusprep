@@ -42,7 +42,7 @@
             @if ($unlocked)
                 <p class="text-sm font-bold uppercase text-medic-light">Access</p>
                 <p class="mt-1 text-2xl font-bold text-white">Unlimited {{ $sectionLabel }} quizzes</p>
-                <p class="mt-2 text-sm text-slate-400">Includes proficiency charts &amp; flashcard study mode.</p>
+                <p class="mt-2 text-sm text-slate-400">Includes proficiency charts, accuracy trends &amp; flashcard study mode.</p>
             @else
                 <p class="text-sm font-bold uppercase text-safety-light">Free preview</p>
                 <p class="mt-1 text-2xl font-bold text-white">{{ $freeRemaining }} questions remaining</p>
@@ -66,6 +66,25 @@
     </div>
 
     @if ($unlocked)
+        <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80">
+            <div class="border-b border-white/10 px-6 py-4">
+                <h2 class="text-lg font-bold text-white">Accuracy trend</h2>
+                <p class="text-sm text-slate-400">
+                    How your quiz scores change over time on {{ $sectionLabel }}.
+                    @if (($accuracyTrend['total_quizzes'] ?? 0) > 15)
+                        Showing your most recent 15 quizzes.
+                    @endif
+                </p>
+            </div>
+            <div class="p-6">
+                @if (count($accuracyTrend['points']) === 0)
+                    <div class="py-10 text-center text-slate-400">Complete a quiz to start tracking your accuracy trend.</div>
+                @else
+                    <x-accuracy-trend-chart :trend="$accuracyTrend" />
+                @endif
+            </div>
+        </div>
+
         <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80">
             <div class="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-6 py-4">
                 <div>
@@ -128,7 +147,13 @@
     @else
         <div class="relative mb-8 overflow-hidden rounded-2xl border border-safety/30 bg-navy-light/80">
             <div class="pointer-events-none select-none blur-sm">
-                <div class="space-y-4 p-6">
+                <div class="space-y-6 p-6">
+                    <div class="h-32 rounded-xl bg-navy/80 p-4">
+                        <div class="mb-3 h-3 w-24 rounded bg-medic/30"></div>
+                        <svg viewBox="0 0 400 100" class="h-20 w-full">
+                            <polyline points="20,80 100,60 180,50 260,40 340,25" fill="none" stroke="#4ade80" stroke-width="2" opacity="0.5" />
+                        </svg>
+                    </div>
                     @foreach (['Airway', 'Trauma', 'Cardiology', 'Operations'] as $demo)
                         <div>
                             <div class="mb-2 flex justify-between text-sm">
@@ -143,9 +168,9 @@
                 </div>
             </div>
             <div class="absolute inset-0 flex flex-col items-center justify-center bg-navy/60 px-6 text-center">
-                <p class="text-lg font-bold text-white">Proficiency charts &amp; flashcard study</p>
+                <p class="text-lg font-bold text-white">Proficiency charts, trends &amp; flashcard study</p>
                 <p class="mt-2 max-w-md text-sm text-slate-300">
-                    Unlock {{ $sectionLabel }} for $8.99 to see category breakdowns and review questions you missed with interactive flashcards.
+                    Unlock {{ $sectionLabel }} for $8.99 to see category breakdowns, accuracy trends over time, and review missed questions with flashcards.
                 </p>
                 <form method="POST" action="{{ route('platform.unlock', $sectionSlug) }}" class="mt-4">
                     @csrf
@@ -168,7 +193,7 @@
                     <div class="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
                         <div>
                             <p class="font-semibold text-white">
-                                Quiz #{{ $session->id }}
+                                Quiz #{{ $quizNumbers[$session->id] ?? '?' }}
                                 <span class="ml-2 rounded-full bg-white/10 px-2 py-0.5 text-xs uppercase text-slate-300">{{ str_replace('_', ' ', $session->status) }}</span>
                             </p>
                             <p class="mt-1 text-sm text-slate-400">

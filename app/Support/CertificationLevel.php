@@ -12,6 +12,10 @@ class CertificationLevel
 
     public const NCLEX_PN = 'nclex_pn';
 
+    public const NREMT_MARK = 'NREMT®';
+
+    public const NCLEX_PN_MARK = 'NCLEX-PN®';
+
     public const FREE_QUESTIONS = 25;
 
     public const PRICE_CENTS = 899;
@@ -51,7 +55,7 @@ class CertificationLevel
             self::EMT_BASIC => 'EMT-Basic',
             self::EMT_ADVANCED => 'EMT-Advanced',
             self::PARAMEDIC => 'Paramedic',
-            self::NCLEX_PN => 'NCLEX-PN',
+            self::NCLEX_PN => self::NCLEX_PN_MARK,
         ];
     }
 
@@ -59,16 +63,16 @@ class CertificationLevel
     public static function descriptions(): array
     {
         return [
-            self::EMT_BASIC => 'National Registry prep at the EMT-Basic scope of practice.',
+            self::EMT_BASIC => self::NREMT_MARK.' prep at the EMT-Basic scope of practice.',
             self::EMT_ADVANCED => 'Advanced EMT (AEMT) adaptive practice for intermediate skills.',
-            self::PARAMEDIC => 'Paramedic-level NREMT adaptive quizzes and critical care scenarios.',
-            self::NCLEX_PN => 'NCLEX-PN adaptive practice for safe, effective practical nursing care.',
+            self::PARAMEDIC => 'Paramedic-level '.self::NREMT_MARK.' adaptive quizzes and critical care scenarios.',
+            self::NCLEX_PN => self::NCLEX_PN_MARK.' adaptive practice for safe, effective practical nursing care.',
         ];
     }
 
     public static function headerTag(string $level): string
     {
-        return self::isNclex($level) ? 'NCLEX Prep' : 'NREMT';
+        return self::isNclex($level) ? 'Prep' : self::NREMT_MARK;
     }
 
     public static function practiceHeadline(string $level): string
@@ -77,7 +81,16 @@ class CertificationLevel
             return 'Adaptive '.self::label($level).' practice.';
         }
 
-        return 'Adaptive NREMT practice for '.self::label($level).'.';
+        return 'Adaptive '.self::NREMT_MARK.' practice for '.self::label($level).'.';
+    }
+
+    public static function unlockProductDescription(string $level): string
+    {
+        if (self::isNclex($level)) {
+            return 'One-time unlock for unlimited adaptive '.self::NCLEX_PN_MARK.' practice.';
+        }
+
+        return 'One-time unlock for unlimited adaptive '.self::NREMT_MARK.' practice.';
     }
 
     public static function isNclex(string $level): bool

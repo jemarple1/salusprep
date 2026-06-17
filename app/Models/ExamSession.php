@@ -115,4 +115,31 @@ class ExamSession extends Model
 
         return $this->guestProgress()?->freeQuestionsRemaining() ?? CertificationLevel::FREE_QUESTIONS;
     }
+
+    /** @return array<int, int> Session ID => quiz number (1-based, per user/guest and certification level). */
+    public static function quizNumbersForUser(int $userId, string $certificationLevel): array
+    {
+        $ids = static::query()
+            ->where('user_id', $userId)
+            ->where('certification_level', $certificationLevel)
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->pluck('id');
+
+        $numbers = [];
+        foreach ($ids as $index => $id) {
+            $numbers[$id] = $index + 1;
+        }
+
+        return $numbers;
+    }
+
+    public function userQuizNumber(): ?int
+    {
+        if ($this->user_id === null) {
+            return null;
+        }
+
+        return static::quizNumbersForUser($this->user_id, $this->certification_level)[$this->id] ?? null;
+    }
 }

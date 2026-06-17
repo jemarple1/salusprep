@@ -38,7 +38,7 @@ class PaymentController extends Controller
         $checkoutSession = $this->stripe->createCheckoutSession(
             user: $user,
             productName: CertificationLevel::label($level).' — Unlimited Quizzes',
-            productDescription: 'One-time unlock for unlimited adaptive NREMT practice.',
+            productDescription: CertificationLevel::unlockProductDescription($level),
             successUrl: route('platform.home', $slug).'?checkout=success&session_id={CHECKOUT_SESSION_ID}',
             cancelUrl: route('platform.home', $slug).'?checkout=cancelled',
             metadata: [
@@ -74,7 +74,7 @@ class PaymentController extends Controller
         $checkoutSession = $this->stripe->createCheckoutSession(
             user: $request->user(),
             productName: CertificationLevel::label($session->certification_level).' — Unlimited Quizzes',
-            productDescription: 'One-time unlock for unlimited adaptive NREMT practice.',
+            productDescription: CertificationLevel::unlockProductDescription($session->certification_level),
             successUrl: route('payment.success', [$slug, $session]).'?checkout=success&session_id={CHECKOUT_SESSION_ID}',
             cancelUrl: route('exam.paywall', [$slug, $session]).'?checkout=cancelled',
             metadata: [
