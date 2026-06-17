@@ -56,12 +56,21 @@ In Laravel Cloud → your **production** environment → **Deployments**:
 ### Build commands
 
 ```bash
-composer install --no-dev --optimize-autoloader
-npm ci
+bash scripts/cloud-build.sh
+```
+
+Or manually:
+
+```bash
+mkdir -p bootstrap/cache/composer
+COMPOSER_CACHE_DIR=bootstrap/cache/composer composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+npm ci --audit false
 npm run build
 ```
 
 Do **not** run `php artisan optimize` during the build — it caches config before database credentials are available and locks in `DB_HOST=127.0.0.1`.
+
+Make sure `npm ci` and `npm run build` are **not commented out** in your Cloud build settings (required for CSS/JS).
 
 ### Deploy commands
 
@@ -171,6 +180,14 @@ Checklist:
 ---
 
 ## Troubleshooting
+
+### Build fails — `composer-cache/files/psy/psysh does not exist`
+
+Transient Laravel Cloud `/tmp` cache issue. Fix:
+
+1. Set build commands to `bash scripts/cloud-build.sh` (uses a project-local Composer cache)
+2. **Redeploy** — often succeeds on retry
+3. `laravel/tinker` is dev-only in this repo (not installed in production builds)
 
 ### `Connection refused` — `Host: 127.0.0.1, Database: laravel`
 
