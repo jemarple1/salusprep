@@ -59,17 +59,42 @@ In Laravel Cloud → your **production** environment → **Deployments**:
 composer install --no-dev --optimize-autoloader
 npm ci
 npm run build
-php artisan optimize
 ```
+
+Do **not** run `php artisan optimize` during the build — it caches config before database credentials are available and locks in `DB_HOST=127.0.0.1`.
 
 ### Deploy commands
 
+**While setting up (no database attached yet):**
+
 ```bash
-php artisan migrate --force
-php artisan db:seed --force
+bash scripts/cloud-deploy.sh
 ```
 
-Run seed **once** on first deploy only. Remove `db:seed` from deploy commands after that.
+This clears config and **skips** migrations until Cloud injects a real `DB_HOST` (not `127.0.0.1`). Deploy will succeed so you can attach a database on the infrastructure canvas.
+
+**After MySQL is attached and redeployed**, set:
+
+```bash
+RUN_DB_SEED=true bash scripts/cloud-deploy.sh
+```
+
+Run with `RUN_DB_SEED=true` **once** for the first seed, then switch back to:
+
+```bash
+bash scripts/cloud-deploy.sh
+```
+
+Or use explicit commands once `DB_HOST` shows a `*.laravel.cloud` hostname:
+
+```bash
+php artisan config:clear
+php artisan migrate --force
+php artisan db:seed --force
+php artisan optimize
+```
+
+Remove `db:seed` from deploy commands after the first successful seed.
 
 ---
 
@@ -146,6 +171,53 @@ Checklist:
 ---
 
 ## Troubleshooting
+
+### `Connection refused` — `Host: 127.0.0.1, Database: laravel`
+
+This means Laravel is using **default MySQL placeholders**, not your Cloud database. Two causes:
+
+**A) Database not attached**
+
+1. **Resources / infrastructure canvas → Add database → Laravel MySQL**
+2. Attach to **production** (same region as compute)
+3. **Redeploy**
+
+**B) Stale config cache (common after first deploys)**
+
+Build-time `php artisan optimize` bakes `DB_HOST=127.0.0.1` into the cache. Fix:
+
+1. Remove `php artisan optimize` from **build** commands
+2. Add `php artisan config:clear` as the **first** deploy command
+3. Put `php artisan optimize` at the **end** of deploy commands (after migrate)
+4. Redeploy
+
+### Deploy keeps failing — can't edit environment
+
+You're stuck because **migrate runs before a database exists**. Laravel Cloud injects `DB_*` automatically when you attach a database — you don't type them manually.
+
+**Unblock in this order:**
+
+1. **Deployments → Deploy commands** — replace everything with:
+   ```bash
+   bash scripts/cloud-deploy.sh
+   ```
+2. **Deploy** — should succeed (migrate is skipped).
+3. **Infrastructure canvas** (not Environment variables) → **Add database** → **Laravel MySQL** → attach to production.
+4. Wait for the database to finish provisioning, then **Deploy** again — migrations run automatically once `DB_HOST` is real.
+5. For the first deploy after DB attach, use:
+   ```bash
+   RUN_DB_SEED=true bash scripts/cloud-deploy.sh
+   ```
+6. Set custom env vars you *can* edit (APP_URL, Stripe keys, etc.) — **do not** manually set `DB_HOST=127.0.0.1` or `DB_CONNECTION=mysql` without an attached database.
+
+If the Environment tab is read-only for `DB_*` fields, that's normal — those come from the attached resource.
+
+**Alternative:** Laravel Cloud CLI:
+```bash
+composer global require laravel/cloud-cli
+cloud auth
+cloud database:create --help
+```
 
 ### 500 error on `/emt-basic` (but `/up` works)
 
