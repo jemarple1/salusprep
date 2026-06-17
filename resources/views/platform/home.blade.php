@@ -15,7 +15,7 @@
                 {{ $sectionLabel }} only
             </p>
             <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                Adaptive NREMT practice for {{ $sectionLabel }}.
+                {{ $sectionPracticeHeadline }}
             </h1>
             <p class="max-w-xl text-lg leading-relaxed text-slate-300">
                 {{ $sectionDescription }}
@@ -77,7 +77,7 @@
             </ul>
 
             <p class="mt-6 text-xs text-slate-500">
-                Use the ⛨ menu to switch to EMT-Advanced or Paramedic — each is a separate platform.
+                {{ $platformSwitcherHint }}
             </p>
         </div>
     </section>

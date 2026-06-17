@@ -15,25 +15,84 @@ class QuestionSeeder extends Seeder
         $this->seedForLevel(CertificationLevel::EMT_BASIC, $this->emtBasicQuestions());
         $this->seedForLevel(CertificationLevel::EMT_ADVANCED, $this->emtAdvancedQuestions());
         $this->seedForLevel(CertificationLevel::PARAMEDIC, $this->paramedicQuestions());
+        $this->seedForLevel(CertificationLevel::NCLEX_PN, $this->nclexPnQuestions());
     }
 
     /** @param list<array{0: string, 1: int, 2: string, 3: string, 4: string, 5: string, 6: string, 7: string, 8: string}> $questions */
     private function seedForLevel(string $level, array $questions): void
     {
-        foreach ($questions as [$category, $difficulty, $stem, $a, $b, $c, $d, $correct, $explanation]) {
+        $targetLetters = $this->balancedCorrectLetters(count($questions), $level);
+
+        foreach ($questions as $index => [$category, $difficulty, $stem, $a, $b, $c, $d, $correct, $explanation]) {
+            $options = $this->redistributeOptions(
+                ['A' => $a, 'B' => $b, 'C' => $c, 'D' => $d],
+                $correct,
+                $targetLetters[$index],
+            );
+
             Question::create([
                 'certification_level' => $level,
                 'category' => $category,
                 'difficulty' => $difficulty,
                 'stem' => $stem,
-                'option_a' => $a,
-                'option_b' => $b,
-                'option_c' => $c,
-                'option_d' => $d,
-                'correct_option' => $correct,
+                'option_a' => $options['A'],
+                'option_b' => $options['B'],
+                'option_c' => $options['C'],
+                'option_d' => $options['D'],
+                'correct_option' => $targetLetters[$index],
                 'explanation' => $explanation,
             ]);
         }
+    }
+
+    /** @return list<string> */
+    private function balancedCorrectLetters(int $count, string $level): array
+    {
+        $letters = ['A', 'B', 'C', 'D'];
+        $targets = [];
+
+        foreach ($letters as $letter) {
+            $targets = array_merge($targets, array_fill(0, intdiv($count, 4), $letter));
+        }
+
+        for ($i = 0; $i < $count % 4; $i++) {
+            $targets[] = $letters[$i];
+        }
+
+        mt_srand(crc32($level));
+        shuffle($targets);
+        mt_srand();
+
+        return $targets;
+    }
+
+    /**
+     * @param  array<string, string>  $options
+     * @return array<string, string>
+     */
+    private function redistributeOptions(array $options, string $currentCorrect, string $targetCorrect): array
+    {
+        $correctText = $options[$currentCorrect];
+        $wrongTexts = [];
+
+        foreach (['A', 'B', 'C', 'D'] as $letter) {
+            if ($letter !== $currentCorrect) {
+                $wrongTexts[] = $options[$letter];
+            }
+        }
+
+        $result = [];
+        $wrongIndex = 0;
+
+        foreach (['A', 'B', 'C', 'D'] as $letter) {
+            if ($letter === $targetCorrect) {
+                $result[$letter] = $correctText;
+            } else {
+                $result[$letter] = $wrongTexts[$wrongIndex++];
+            }
+        }
+
+        return $result;
     }
 
     /** @return list<array{0: string, 1: int, 2: string, 3: string, 4: string, 5: string, 6: string, 7: string, 8: string}> */
@@ -153,6 +212,68 @@ class QuestionSeeder extends Seeder
             ['Airway', 5, 'Cannot intubate, cannot oxygenate in a paramedic airway scenario requires:', 'Emergency surgical cricothyrotomy when authorized and indicated', 'Continued attempts without limit', 'Nasal cannula at 1 L/min', 'Transport apneic without intervention', 'A', 'CICO is a surgical airway emergency.'],
             ['Pharmacology', 4, 'Calcium chloride may be indicated for:', 'Hyperkalemia, calcium channel blocker overdose, or hypocalcemia per protocol', 'All chest pain patients', 'Anaphylaxis as first-line instead of epinephrine', 'Hypoglycemia', 'A', 'Calcium has specific indications including hyperkalemia and calcium channel blocker toxicity.'],
             ['Medical', 5, 'Severe sepsis in the field should prompt:', 'Early recognition, oxygen, IV access, fluid per protocol, and rapid transport', 'Delayed transport for repeat vitals every hour only', 'Oral antibiotics only', 'Withholding fluids in all hypotensive patients', 'A', 'Sepsis requires early recognition, supportive care, and rapid transport.'],
+        ];
+    }
+
+    /** @return list<array{0: string, 1: int, 2: string, 3: string, 4: string, 5: string, 6: string, 7: string, 8: string}> */
+    private function nclexPnQuestions(): array
+    {
+        return [
+            // Difficulty 1
+            ['Safe Care', 1, 'Before entering an isolation room, the PN should first:', 'Perform hand hygiene and don appropriate PPE', 'Document vital signs at the nurses\' station', 'Administer scheduled medications early', 'Remove all PPE in the hallway after exit only', 'A', 'Hand hygiene and proper PPE sequence prevent transmission of infection.'],
+            ['Basic Care', 1, 'When measuring an oral temperature, the PN should:', 'Ensure the patient has not smoked or consumed hot fluids in the last 15 minutes', 'Use the same thermometer for all patients without cleaning', 'Place the probe under the tongue on the side with a pacemaker', 'Record axillary and oral temperatures as equivalent always', 'A', 'Recent hot/cold intake or smoking can falsely alter oral temperature readings.'],
+            ['Health Promotion', 1, 'A primary goal of patient education for a new insulin prescription is:', 'Safe self-administration and recognition of hypoglycemia', 'Memorizing the drug\'s chemical structure', 'Discontinuing glucose monitoring once stable', 'Avoiding all carbohydrate intake permanently', 'A', 'Education should focus on safe use and recognizing dangerous side effects.'],
+            ['Psychosocial', 1, 'A patient who says "I don\'t want to talk about it" during admission should be met with:', 'Respectful presence, open-ended offers to listen, and assessment for safety', 'Immediate psychiatric commitment without evaluation', 'Changing the subject to lighter topics only', 'Leaving the room without further contact', 'A', 'Therapeutic communication respects boundaries while maintaining supportive care.'],
+            ['Pharmacology', 1, 'The PN recognizes a medication error has occurred. The first action is:', 'Assess the patient and notify the RN or provider per facility policy', 'Document the error only in the patient diary', 'Discard the unused medication without reporting', 'Wait until the end of the shift to mention it', 'A', 'Patient safety requires immediate assessment and notification when errors occur.'],
+            ['Adult Health', 1, 'Early signs of hypovolemic shock may include:', 'Increased heart rate and decreased urine output', 'Bounding pulse and brisk capillary refill only', 'Hypertension and wide pulse pressure', 'Bradycardia with warm, dry skin exclusively', 'A', 'Compensatory tachycardia and oliguria are early shock indicators.'],
+            ['Maternal/Child', 1, 'When holding a newborn, the PN should:', 'Support the head and neck and maintain safe body alignment', 'Hold the infant only by the ankles during transport', 'Place soft pillows in the crib for positioning', 'Leave the newborn unattended on an adult bed briefly', 'A', 'Newborns require head/neck support due to weak muscle control.'],
+            ['Risk Reduction', 1, 'To reduce fall risk in an older adult, the PN should:', 'Keep the call light within reach and bed in low position with brakes locked', 'Use side rails as restraints without an order', 'Dim all lights at night without night lights', 'Encourage ambulation without non-slip footwear', 'A', 'Fall prevention includes accessible call devices, low beds, and safe mobility aids.'],
+            ['Safe Care', 1, 'Standard precautions apply to:', 'All patients regardless of suspected diagnosis', 'Only patients with confirmed HIV', 'Patients in reverse isolation exclusively', 'Visitors but not healthcare workers', 'A', 'Standard precautions are used for all patient interactions.'],
+            ['Basic Care', 1, 'When assisting a patient with oral care who is unconscious, the PN should:', 'Position the patient on the side to prevent aspiration', 'Use large amounts of fluid with the head flat', 'Perform oral care only once per hospitalization', 'Place cotton swabs deep into the pharynx routinely', 'A', 'Side-lying position reduces aspiration risk during oral care.'],
+            // Difficulty 2
+            ['Pharmacology', 2, 'A patient prescribed warfarin should be taught to report:', 'Unusual bleeding, dark stools, or severe headache', 'Mild thirst after exercise only', 'Occasional yawning in the morning', 'Improved appetite as an emergency sign', 'A', 'Anticoagulant therapy requires monitoring for bleeding complications.'],
+            ['Adult Health', 2, 'A patient with COPD receiving oxygen via nasal cannula at 5 L/min becomes sleepy and has a rising PaCO2. The PN should:', 'Notify the RN — high-flow oxygen may suppress hypoxic drive in select COPD patients', 'Increase oxygen to 10 L/min without assessment', 'Remove oxygen and leave the patient without monitoring', 'Place an ice pack on the forehead only', 'A', 'Excessive oxygen in some COPD patients can worsen hypercapnia; notify the care team.'],
+            ['Psychosocial', 2, 'Therapeutic communication with an anxious patient includes:', 'Calm tone, short clear statements, and acknowledging feelings', 'Arguing that there is nothing to worry about', 'Providing lengthy medical lectures during acute anxiety', 'Using medical jargon to sound authoritative', 'A', 'Validation and clarity reduce anxiety more than dismissal or jargon.'],
+            ['Health Promotion', 2, 'When teaching foot care to a patient with diabetes, the PN should emphasize:', 'Daily inspection, proper footwear, and never soaking feet in hot water', 'Trimming nails aggressively into the corners', 'Walking barefoot outdoors to toughen skin', 'Applying heating pads to improve circulation nightly', 'A', 'Diabetic foot care focuses on prevention of injury and infection.'],
+            ['Safe Care', 2, 'The PN receives a telephone order for a new medication. The correct action is:', 'Repeat the order back for verification and document per policy', 'Administer immediately and chart later', 'Accept orders only from family members', 'Refuse all telephone orders in every setting', 'A', 'Read-back verification reduces transcription errors for verbal/telephone orders.'],
+            ['Maternal/Child', 2, 'An infant with a rectal temperature of 100.4°F (38°C) requires:', 'Prompt notification and further assessment per pediatric protocol', 'No action if feeding well', 'Immediate discharge planning only', 'Application of alcohol baths at home without reporting', 'A', 'Fever in young infants can indicate serious infection and needs evaluation.'],
+            ['Risk Reduction', 2, 'Before ambulating a postoperative patient, the PN should:', 'Assess pain, dizziness, orthostatic vitals, and assistive devices', 'Ambulate alone without calling for help', 'Withhold pain medication to keep the patient alert', 'Use a gait belt only for pediatric patients', 'A', 'Pre-ambulation assessment reduces fall and syncope risk after surgery.'],
+            ['Basic Care', 2, 'A patient on strict fluid restriction should have intake recorded:', 'All oral fluids, IV fluids, ice chips, and foods with high fluid content', 'Only water consumed from a cup', 'IV fluids but not ice chips', 'Fluids only if volume exceeds 240 mL', 'A', 'Fluid restrictions require accurate measurement of all fluid sources.'],
+            ['Adult Health', 2, 'Crackles at lung bases in a patient with heart failure suggest:', 'Pulmonary congestion requiring assessment and possible diuretic therapy', 'Normal finding requiring no follow-up', 'Improved gas exchange exclusively', 'Need for high-sodium diet encouragement', 'A', 'Basilar crackles may indicate fluid overload in heart failure.'],
+            ['Pharmacology', 2, 'A patient receiving IV potassium should be monitored for:', 'Cardiac dysrhythmias and proper infusion rate per protocol', 'Hypertension only without ECG changes', 'Improved vision as a primary effect', 'No need to use an infusion pump', 'A', 'IV potassium must be infused slowly; rapid infusion can cause fatal arrhythmias.'],
+            // Difficulty 3
+            ['Safe Care', 3, 'A confused patient pulls at an IV line. The most appropriate initial intervention is:', 'Reorient, ensure safety, notify RN, and use alternatives per care plan', 'Apply wrist restraints immediately without an order', 'Leave the room until the behavior stops', 'Remove the IV without provider notification', 'A', 'Non-pharmacologic safety measures and team notification come before restraints.'],
+            ['Adult Health', 3, 'A patient with acute chest pain and diaphoresis should receive priority assessment for:', 'Myocardial infarction including vital signs, ECG, and pain evaluation', 'Constipation only', 'Routine discharge teaching first', 'Delayed assessment until lunch is served', 'A', 'Acute chest pain with diaphoresis is a cardiac emergency until ruled out.'],
+            ['Pharmacology', 3, 'The PN prepares to administer digoxin and finds the apical pulse is 58/min. The PN should:', 'Hold the dose and notify the RN or provider per protocol', 'Administer half the dose without reporting', 'Crush the tablet and mix with applesauce anyway', 'Give the dose if the radial pulse is 72/min', 'A', 'Digoxin is often held for bradycardia per protocol; use apical pulse for one minute.'],
+            ['Psychosocial', 3, 'A patient experiencing grief after a miscarriage needs the PN to:', 'Provide empathetic support and facilitate appropriate referrals', 'Minimize feelings by comparing to others\' losses', 'Avoid discussing the topic entirely', 'Tell the patient to "stay positive" and move on quickly', 'A', 'Grief support requires empathy and appropriate resources, not minimization.'],
+            ['Maternal/Child', 3, 'When assessing a breastfeeding mother, the PN should evaluate for:', 'Effective latch, audible swallowing, and nipple integrity', 'Scheduled feeding times only with no night feeds', 'Formula supplementation at every feed routinely', 'Pain is expected and should not be addressed', 'A', 'Successful breastfeeding assessment includes latch, transfer, and maternal comfort.'],
+            ['Health Promotion', 3, 'When planning discharge for a patient starting a low-sodium diet, teaching should include:', 'Reading food labels and avoiding processed meats and canned soups', 'Using salt substitutes without provider guidance in all cases', 'Increasing canned vegetables for convenience', 'Eliminating all fluids from the diet', 'A', 'Sodium restriction education focuses on hidden sources in processed foods.'],
+            ['Risk Reduction', 3, 'A patient on bed rest is at risk for deep vein thrombosis. Appropriate nursing care includes:', 'Leg exercises, hydration, and anti-embolism devices as ordered', 'Massaging calf muscles firmly every hour', 'Keeping knee gatch raised continuously without movement', 'Withholding all fluids to prevent edema', 'A', 'DVT prevention includes mobility exercises, hydration, and ordered prophylaxis.'],
+            ['Basic Care', 3, 'A patient with urinary retention post-op reports inability to void 8 hours after surgery. The PN should:', 'Assess bladder distention, encourage privacy, and notify the RN', 'Ignore unless 24 hours have passed', 'Force oral fluids only without further assessment', 'Ambulate the patient outdoors immediately alone', 'A', 'Postoperative urinary retention requires assessment and intervention to prevent complications.'],
+            ['Adult Health', 3, 'Signs of increased intracranial pressure in an alert patient may include:', 'Worsening headache, vomiting, and changes in level of consciousness', 'Improved orientation as ICP rises', 'Bradycardia with hypertension in late stages only — never early symptoms', 'Pinpoint pupils as the only sign always', 'A', 'Headache, vomiting, and LOC changes may signal rising ICP.'],
+            ['Safe Care', 3, 'When delegating a task to unlicensed assistive personnel, the PN must:', 'Ensure the task is within scope, the person is competent, and supervision is appropriate', 'Delegate any task regardless of training', 'Never delegate vital signs on stable patients', 'Assign medication administration to UAP routinely', 'A', 'Delegation requires appropriate task, competence, and supervision per nurse practice act.'],
+            // Difficulty 4
+            ['Pharmacology', 4, 'A patient with a penicillin allergy is prescribed cephalexin. The PN should:', 'Question the order and notify the RN — cross-reactivity may occur with some cephalosporins', 'Administer immediately without verification', 'Assume all antibiotics are safe if allergic to one', 'Document allergy as inactive without provider review', 'A', 'Cross-sensitivity between penicillins and cephalosporins requires verification before administration.'],
+            ['Adult Health', 4, 'A patient with diabetic ketoacidosis presents with Kussmaul respirations. The PN understands this indicates:', 'Compensatory elimination of excess acid via deep, rapid breathing', 'Improved oxygenation without metabolic disturbance', 'Normal sleep breathing pattern', 'Hyperventilation from anxiety only without acid-base change', 'A', 'Kussmaul respirations are a compensatory response to metabolic acidosis.'],
+            ['Psychosocial', 4, 'A patient with schizophrenia who hears voices telling them to hurt others requires:', 'Immediate safety assessment, close observation, and notification of the care team', 'Isolation without any communication', 'Agreement that the voices are real to build trust', 'Discharge home alone without evaluation', 'A', 'Command hallucinations with harm ideation are a psychiatric emergency requiring safety measures.'],
+            ['Maternal/Child', 4, 'The PN caring for a laboring patient notes late decelerations on the fetal monitor. The appropriate action is:', 'Reposition the patient, apply oxygen if ordered, stop oxytocin if infusing, and notify the RN', 'Document as normal and continue without notification', 'Encourage supine positioning exclusively', 'Ambulate the patient outdoors without monitoring', 'A', 'Late decelerations may indicate uteroplacental insufficiency and require intervention.'],
+            ['Safe Care', 4, 'During a fire emergency on the unit, the PN\'s first priority is:', 'Rescue patients in immediate danger, then alarm, contain, and extinguish as trained', 'Finish all medication passes before evacuating', 'Open all windows and doors to improve airflow first', 'Use elevators to move all patients quickly', 'A', 'RACE protocols prioritize rescue and alarm before containment and extinguishment.'],
+            ['Health Promotion', 4, 'When counseling a patient about smoking cessation, the most effective approach includes:', 'Setting a quit date, identifying triggers, and discussing nicotine replacement options', 'Scolding the patient for lack of willpower', 'Suggesting cutting down to one cigarette without a plan', 'Avoiding follow-up after initial advice', 'A', 'Evidence-based cessation includes planning, trigger management, and pharmacologic support when appropriate.'],
+            ['Risk Reduction', 4, 'A patient receiving a blood transfusion develops flushing, wheezing, and hypotension. The PN should:', 'Stop the transfusion, maintain IV access, monitor, and notify the RN immediately', 'Slow the rate and continue unless fever occurs', 'Administer the next unit to dilute the reaction', 'Document as mild allergy without stopping infusion', 'A', 'Transfusion reactions require stopping the blood product and urgent assessment.'],
+            ['Basic Care', 4, 'An older adult with dysphagia after a stroke should receive:', 'Thickened liquids and upright positioning during meals as ordered', 'Thin liquids through a straw without supervision', 'Large boluses of food to finish meals quickly', 'NPO status without alternative nutrition planning indefinitely', 'A', 'Dysphagia management includes texture modification and safe positioning to prevent aspiration.'],
+            ['Adult Health', 4, 'A patient post-thyroidectomy reports tingling around the mouth and muscle twitching. The PN suspects:', 'Hypocalcemia from possible parathyroid involvement and notifies the RN', 'Hypernatremia requiring free water only', 'Normal post-op sensation requiring no action', 'Hyperkalemia treated with kayexelate immediately without labs', 'A', 'Perioral tingling and tetany may indicate hypocalcemia after thyroid surgery.'],
+            ['Pharmacology', 4, 'The PN is administering insulin lispro at 0730. The patient refuses breakfast. The PN should:', 'Notify the RN — rapid-acting insulin may need adjustment when the patient is NPO', 'Administer the insulin IM for faster effect', 'Give double the dose to compensate for missed meal', 'Skip documentation if the patient refuses', 'A', 'Mealtime insulin requires coordination with intake; hypoglycemia risk increases if food is refused.'],
+            // Difficulty 5
+            ['Safe Care', 5, 'The PN discovers a coworker is impaired on the job. The priority action is:', 'Ensure patient safety and report to the nurse manager or chain of command per policy', 'Ignore it to maintain workplace friendships', 'Confront publicly on social media', 'Assign the coworker more complex patients to test them', 'A', 'Impaired practice threatens patient safety and must be reported through proper channels.'],
+            ['Adult Health', 5, 'A patient with pulmonary embolism may present with:', 'Sudden dyspnea, pleuritic chest pain, tachycardia, and hypoxia', 'Slow respirations with bradycardia only', 'Improved exercise tolerance initially', 'Painless hemoptysis as the sole symptom always', 'A', 'PE classically causes sudden respiratory distress, chest pain, and tachycardia.'],
+            ['Psychosocial', 5, 'A patient with major depression expresses a specific suicide plan. The PN should:', 'Stay with the patient, remove harmful items, and initiate emergency protocols', 'Promise confidentiality and avoid telling anyone', 'Leave to complete other assignments first', 'Suggest they sleep it off without assessment', 'A', 'Active suicide plan requires immediate safety intervention and cannot be kept confidential.'],
+            ['Maternal/Child', 5, 'A neonate born to a mother with active genital herpes lesions at delivery is at risk for:', 'Neonatal herpes infection requiring isolation and close monitoring per protocol', 'No transmission if breastfeeding is avoided only', 'Immediate immunity without symptoms', 'Only ocular infection with no systemic spread', 'A', 'Neonatal herpes can cause severe systemic infection and requires prompt recognition.'],
+            ['Pharmacology', 5, 'A patient receiving heparin infusion has an aPTT of 120 seconds. The PN should:', 'Hold infusion and notify the RN — supratherapeutic aPTT increases bleeding risk', 'Increase rate to reach target faster', 'Administer protamine without provider order independently in all states', 'Ignore unless the patient reports pain', 'A', 'Supratherapeutic aPTT on heparin requires dose adjustment and provider notification.'],
+            ['Health Promotion', 5, 'When prioritizing care for four patients, the PN should see first the patient who:', 'Has new onset chest pain and diaphoresis', 'Needs routine discharge paperwork signed', 'Requests help trimming toenails before lunch', 'Asks for a second blanket while watching television', 'A', 'Airway, breathing, and circulation problems take priority over comfort or routine tasks.'],
+            ['Risk Reduction', 5, 'A patient with a central venous catheter develops chills and fever during an infusion. The PN suspects:', 'Catheter-related bloodstream infection and stops infusion per protocol while notifying the RN', 'Normal inflammatory response requiring no action', 'Need to increase infusion rate to flush bacteria', 'Removal of the catheter by the PN alone without orders always', 'A', 'Infusion-related fever with chills may indicate line infection and requires assessment and notification.'],
+            ['Basic Care', 5, 'An unconscious patient with increased intracranial pressure should be positioned:', 'Head midline with head of bed elevated 30 degrees unless contraindicated', 'Flat with legs elevated above heart level routinely', 'Prone with head turned sharply to one side always', 'Trendelenburg to improve cerebral perfusion in all cases', 'A', 'HOB elevation with neutral head alignment helps reduce venous congestion and ICP.'],
+            ['Adult Health', 5, 'A patient with acute pancreatitis should be monitored for complications including:', 'Hypovolemic shock, respiratory distress, and infection', 'Improved glucose control without fluid shifts', 'Hyperkalemia as the earliest life-threatening issue always', 'No pain management needs due to autodigestion pause', 'A', 'Pancreatitis can cause third-spacing, ARDS, and sepsis requiring close monitoring.'],
+            ['Safe Care', 5, 'The PN identifies a sentinel event near-miss on the unit. The appropriate response is:', 'Report through event reporting systems to improve systems of care', 'Hide the incident to protect the unit\'s reputation', 'Blame the patient for noncompliance publicly', 'Document only in personal notes without institutional reporting', 'A', 'Near-miss reporting supports patient safety and quality improvement initiatives.'],
         ];
     }
 }

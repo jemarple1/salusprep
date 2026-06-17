@@ -48,7 +48,7 @@
                             >⛨</button>
                             <div
                                 id="platform-switcher-menu"
-                                class="hidden absolute left-0 top-full z-[100] mt-2 w-56 overflow-hidden rounded-xl border border-slate-600 shadow-2xl"
+                                class="hidden absolute left-0 top-full z-[100] mt-2 w-64 overflow-hidden rounded-xl border border-slate-600 shadow-2xl"
                                 role="menu"
                             >
                                 <p class="border-b border-slate-600 bg-[#0f172a] px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-400">Switch platform</p>
@@ -73,9 +73,9 @@
                             <p class="text-sm font-bold tracking-wide text-white">SalusPrep</p>
                             <p class="text-xs font-medium text-medic-light">
                                 @isset($sectionLabel)
-                                    {{ $sectionLabel }} NREMT
+                                    {{ $sectionLabel }} {{ $sectionHeaderTag ?? 'NREMT' }}
                                 @else
-                                    NREMT Adaptive Practice
+                                    Adaptive Practice
                                 @endisset
                             </p>
                         </a>

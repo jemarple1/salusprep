@@ -10,6 +10,8 @@ class CertificationLevel
 
     public const PARAMEDIC = 'paramedic';
 
+    public const NCLEX_PN = 'nclex_pn';
+
     public const FREE_QUESTIONS = 25;
 
     public const PRICE_CENTS = 899;
@@ -21,6 +23,7 @@ class CertificationLevel
             self::EMT_BASIC => 'emt-basic',
             self::EMT_ADVANCED => 'emt-advanced',
             self::PARAMEDIC => 'paramedic',
+            self::NCLEX_PN => 'nclex-pn',
         ];
     }
 
@@ -48,6 +51,7 @@ class CertificationLevel
             self::EMT_BASIC => 'EMT-Basic',
             self::EMT_ADVANCED => 'EMT-Advanced',
             self::PARAMEDIC => 'Paramedic',
+            self::NCLEX_PN => 'NCLEX-PN',
         ];
     }
 
@@ -58,7 +62,37 @@ class CertificationLevel
             self::EMT_BASIC => 'National Registry prep at the EMT-Basic scope of practice.',
             self::EMT_ADVANCED => 'Advanced EMT (AEMT) adaptive practice for intermediate skills.',
             self::PARAMEDIC => 'Paramedic-level NREMT adaptive quizzes and critical care scenarios.',
+            self::NCLEX_PN => 'NCLEX-PN adaptive practice for safe, effective practical nursing care.',
         ];
+    }
+
+    public static function headerTag(string $level): string
+    {
+        return self::isNclex($level) ? 'NCLEX Prep' : 'NREMT';
+    }
+
+    public static function practiceHeadline(string $level): string
+    {
+        if (self::isNclex($level)) {
+            return 'Adaptive '.self::label($level).' practice.';
+        }
+
+        return 'Adaptive NREMT practice for '.self::label($level).'.';
+    }
+
+    public static function isNclex(string $level): bool
+    {
+        return $level === self::NCLEX_PN;
+    }
+
+    public static function platformSwitcherHint(string $activeLevel): string
+    {
+        $others = collect(self::all())
+            ->reject(fn (string $l) => $l === $activeLevel)
+            ->map(fn (string $l) => self::label($l))
+            ->join(', ', ' and ');
+
+        return "Use the ⛨ menu to switch to {$others} — each is a separate platform.";
     }
 
     public static function label(string $level): string
