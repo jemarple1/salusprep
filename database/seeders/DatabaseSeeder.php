@@ -17,10 +17,16 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(QuestionSeeder::class);
 
-        User::factory()->create([
-            'name' => 'Demo Student',
-            'email' => 'demo@salusprep.test',
-            'password' => bcrypt('password'),
-        ]);
+        if (! app()->environment('local')) {
+            return;
+        }
+
+        User::query()->updateOrCreate(
+            ['email' => 'demo@salusprep.test'],
+            [
+                'name' => 'Demo Student',
+                'password' => bcrypt('password'),
+            ],
+        );
     }
 }
