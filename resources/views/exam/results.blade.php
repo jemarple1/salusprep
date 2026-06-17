@@ -56,6 +56,11 @@
             @csrf
             <button type="submit" class="rounded-xl bg-medic px-5 py-3 font-bold text-white hover:bg-medic-dark">Start new quiz</button>
         </form>
+        @auth
+            @if (auth()->user()->hasSectionAccess($sectionLevel) && $session->answers->where('is_correct', false)->isNotEmpty())
+                <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-xl border border-ems/40 bg-ems/10 px-5 py-3 font-bold text-ems-light hover:bg-ems/20">Review missed with flashcards</a>
+            @endif
+        @endauth
         <a href="{{ route('platform.home', $sectionSlug) }}" class="rounded-xl border border-white/10 px-5 py-3 font-medium text-slate-200 hover:bg-white/5">Back to {{ $sectionLabel }}</a>
     </div>
 @endsection

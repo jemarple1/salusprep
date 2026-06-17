@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PlatformController;
+use App\Http\Controllers\StudyController;
 use App\Http\Middleware\ResolveSection;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,10 @@ Route::prefix('{section}')
 
         Route::middleware('auth')->group(function () {
             Route::get('/dashboard', DashboardController::class)->name('platform.dashboard');
+            Route::get('/study', [StudyController::class, 'index'])->name('study.index');
+            Route::post('/study/start', [StudyController::class, 'start'])->name('study.start');
+            Route::get('/study/{studySession}', [StudyController::class, 'show'])->name('study.show');
+            Route::post('/study/{studySession}/advance', [StudyController::class, 'advance'])->name('study.advance');
             Route::post('/exam/{session}/pay', [PaymentController::class, 'checkout'])->name('exam.pay');
             Route::post('/unlock', [PaymentController::class, 'checkoutSection'])->name('platform.unlock');
             Route::get('/exam/{session}/payment/success', [PaymentController::class, 'success'])->name('payment.success');

@@ -147,10 +147,39 @@ Checklist:
 
 ## Troubleshooting
 
+### 500 error on `/emt-basic` (but `/up` works)
+
+This almost always means **the database is not connected or migrations have not run**. The homepage hits the DB for sessions and guest progress.
+
+**Fix in Laravel Cloud dashboard:**
+
+1. **Resources → Database** — confirm a MySQL database is attached to the production environment.
+2. **Deployments → Deploy commands** — must include:
+   ```bash
+   php artisan migrate --force
+   ```
+3. **Commands tab** — run manually if needed:
+   ```bash
+   php artisan migrate --force
+   php artisan db:seed --force
+   ```
+4. **Environment → Variables** — confirm these are set (Cloud auto-fills DB_* when a database is attached):
+   ```env
+   DB_CONNECTION=mysql
+   SESSION_DRIVER=database
+   CACHE_STORE=database
+   ```
+   Do **not** set `DB_CONNECTION=sqlite` in production.
+5. **Redeploy** after changing variables or deploy commands.
+6. To see the exact error temporarily, set `APP_DEBUG=true`, redeploy, reload the page, then set it back to `false`.
+
+**If build used cached config with wrong DB:** remove `php artisan optimize` from build commands, redeploy, then add it back after env vars are set.
+
 | Problem | Solution |
 |---------|----------|
-| 500 on deploy | Check deploy logs; ensure MySQL is attached and migrations ran |
+| 500 on all pages except `/up` | Run migrations; attach MySQL database |
+| 500 on all pages | Check deployment logs; verify `APP_KEY` exists |
 | Assets unstyled | Confirm `npm run build` is in build commands |
 | Stripe redirect error | `APP_URL` must be exactly `https://salusprep.com` |
 | Session lost after login | Set `SESSION_DOMAIN=.salusprep.com` and redeploy |
-| Old Herd URL in emails/links | Clear config cache via redeploy |
+| Old Herd URL in emails/links | Redeploy after setting `APP_URL` |

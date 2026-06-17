@@ -77,7 +77,7 @@
             </ul>
 
             <p class="mt-6 text-xs text-slate-500">
-                Use the ✚ menu to switch to EMT-Advanced or Paramedic — each is a separate platform.
+                Use the ⛨ menu to switch to EMT-Advanced or Paramedic — each is a separate platform.
             </p>
         </div>
     </section>

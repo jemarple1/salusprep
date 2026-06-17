@@ -43,9 +43,9 @@
                                 id="platform-switcher-btn"
                                 aria-haspopup="true"
                                 aria-expanded="false"
-                                class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg bg-medic text-xl font-bold text-white shadow-lg shadow-medic/25 ring-2 ring-medic-light/30 hover:bg-medic-dark"
+                                class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg bg-medic text-3xl font-bold text-white shadow-lg shadow-medic/25 ring-2 ring-medic-light/30 hover:bg-medic-dark"
                                 title="Switch certification level"
-                            >✚</button>
+                            >⛨</button>
                             <div
                                 id="platform-switcher-menu"
                                 class="hidden absolute left-0 top-full z-[100] mt-2 w-56 overflow-hidden rounded-xl border border-slate-600 shadow-2xl"
@@ -65,7 +65,7 @@
                             </div>
                         </div>
                     @else
-                        <a href="{{ route('platform.home', 'emt-basic') }}" class="flex h-11 w-11 items-center justify-center rounded-lg bg-medic text-xl font-bold text-white shadow-lg shadow-medic/25">✚</a>
+                        <a href="{{ route('platform.home', 'emt-basic') }}" class="flex h-11 w-11 items-center justify-center rounded-lg bg-medic text-3xl font-bold text-white shadow-lg shadow-medic/25">⛨</a>
                     @endisset
 
                     <div>
@@ -86,6 +86,9 @@
                     @auth
                         @isset($sectionSlug)
                             <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-medic-light">Dashboard</a>
+                            @if (auth()->user()->hasSectionAccess($sectionLevel ?? 'emt_basic'))
+                                <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-ems-light">Study</a>
+                            @endif
                         @endisset
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf

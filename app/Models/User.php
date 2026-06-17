@@ -33,6 +33,11 @@ class User extends Authenticatable
         return $this->hasMany(Payment::class);
     }
 
+    public function studySessions(): HasMany
+    {
+        return $this->hasMany(StudySession::class);
+    }
+
     public function hasSectionAccess(string $certificationLevel): bool
     {
         return $this->sectionAccesses()
