@@ -5,13 +5,20 @@
 @section('content')
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-            <p class="text-sm font-bold uppercase tracking-wider text-medic-light">Question {{ $questionNumber }}</p>
+            <p class="text-sm font-bold uppercase tracking-wider text-medic-light">
+                Question {{ $questionNumber }} of {{ $totalQuestions }}
+            </p>
             <h1 class="mt-1 text-2xl font-bold text-white">{{ $sectionLabel }}</h1>
         </div>
-        <div class="flex gap-3 text-sm">
+        <div class="flex flex-wrap gap-3 text-sm">
             <span class="rounded-full border border-ems/30 bg-ems/10 px-3 py-1 font-semibold text-ems-light">Difficulty {{ $session->current_difficulty }}/5</span>
             <span class="rounded-full border border-medic/30 bg-medic/10 px-3 py-1 font-semibold text-medic-light">{{ $session->scorePercent() }}% correct</span>
+            <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-slate-300">{{ $session->questions_answered }}/{{ $totalQuestions }} answered</span>
         </div>
+    </div>
+
+    <div class="mb-6 h-2 overflow-hidden rounded-full bg-navy-light ring-1 ring-white/10">
+        <div class="h-full rounded-full bg-medic transition-all" style="width: {{ $session->progressPercent() }}%"></div>
     </div>
 
     @if ($lastAnswer)
@@ -55,7 +62,7 @@
         @if ($session->questions_answered >= 3)
             <form method="POST" action="{{ route('exam.finish', [$sectionSlug, $session]) }}" class="mt-3">
                 @csrf
-                <button type="submit" class="rounded-xl border border-white/10 px-5 py-2.5 text-sm text-slate-400 hover:bg-white/5">End quiz &amp; view results</button>
+                <button type="submit" class="rounded-xl border border-white/10 px-5 py-2.5 text-sm text-slate-400 hover:bg-white/5">End quiz early &amp; view results</button>
             </form>
         @endif
     </div>

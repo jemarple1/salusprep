@@ -37,7 +37,7 @@
                     <form method="POST" action="{{ route('exam.start', $sectionSlug) }}">
                         @csrf
                         <button type="submit" class="rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">
-                            Start adaptive quiz
+                            Start 40-question quiz
                         </button>
                     </form>
                 @elseif (auth()->check())
@@ -72,6 +72,7 @@
 
             <ul class="mt-6 space-y-3 text-sm text-slate-300">
                 <li class="flex gap-2"><span class="text-medic-light">✓</span> Start immediately — no account</li>
+                <li class="flex gap-2"><span class="text-medic-light">✓</span> 40-question adaptive quizzes</li>
                 <li class="flex gap-2"><span class="text-medic-light">✓</span> Adaptive difficulty 1–5</li>
                 <li class="flex gap-2"><span class="text-medic-light">✓</span> Instant feedback &amp; rationales</li>
             </ul>

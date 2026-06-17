@@ -98,6 +98,10 @@ class AdaptiveExamService
             return null;
         }
 
+        if ($session->hasReachedQuestionLimit()) {
+            return null;
+        }
+
         $answeredIds = $session->answers()->pluck('question_id');
 
         $question = Question::query()
@@ -173,6 +177,11 @@ class AdaptiveExamService
                         $session->status = ExamSession::STATUS_PAYWALL;
                     }
                 }
+            }
+
+            if ($session->hasReachedQuestionLimit() && $session->status !== ExamSession::STATUS_PAYWALL) {
+                $session->status = ExamSession::STATUS_COMPLETED;
+                $session->completed_at = now();
             }
 
             $session->save();

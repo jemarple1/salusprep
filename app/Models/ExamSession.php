@@ -107,6 +107,27 @@ class ExamSession extends Model
         return (int) round(($this->correct_count / $this->questions_answered) * 100);
     }
 
+    public function targetQuestionCount(): int
+    {
+        return CertificationLevel::QUIZ_QUESTIONS;
+    }
+
+    public function progressPercent(): int
+    {
+        $target = $this->targetQuestionCount();
+
+        if ($target === 0) {
+            return 0;
+        }
+
+        return (int) round(min(100, ($this->questions_answered / $target) * 100));
+    }
+
+    public function hasReachedQuestionLimit(): bool
+    {
+        return $this->questions_answered >= $this->targetQuestionCount();
+    }
+
     public function freeQuestionsRemaining(): int
     {
         if ($this->user_id !== null) {

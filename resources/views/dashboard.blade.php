@@ -197,7 +197,7 @@
                                 <span class="ml-2 rounded-full bg-white/10 px-2 py-0.5 text-xs uppercase text-slate-300">{{ str_replace('_', ' ', $session->status) }}</span>
                             </p>
                             <p class="mt-1 text-sm text-slate-400">
-                                {{ $session->questions_answered }} answered · {{ $session->scorePercent() }}% · difficulty {{ $session->current_difficulty }}/5
+                                {{ $session->questions_answered }}/{{ $session->targetQuestionCount() }} answered · {{ $session->scorePercent() }}% · difficulty {{ $session->current_difficulty }}/5
                             </p>
                         </div>
                         <div class="flex gap-2">

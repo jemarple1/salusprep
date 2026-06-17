@@ -1,9 +1,19 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') — SalusPrep{{ isset($sectionLabel) ? ' '.$sectionLabel : '' }}</title>
+    <script>
+        (function () {
+            try {
+                var theme = localStorage.getItem('salusprep-theme');
+                document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+            } catch (e) {
+                document.documentElement.dataset.theme = 'dark';
+            }
+        })();
+    </script>
     @if (file_exists(public_path('build/manifest.json')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @else
@@ -23,63 +33,66 @@
                 }
             }
         </script>
+        <style>{!! file_get_contents(resource_path('css/theme.css')) !!}</style>
     @endif
-    <style>
-        #platform-switcher-menu { background-color: #1e293b; }
-    </style>
 </head>
 <body class="flex min-h-screen flex-col bg-navy text-slate-100 antialiased">
     <div class="relative flex flex-1 flex-col">
-        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(22,163,74,0.08),_transparent_50%)]"></div>
-        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,_rgba(0,107,182,0.12),_transparent_45%)]"></div>
+        <div class="theme-page-glow-medic pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(22,163,74,0.08),_transparent_50%)]"></div>
+        <div class="theme-page-glow-ems pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,_rgba(0,107,182,0.12),_transparent_45%)]"></div>
 
-        <header class="relative z-50 border-b border-white/10 bg-[#1e293b]">
+        <header class="theme-header relative z-50 border-b border-white/10 bg-[#1e293b]">
             <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
-                <div class="flex items-center gap-3">
+                <div class="group relative flex items-center gap-3" id="platform-switcher">
                     @isset($platformSections)
-                        <div class="relative" id="platform-switcher">
-                            <button
-                                type="button"
-                                id="platform-switcher-btn"
-                                aria-haspopup="true"
-                                aria-expanded="false"
-                                class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg bg-medic text-3xl font-bold text-white shadow-lg shadow-medic/25 ring-2 ring-medic-light/30 hover:bg-medic-dark"
-                                title="Switch certification level"
-                            >⛨</button>
-                            <div
-                                id="platform-switcher-menu"
-                                class="hidden absolute left-0 top-full z-[100] mt-2 w-64 overflow-hidden rounded-xl border border-slate-600 shadow-2xl"
-                                role="menu"
-                            >
-                                <p class="border-b border-slate-600 bg-[#0f172a] px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-400">Switch platform</p>
-                                @foreach ($platformSections as $platform)
-                                    <a href="{{ route('platform.home', $platform['slug']) }}"
-                                       role="menuitem"
-                                       class="block px-4 py-3 text-sm hover:bg-slate-700 {{ $platform['active'] ? 'bg-medic/20 font-bold text-medic-light' : 'text-slate-200' }}">
-                                        {{ $platform['label'] }}
-                                        @if ($platform['active'])
-                                            <span class="ml-1 text-xs text-medic-light">●</span>
-                                        @endif
-                                    </a>
-                                @endforeach
+                        <button
+                            type="button"
+                            id="platform-switcher-btn"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg bg-medic text-3xl font-bold text-white shadow-lg shadow-medic/25 ring-2 ring-medic-light/30 hover:bg-medic-dark"
+                            title="Switch certification level"
+                        >⛨</button>
+                        <div>
+                            <a href="{{ isset($sectionSlug) ? route('platform.home', $sectionSlug) : route('platform.home', 'emt-basic') }}" class="block">
+                                <p class="text-sm font-bold tracking-wide text-white">SalusPrep</p>
+                                <p class="text-xs font-medium text-medic-light">
+                                    @isset($sectionLabel)
+                                        {{ $sectionLabel }} {{ $sectionHeaderTag ?? \App\Support\CertificationLevel::NREMT_MARK }}
+                                    @else
+                                        Adaptive Practice
+                                    @endisset
+                                </p>
+                            </a>
+                        </div>
+                        <div
+                            id="platform-switcher-menu"
+                            class="invisible absolute left-0 top-full z-[100] w-64 pt-2 opacity-0 transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+                            role="menu"
+                        >
+                            <div class="overflow-hidden rounded-xl border border-slate-600 shadow-2xl">
+                            <p class="border-b border-slate-600 bg-[#0f172a] px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-400">Switch platform</p>
+                            @foreach ($platformSections as $platform)
+                                <a href="{{ route('platform.home', $platform['slug']) }}"
+                                   role="menuitem"
+                                   class="block px-4 py-3 text-sm hover:bg-slate-700 {{ $platform['active'] ? 'bg-medic/20 font-bold text-medic-light' : 'text-slate-200' }}">
+                                    {{ $platform['label'] }}
+                                    @if ($platform['active'])
+                                        <span class="ml-1 text-xs text-medic-light">●</span>
+                                    @endif
+                                </a>
+                            @endforeach
                             </div>
                         </div>
                     @else
                         <a href="{{ route('platform.home', 'emt-basic') }}" class="flex h-11 w-11 items-center justify-center rounded-lg bg-medic text-3xl font-bold text-white shadow-lg shadow-medic/25">⛨</a>
+                        <div>
+                            <a href="{{ route('platform.home', 'emt-basic') }}" class="block">
+                                <p class="text-sm font-bold tracking-wide text-white">SalusPrep</p>
+                                <p class="text-xs font-medium text-medic-light">Adaptive Practice</p>
+                            </a>
+                        </div>
                     @endisset
-
-                    <div>
-                        <a href="{{ isset($sectionSlug) ? route('platform.home', $sectionSlug) : route('platform.home', 'emt-basic') }}" class="block">
-                            <p class="text-sm font-bold tracking-wide text-white">SalusPrep</p>
-                            <p class="text-xs font-medium text-medic-light">
-                                @isset($sectionLabel)
-                                    {{ $sectionLabel }} {{ $sectionHeaderTag ?? \App\Support\CertificationLevel::NREMT_MARK }}
-                                @else
-                                    Adaptive Practice
-                                @endisset
-                            </p>
-                        </a>
-                    </div>
                 </div>
 
                 <nav class="flex items-center gap-2 text-sm">
@@ -122,12 +135,13 @@
             @yield('content')
         </main>
 
-        <footer class="relative z-10 border-t border-white/10 bg-[#1e293b]">
+        <footer class="theme-footer relative z-10 border-t border-white/10 bg-[#1e293b]">
             <div class="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-4 py-6 text-sm text-slate-500 sm:flex-row sm:px-6">
                 <p>&copy; {{ date('Y') }} SalusPrep. All rights reserved.</p>
                 <nav class="flex items-center gap-4">
                     <a href="{{ route('legal.terms') }}" class="hover:text-medic-light">Terms of Service</a>
                     <a href="{{ route('legal.privacy') }}" class="hover:text-medic-light">Privacy Policy</a>
+                    <x-theme-toggle />
                 </nav>
             </div>
         </footer>
@@ -141,35 +155,73 @@
             var menu = document.getElementById('platform-switcher-menu');
             if (!switcher || !btn || !menu) return;
 
-            function openMenu() {
-                menu.classList.remove('hidden');
-                btn.setAttribute('aria-expanded', 'true');
+            function setExpanded(isOpen) {
+                btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
             }
 
-            function closeMenu() {
-                menu.classList.add('hidden');
-                btn.setAttribute('aria-expanded', 'false');
-            }
+            switcher.addEventListener('mouseenter', function () {
+                setExpanded(true);
+            });
 
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (menu.classList.contains('hidden')) {
-                    openMenu();
-                } else {
-                    closeMenu();
+            switcher.addEventListener('mouseleave', function () {
+                setExpanded(false);
+            });
+
+            switcher.addEventListener('focusin', function () {
+                setExpanded(true);
+            });
+
+            switcher.addEventListener('focusout', function () {
+                if (!switcher.contains(document.activeElement)) {
+                    setExpanded(false);
                 }
-            });
-
-            document.addEventListener('click', function () {
-                closeMenu();
-            });
-
-            switcher.addEventListener('click', function (e) {
-                e.stopPropagation();
             });
         })();
     </script>
     @endisset
+
+    @unless (file_exists(public_path('build/manifest.json')))
+    <script>
+        (function () {
+            var storageKey = 'salusprep-theme';
+
+            function getTheme() {
+                try {
+                    var stored = localStorage.getItem(storageKey);
+                    return stored === 'light' || stored === 'dark' ? stored : 'dark';
+                } catch (e) {
+                    return 'dark';
+                }
+            }
+
+            function applyTheme(theme) {
+                var resolved = theme === 'light' ? 'light' : 'dark';
+                document.documentElement.dataset.theme = resolved;
+                document.documentElement.style.colorScheme = resolved;
+
+                document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+                    var nextTheme = resolved === 'dark' ? 'light' : 'dark';
+                    button.setAttribute('aria-label', nextTheme === 'light' ? 'Switch to light mode' : 'Switch to dark mode');
+                });
+            }
+
+            function toggleTheme() {
+                var nextTheme = getTheme() === 'dark' ? 'light' : 'dark';
+
+                try {
+                    localStorage.setItem(storageKey, nextTheme);
+                } catch (e) {}
+
+                applyTheme(nextTheme);
+            }
+
+            applyTheme(getTheme());
+
+            document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+                button.addEventListener('click', toggleTheme);
+            });
+        })();
+    </script>
+    @endunless
 </body>
 </html>

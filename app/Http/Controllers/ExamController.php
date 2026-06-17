@@ -48,12 +48,20 @@ class ExamController extends Controller
             return redirect()->route('exam.results', [$section, $session]);
         }
 
+        if ($session->hasReachedQuestionLimit()) {
+            $this->examService->completeSession($session);
+
+            return redirect()->route('exam.results', [$section, $session]);
+        }
+
         $question = $this->examService->nextQuestion($session);
 
         if ($question === null) {
+            $this->examService->completeSession($session);
+
             return redirect()
                 ->route('exam.results', [$section, $session])
-                ->with('success', 'No more questions available right now. Start a new quiz anytime.');
+                ->with('success', 'Quiz complete.');
         }
 
         $lastAnswer = $session->answers()->with('question')->latest('id')->first();
@@ -63,6 +71,7 @@ class ExamController extends Controller
             'question' => $question,
             'lastAnswer' => $lastAnswer,
             'questionNumber' => $session->questions_answered + 1,
+            'totalQuestions' => $session->targetQuestionCount(),
         ]);
     }
 
@@ -80,6 +89,10 @@ class ExamController extends Controller
 
         if ($session->requiresPayment()) {
             return redirect()->route('exam.paywall', [$section, $session]);
+        }
+
+        if ($session->isComplete()) {
+            return redirect()->route('exam.results', [$section, $session]);
         }
 
         return redirect()->route('exam.show', [$section, $session]);

@@ -11,7 +11,7 @@
     <div class="mb-8 grid gap-4 sm:grid-cols-4">
         <div class="rounded-xl border border-white/10 bg-navy-light/80 p-5">
             <p class="text-3xl font-bold text-white">{{ $session->questions_answered }}</p>
-            <p class="mt-1 text-sm text-slate-500">Answered</p>
+            <p class="mt-1 text-sm text-slate-500">of {{ $session->targetQuestionCount() }} total</p>
         </div>
         <div class="rounded-xl border border-white/10 bg-navy-light/80 p-5">
             <p class="text-3xl font-bold text-medic-light">{{ $session->correct_count }}</p>

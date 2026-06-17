@@ -18,6 +18,8 @@ class CertificationLevel
 
     public const FREE_QUESTIONS = 25;
 
+    public const QUIZ_QUESTIONS = 40;
+
     public const PRICE_CENTS = 899;
 
     /** @return array<string, string> */

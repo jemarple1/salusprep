@@ -70,8 +70,8 @@
                     @php
                         $y = $padY + (1 - $pct / 100) * $chartH;
                     @endphp
-                    <line x1="{{ $padX }}" y1="{{ $y }}" x2="{{ $width - $padX }}" y2="{{ $y }}" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
-                    <text x="{{ $padX - 8 }}" y="{{ $y + 4 }}" text-anchor="end" fill="#64748b" font-size="10">{{ $pct }}%</text>
+                    <line x1="{{ $padX }}" y1="{{ $y }}" x2="{{ $width - $padX }}" y2="{{ $y }}" class="theme-chart-grid" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+                    <text x="{{ $padX - 8 }}" y="{{ $y + 4 }}" text-anchor="end" class="theme-chart-label" fill="#64748b" font-size="10">{{ $pct }}%</text>
                 @endforeach
 
                 <path d="{{ $areaPath }}" fill="{{ $trendStyles['fill'] }}" />
@@ -79,14 +79,14 @@
 
                 @foreach ($coords as $coord)
                     <g>
-                        <circle cx="{{ $coord['x'] }}" cy="{{ $coord['y'] }}" r="5" fill="#0f172a" stroke="{{ $trendStyles['stroke'] }}" stroke-width="2.5" />
+                        <circle cx="{{ $coord['x'] }}" cy="{{ $coord['y'] }}" r="5" class="theme-chart-dot" fill="#0f172a" stroke="{{ $trendStyles['stroke'] }}" stroke-width="2.5" />
                         <title>{{ $coord['point']['label'] }}: {{ $coord['point']['accuracy_percent'] }}% ({{ $coord['point']['date'] }})</title>
                     </g>
                 @endforeach
 
                 @foreach ($coords as $coord)
                     @if ($count <= 8 || $loop->first || $loop->last || $loop->iteration % 2 === 0)
-                        <text x="{{ $coord['x'] }}" y="{{ $height - 4 }}" text-anchor="middle" fill="#64748b" font-size="10">
+                        <text x="{{ $coord['x'] }}" y="{{ $height - 4 }}" text-anchor="middle" class="theme-chart-label" fill="#64748b" font-size="10">
                             #{{ $coord['point']['quiz_number'] }}
                         </text>
                     @endif
