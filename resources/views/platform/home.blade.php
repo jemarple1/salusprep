@@ -44,7 +44,7 @@
                     <form method="POST" action="{{ route('platform.unlock', $sectionSlug) }}">
                         @csrf
                         <button type="submit" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">
-                            Unlock unlimited — $8.99
+                            Unlock unlimited — <x-section-price tone="safety" />
                         </button>
                     </form>
                 @endif
@@ -67,7 +67,7 @@
                 <p class="mt-1 text-sm text-slate-400">Full access to this platform.</p>
             @else
                 <p class="mt-3 text-2xl font-bold text-safety-light">{{ $freeRemaining }} <span class="text-lg font-semibold text-slate-400">free questions left</span></p>
-                <p class="mt-1 text-sm text-slate-400">Create an account at question 25, then $8.99 for unlimited quizzing.</p>
+                <p class="mt-1 text-sm text-slate-400">Create an account at question 25, then <x-section-price size="inline" /> for unlimited quizzing.</p>
             @endif
 
             <ul class="mt-6 space-y-3 text-sm text-slate-300">

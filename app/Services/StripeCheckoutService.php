@@ -4,10 +4,12 @@ namespace App\Services;
 
 use App\Models\Payment;
 use App\Models\User;
+use App\Support\SectionPricing;
 use App\Support\CertificationLevel;
 use Illuminate\Support\Facades\Log;
 use Stripe\Checkout\Session as StripeCheckoutSession;
 use Stripe\Exception\ApiErrorException;
+use Stripe\PromotionCode;
 use Stripe\Stripe;
 use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
@@ -51,14 +53,15 @@ class StripeCheckoutService
     ): StripeCheckoutSession {
         Stripe::setApiKey(config('services.stripe.secret'));
 
-        return StripeCheckoutSession::create([
+        $unitAmount = SectionPricing::listPriceCents();
+        $sessionParams = [
             'mode' => 'payment',
             'customer_email' => $user->email,
             'line_items' => [[
                 'quantity' => 1,
                 'price_data' => [
                     'currency' => 'usd',
-                    'unit_amount' => CertificationLevel::PRICE_CENTS,
+                    'unit_amount' => $unitAmount,
                     'product_data' => [
                         'name' => $productName,
                         'description' => $productDescription,
@@ -68,7 +71,73 @@ class StripeCheckoutService
             'metadata' => $metadata,
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
-        ]);
+        ];
+
+        $promotionCode = SectionPricing::stripePromotionCode();
+        if ($promotionCode !== null) {
+            $promotionCodeId = $this->resolveStripePromotionCodeId($promotionCode);
+
+            if ($promotionCodeId !== null) {
+                $sessionParams['discounts'] = [
+                    ['promotion_code' => $promotionCodeId],
+                ];
+            } else {
+                $sessionParams['line_items'][0]['price_data']['unit_amount'] = SectionPricing::salePriceCents();
+
+                Log::warning('Stripe promotion code not found; using sale price directly.', [
+                    'code' => $promotionCode,
+                ]);
+            }
+        }
+
+        try {
+            return StripeCheckoutSession::create($sessionParams);
+        } catch (ApiErrorException $exception) {
+            if (! isset($sessionParams['discounts'])) {
+                throw $exception;
+            }
+
+            Log::warning('Stripe rejected promotion code; retrying checkout at sale price.', [
+                'code' => $promotionCode,
+                'message' => $exception->getMessage(),
+            ]);
+
+            unset($sessionParams['discounts']);
+            $sessionParams['line_items'][0]['price_data']['unit_amount'] = SectionPricing::salePriceCents();
+
+            return StripeCheckoutSession::create($sessionParams);
+        }
+    }
+
+    private function resolveStripePromotionCodeId(string $code): ?string
+    {
+        $configuredId = config('pricing.stripe_promotion_id');
+        if (filled($configuredId) && str_starts_with($configuredId, 'promo_')) {
+            return $configuredId;
+        }
+
+        if (filled($configuredId)) {
+            Log::warning('STRIPE_PROMOTION_ID must be a promo_... ID, not the customer-facing code. Looking up by code instead.', [
+                'configured' => $configuredId,
+            ]);
+        }
+
+        try {
+            $promotionCodes = PromotionCode::all([
+                'code' => $code,
+                'active' => true,
+                'limit' => 1,
+            ]);
+
+            return $promotionCodes->data[0]->id ?? null;
+        } catch (ApiErrorException $exception) {
+            Log::warning('Stripe promotion code lookup failed.', [
+                'code' => $code,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     public function fulfillFromCheckoutSessionId(string $checkoutSessionId): bool
@@ -117,6 +186,7 @@ class StripeCheckoutService
 
         $payment->update([
             'status' => Payment::STATUS_COMPLETED,
+            'amount_cents' => (int) ($checkoutSession->amount_total ?? $payment->amount_cents),
             'stripe_payment_intent_id' => is_string($checkoutSession->payment_intent)
                 ? $checkoutSession->payment_intent
                 : $checkoutSession->payment_intent?->id,

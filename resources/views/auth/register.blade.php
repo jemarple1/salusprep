@@ -53,7 +53,7 @@
 
                     <label class="flex items-start gap-3 text-sm text-slate-400">
                         <input type="checkbox" name="marketing_emails_opt_in" value="1"
-                            @checked(old('marketing_emails_opt_in'))
+                            @checked(old('marketing_emails_opt_in', true))
                             class="mt-0.5 rounded border-white/20 bg-navy text-safety focus:ring-safety">
                         <span>Send me resources and emails from SalusPrep.</span>
                     </label>

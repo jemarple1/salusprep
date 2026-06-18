@@ -21,9 +21,9 @@
     </div>
 
     <div id="flashcard" class="group mx-auto max-w-2xl cursor-pointer perspective-[1200px]" role="button" tabindex="0" aria-label="Flip card">
-        <div id="flashcard-inner" class="relative min-h-[22rem] transition-transform duration-500 [transform-style:preserve-3d] sm:min-h-[24rem]">
+        <div id="flashcard-inner" class="grid transition-transform duration-500 [transform-style:preserve-3d]">
             {{-- Front --}}
-            <div class="absolute inset-0 rounded-2xl border border-white/10 bg-navy-light/90 p-6 shadow-xl [backface-visibility:hidden] sm:p-8">
+            <div class="col-start-1 row-start-1 rounded-2xl border border-white/10 bg-navy-light/90 p-6 shadow-xl [backface-visibility:hidden] sm:p-8">
                 <div class="mb-4 flex items-center justify-between gap-4">
                     <span class="rounded-full bg-ems/20 px-3 py-1 text-xs font-bold uppercase text-ems-light">{{ $question->category }}</span>
                     <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Question</span>
@@ -40,7 +40,7 @@
             </div>
 
             {{-- Back --}}
-            <div class="absolute inset-0 rounded-2xl border border-medic/30 bg-gradient-to-br from-medic/10 to-navy-light/95 p-6 shadow-xl [backface-visibility:hidden] [transform:rotateY(180deg)] sm:p-8">
+            <div class="col-start-1 row-start-1 rounded-2xl border border-medic/30 bg-gradient-to-br from-medic/10 to-navy-light/95 p-6 shadow-xl [backface-visibility:hidden] [transform:rotateY(180deg)] sm:p-8">
                 <div class="mb-4 flex items-center justify-between gap-4">
                     <span class="rounded-full bg-medic/20 px-3 py-1 text-xs font-bold uppercase text-medic-light">Answer</span>
                     @if ($lastWrong)

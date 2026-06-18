@@ -48,7 +48,7 @@
             @if ($requiresAuth)
                 <div class="mt-8 rounded-xl border border-medic/30 bg-navy p-6">
                     <p class="text-lg font-bold text-white">Your study deck is building</p>
-                    <p class="mt-1 text-sm text-slate-400">Every question you miss on a quiz can be added to flashcards. Sign up free, then unlock study tools for $8.99.</p>
+                    <p class="mt-1 text-sm text-slate-400">Every question you miss on a quiz can be added to flashcards. Sign up free, then unlock study tools for <x-section-price size="inline" />.</p>
 
                     <div class="mt-6 flex flex-col gap-3 sm:flex-row">
                         <a href="{{ route('register') }}" class="flex-1 rounded-xl bg-medic py-3.5 text-center font-bold text-white hover:bg-medic-dark">
@@ -66,7 +66,7 @@
                             <p class="text-lg font-bold text-white">{{ $sectionLabel }} — Study + quizzes</p>
                             <p class="text-sm text-slate-400">One-time · includes flashcard study mode</p>
                         </div>
-                        <p class="text-3xl font-bold text-safety-light">$8.99</p>
+                        <x-section-price size="hero" />
                     </div>
 
                     <form method="POST" action="{{ route('platform.unlock', $sectionSlug) }}" class="mt-6">

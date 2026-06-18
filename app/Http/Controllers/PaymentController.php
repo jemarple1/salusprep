@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Services\AdaptiveExamService;
 use App\Services\StripeCheckoutService;
 use App\Support\CertificationLevel;
+use App\Support\SectionPricing;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -50,7 +51,7 @@ class PaymentController extends Controller
         Payment::create([
             'user_id' => $user->id,
             'certification_level' => $level,
-            'amount_cents' => CertificationLevel::PRICE_CENTS,
+            'amount_cents' => SectionPricing::priceCents(),
             'status' => Payment::STATUS_PENDING,
             'provider' => 'stripe',
             'stripe_checkout_session_id' => $checkoutSession->id,
@@ -88,7 +89,7 @@ class PaymentController extends Controller
             'user_id' => $request->user()->id,
             'exam_session_id' => $session->id,
             'certification_level' => $session->certification_level,
-            'amount_cents' => CertificationLevel::PRICE_CENTS,
+            'amount_cents' => SectionPricing::priceCents(),
             'status' => Payment::STATUS_PENDING,
             'provider' => 'stripe',
             'stripe_checkout_session_id' => $checkoutSession->id,
@@ -159,7 +160,7 @@ class PaymentController extends Controller
         Payment::create([
             'user_id' => $user->id,
             'certification_level' => $level,
-            'amount_cents' => CertificationLevel::PRICE_CENTS,
+            'amount_cents' => SectionPricing::priceCents(),
             'status' => Payment::STATUS_COMPLETED,
             'provider' => 'mock',
             'reference' => 'mock_'.uniqid(),
@@ -179,7 +180,7 @@ class PaymentController extends Controller
             'user_id' => $request->user()->id,
             'exam_session_id' => $session->id,
             'certification_level' => $session->certification_level,
-            'amount_cents' => CertificationLevel::PRICE_CENTS,
+            'amount_cents' => SectionPricing::priceCents(),
             'status' => Payment::STATUS_COMPLETED,
             'provider' => 'mock',
             'reference' => 'mock_'.uniqid(),

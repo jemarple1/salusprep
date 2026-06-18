@@ -31,7 +31,7 @@
             @else
                 <form method="POST" action="{{ route('platform.unlock', $sectionSlug) }}">
                     @csrf
-                    <button type="submit" class="rounded-xl bg-safety px-5 py-3 font-bold text-navy hover:bg-safety-light">Unlock — $8.99</button>
+                    <button type="submit" class="rounded-xl bg-safety px-5 py-3 font-bold text-navy hover:bg-safety-light">Unlock — <x-section-price tone="safety" /></button>
                 </form>
             @endif
         </div>
@@ -170,11 +170,11 @@
             <div class="absolute inset-0 flex flex-col items-center justify-center bg-navy/60 px-6 text-center">
                 <p class="text-lg font-bold text-white">Proficiency charts, trends &amp; flashcard study</p>
                 <p class="mt-2 max-w-md text-sm text-slate-300">
-                    Unlock {{ $sectionLabel }} for $8.99 to see category breakdowns, accuracy trends over time, and review missed questions with flashcards.
+                    Unlock {{ $sectionLabel }} for <x-section-price size="inline" tone="overlay" /> to see category breakdowns, accuracy trends over time, and review missed questions with flashcards.
                 </p>
                 <form method="POST" action="{{ route('platform.unlock', $sectionSlug) }}" class="mt-4">
                     @csrf
-                    <button type="submit" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">Unlock — $8.99</button>
+                    <button type="submit" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">Unlock — <x-section-price tone="safety" /></button>
                 </form>
             </div>
         </div>
