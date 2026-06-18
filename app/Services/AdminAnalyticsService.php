@@ -6,6 +6,7 @@ use App\Models\ExamSession;
 use App\Models\Payment;
 use App\Models\SectionAccess;
 use App\Models\User;
+use App\Support\CertificationLevel;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
@@ -106,6 +107,48 @@ class AdminAnalyticsService
             ->paginate($perPage);
     }
 
+    /** @return list<array{label: string, value: int, color: string}> */
+    public function platformQuizSlices(): array
+    {
+        $counts = ExamSession::query()
+            ->selectRaw('certification_level, COUNT(*) as total')
+            ->groupBy('certification_level')
+            ->pluck('total', 'certification_level');
+
+        return $this->platformSlices($counts);
+    }
+
+    /** @return list<array{label: string, value: int, color: string}> */
+    public function platformPurchaseSlices(): array
+    {
+        $counts = Payment::query()
+            ->where('status', Payment::STATUS_COMPLETED)
+            ->selectRaw('certification_level, COUNT(*) as total')
+            ->groupBy('certification_level')
+            ->pluck('total', 'certification_level');
+
+        return $this->platformSlices($counts);
+    }
+
+    /** @return list<array{id: int, lat: float, lon: float, label: string, country: ?string}> */
+    public function signupGeoPoints(int $limit = 500): array
+    {
+        return User::query()
+            ->whereNotNull('signup_latitude')
+            ->whereNotNull('signup_longitude')
+            ->latest()
+            ->limit($limit)
+            ->get(['id', 'name', 'signup_country_name', 'signup_latitude', 'signup_longitude'])
+            ->map(fn (User $user) => [
+                'id' => $user->id,
+                'lat' => (float) $user->signup_latitude,
+                'lon' => (float) $user->signup_longitude,
+                'label' => $user->name,
+                'country' => $user->signup_country_name,
+            ])
+            ->all();
+    }
+
     /**
      * @param  Collection<string, mixed>  $counts
      * @return list<array{label: string, date: string, value: int}>
@@ -125,5 +168,31 @@ class AdminAnalyticsService
         }
 
         return $series;
+    }
+
+    /**
+     * @param  Collection<string, mixed>  $counts
+     * @return list<array{label: string, value: int, color: string}>
+     */
+    private function platformSlices(Collection $counts): array
+    {
+        $colors = [
+            CertificationLevel::EMT_BASIC => '#4ade80',
+            CertificationLevel::EMT_ADVANCED => '#3399cc',
+            CertificationLevel::PARAMEDIC => '#fbbf24',
+            CertificationLevel::NCLEX_PN => '#c084fc',
+        ];
+
+        $slices = [];
+
+        foreach (CertificationLevel::all() as $level) {
+            $slices[] = [
+                'label' => CertificationLevel::label($level),
+                'value' => (int) ($counts[$level] ?? 0),
+                'color' => $colors[$level],
+            ];
+        }
+
+        return $slices;
     }
 }

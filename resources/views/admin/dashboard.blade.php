@@ -55,6 +55,19 @@
         <x-admin.line-chart title="Daily purchases (30 days)" :points="$purchaseChart" value-label="purchases" stroke="#3399cc" fill="rgba(51, 153, 204, 0.12)" />
     </div>
 
+    <div class="mb-8 grid gap-6 lg:grid-cols-2">
+        <x-admin.pie-chart title="Platform popularity — quiz sessions" :slices="$platformQuizSlices" />
+        <x-admin.pie-chart title="Platform popularity — purchases" :slices="$platformPurchaseSlices" />
+    </div>
+
+    <div class="mb-8">
+        <x-admin.signup-map
+            title="Signup geography"
+            :points="$signupGeoPoints"
+            :total-signups="$summary['total_users']"
+        />
+    </div>
+
     <div class="mb-8 grid gap-6 lg:grid-cols-3">
         <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-5">
             <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Recent signups</h2>

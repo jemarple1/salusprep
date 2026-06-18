@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\WelcomeMail;
 use App\Models\User;
 use App\Services\GuestService;
+use App\Services\SignupGeoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +16,10 @@ use Illuminate\View\View;
 
 class AuthController extends Controller
 {
-    public function __construct(private GuestService $guests) {}
+    public function __construct(
+        private GuestService $guests,
+        private SignupGeoService $signupGeo,
+    ) {}
 
     public function showRegister(): View
     {
@@ -34,6 +38,7 @@ class AuthController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            ...$this->signupGeo->fromRequest($request),
         ]);
 
         Auth::login($user);

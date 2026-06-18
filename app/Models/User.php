@@ -13,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Mail;
 
-#[Fillable(['name', 'email', 'password', 'last_login_at'])]
+#[Fillable(['name', 'email', 'password', 'last_login_at', 'signup_country_code', 'signup_country_name', 'signup_latitude', 'signup_longitude'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
