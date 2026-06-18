@@ -52,6 +52,7 @@ Route::prefix('{section}')
         Route::post('/exam/start', [ExamController::class, 'start'])->name('exam.start');
         Route::get('/exam/{session}', [ExamController::class, 'show'])->name('exam.show');
         Route::post('/exam/{session}/questions/{question}', [ExamController::class, 'answer'])->name('exam.answer');
+        Route::post('/exam/{session}/continue', [ExamController::class, 'continue'])->name('exam.continue');
         Route::get('/exam/{session}/paywall', [ExamController::class, 'paywall'])->name('exam.paywall');
         Route::get('/exam/{session}/results', [ExamController::class, 'results'])->name('exam.results');
         Route::post('/exam/{session}/finish', [ExamController::class, 'finish'])->name('exam.finish');

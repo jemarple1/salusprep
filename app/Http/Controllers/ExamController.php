@@ -56,17 +56,27 @@ class ExamController extends Controller
             return redirect()->route('exam.results', [$section, $session]);
         }
 
-        $question = $this->examService->nextQuestion($session);
-
-        if ($question === null) {
-            $this->examService->completeSession($session);
-
-            return redirect()
-                ->route('exam.results', [$section, $session])
-                ->with('success', 'Quiz complete.');
-        }
-
         $lastAnswer = $session->answers()->with('question')->latest('id')->first();
+        $reviewedAnswerId = session('exam.reviewed_answer_id.'.$session->id);
+        $reviewMode = $lastAnswer !== null && $lastAnswer->id !== $reviewedAnswerId;
+
+        if ($reviewMode) {
+            $question = $lastAnswer->question;
+            $questionNumber = $session->questions_answered;
+        } else {
+            $question = $this->examService->nextQuestion($session);
+
+            if ($question === null) {
+                $this->examService->completeSession($session);
+
+                return redirect()
+                    ->route('exam.results', [$section, $session])
+                    ->with('success', 'Quiz complete.');
+            }
+
+            $questionNumber = $session->questions_answered + 1;
+            $lastAnswer = null;
+        }
 
         $user = $request->user();
         $slug = $request->attributes->get('section_slug');
@@ -80,10 +90,24 @@ class ExamController extends Controller
             'session' => $session,
             'question' => $question,
             'lastAnswer' => $lastAnswer,
-            'questionNumber' => $session->questions_answered + 1,
+            'reviewMode' => $reviewMode,
+            'questionNumber' => $questionNumber,
             'totalQuestions' => $session->targetQuestionCount(),
             'studyDeckUrl' => $studyDeckUrl,
         ]);
+    }
+
+    public function continue(Request $request, string $section, ExamSession $session): RedirectResponse
+    {
+        $this->authorizeSession($request, $session);
+
+        $lastAnswer = $session->answers()->latest('id')->first();
+
+        if ($lastAnswer !== null) {
+            session(['exam.reviewed_answer_id.'.$session->id => $lastAnswer->id]);
+        }
+
+        return redirect()->route('exam.show', [$section, $session]);
     }
 
     public function answer(Request $request, string $section, ExamSession $session, Question $question): RedirectResponse
