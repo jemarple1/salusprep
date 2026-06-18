@@ -97,6 +97,22 @@ class AdminAnalyticsService
             ->get();
     }
 
+    /** @return Collection<int, User> */
+    public function marketingEmailSubscribers(): Collection
+    {
+        return User::query()
+            ->where('marketing_emails_opt_in', true)
+            ->orderBy('email')
+            ->get(['id', 'name', 'email', 'created_at']);
+    }
+
+    public function marketingEmailsExport(): string
+    {
+        return $this->marketingEmailSubscribers()
+            ->pluck('email')
+            ->implode(', ');
+    }
+
     /** @return \Illuminate\Contracts\Pagination\LengthAwarePaginator<int, User> */
     public function usersPaginated(int $perPage = 25)
     {

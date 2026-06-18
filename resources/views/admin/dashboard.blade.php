@@ -115,6 +115,53 @@
         </div>
     </div>
 
+    <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80 p-5 sm:p-6">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h2 class="text-lg font-bold text-white">Marketing email subscribers</h2>
+                <p class="mt-1 text-sm text-slate-400">Users who opted in to resources and emails at signup.</p>
+            </div>
+            <p class="text-sm font-semibold text-safety-light">{{ number_format($marketingSubscribers->count()) }} subscribed</p>
+        </div>
+
+        @if ($marketingSubscribers->isNotEmpty())
+            <div class="mb-6 overflow-x-auto">
+                <table class="min-w-full text-left text-sm">
+                    <thead class="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
+                        <tr>
+                            <th class="px-3 py-3 font-semibold">Name</th>
+                            <th class="px-3 py-3 font-semibold">Email</th>
+                            <th class="px-3 py-3 font-semibold">Signed up</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        @foreach ($marketingSubscribers as $subscriber)
+                            <tr class="text-slate-300">
+                                <td class="px-3 py-3 font-medium text-white">{{ $subscriber->name }}</td>
+                                <td class="px-3 py-3">{{ $subscriber->email }}</td>
+                                <td class="px-3 py-3 whitespace-nowrap">{{ $subscriber->created_at->format('M j, Y') }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <div>
+                <div class="mb-2 flex items-center justify-between gap-4">
+                    <label for="marketing-emails-export" class="text-sm font-semibold text-slate-300">Export (comma-separated)</label>
+                    <button type="button" id="copy-marketing-emails"
+                        class="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold text-safety-light hover:border-safety/40 hover:text-safety">
+                        Copy to clipboard
+                    </button>
+                </div>
+                <textarea id="marketing-emails-export" readonly rows="4"
+                    class="w-full rounded-xl border border-white/10 bg-navy px-4 py-3 text-sm text-slate-300 outline-none focus:ring-2 focus:ring-safety">{{ $marketingEmailsExport }}</textarea>
+            </div>
+        @else
+            <p class="text-sm text-slate-500">No marketing subscribers yet.</p>
+        @endif
+    </div>
+
     <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-5 sm:p-6">
         <div class="mb-4 flex items-center justify-between gap-4">
             <h2 class="text-lg font-bold text-white">All users</h2>
@@ -152,4 +199,27 @@
             {{ $users->links() }}
         </div>
     </div>
+
+    @if ($marketingSubscribers->isNotEmpty())
+        @push('scripts')
+            <script>
+                document.getElementById('copy-marketing-emails')?.addEventListener('click', async () => {
+                    const textarea = document.getElementById('marketing-emails-export');
+                    if (!textarea) return;
+
+                    try {
+                        await navigator.clipboard.writeText(textarea.value);
+                    } catch {
+                        textarea.select();
+                        document.execCommand('copy');
+                    }
+
+                    const button = document.getElementById('copy-marketing-emails');
+                    const original = button.textContent;
+                    button.textContent = 'Copied!';
+                    setTimeout(() => { button.textContent = original; }, 2000);
+                });
+            </script>
+        @endpush
+    @endif
 @endsection

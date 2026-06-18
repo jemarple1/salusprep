@@ -9,9 +9,12 @@ use Illuminate\Support\Facades\DB;
 class Question extends Model
 {
     protected $fillable = [
+        'source_key',
         'category',
         'certification_level',
         'difficulty',
+        'initial_difficulty',
+        'difficulty_calibrated_at',
         'stem',
         'option_a',
         'option_b',
@@ -20,6 +23,13 @@ class Question extends Model
         'correct_option',
         'explanation',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'difficulty_calibrated_at' => 'datetime',
+        ];
+    }
 
     public function answers(): HasMany
     {

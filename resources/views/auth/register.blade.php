@@ -35,6 +35,30 @@
                         class="w-full rounded-xl border border-white/10 bg-navy px-4 py-3 text-white outline-none focus:ring-2 focus:ring-safety">
                 </div>
 
+                <div class="space-y-3">
+                    <label class="flex items-start gap-3 text-sm text-slate-300">
+                        <input type="checkbox" name="terms" value="1" required
+                            @checked(old('terms'))
+                            class="mt-0.5 rounded border-white/20 bg-navy text-safety focus:ring-safety">
+                        <span>
+                            I agree to the
+                            <a href="{{ route('legal.terms') }}" target="_blank" rel="noopener noreferrer" class="font-semibold text-safety-light hover:text-safety">Terms &amp; Conditions</a>
+                            and
+                            <a href="{{ route('legal.privacy') }}" target="_blank" rel="noopener noreferrer" class="font-semibold text-safety-light hover:text-safety">Privacy Policy</a>.
+                        </span>
+                    </label>
+                    @error('terms')
+                        <p class="text-sm text-red-400">{{ $message }}</p>
+                    @enderror
+
+                    <label class="flex items-start gap-3 text-sm text-slate-400">
+                        <input type="checkbox" name="marketing_emails_opt_in" value="1"
+                            @checked(old('marketing_emails_opt_in'))
+                            class="mt-0.5 rounded border-white/20 bg-navy text-safety focus:ring-safety">
+                        <span>Send me resources and emails from SalusPrep.</span>
+                    </label>
+                </div>
+
                 <button type="submit" class="w-full rounded-xl bg-safety py-3 font-bold text-navy hover:bg-safety-light">
                     Create account
                 </button>

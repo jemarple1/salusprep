@@ -32,12 +32,16 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
+            'terms' => ['required', 'accepted'],
+            'marketing_emails_opt_in' => ['sometimes', 'boolean'],
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'terms_accepted_at' => now(),
+            'marketing_emails_opt_in' => $request->boolean('marketing_emails_opt_in'),
             ...$this->signupGeo->fromRequest($request),
         ]);
 

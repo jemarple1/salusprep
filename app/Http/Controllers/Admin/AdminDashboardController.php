@@ -23,6 +23,8 @@ class AdminDashboardController extends Controller
             'recentLogins' => $this->analytics->recentLogins(),
             'recentPurchases' => $this->analytics->recentPurchases(),
             'users' => $this->analytics->usersPaginated(),
+            'marketingSubscribers' => $this->analytics->marketingEmailSubscribers(),
+            'marketingEmailsExport' => $this->analytics->marketingEmailsExport(),
         ]);
     }
 }

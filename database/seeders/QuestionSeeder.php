@@ -10,8 +10,6 @@ class QuestionSeeder extends Seeder
 {
     public function run(): void
     {
-        Question::query()->delete();
-
         $this->seedForLevel(CertificationLevel::EMT_BASIC, $this->emtBasicQuestions());
         $this->seedForLevel(CertificationLevel::EMT_ADVANCED, $this->emtAdvancedQuestions());
         $this->seedForLevel(CertificationLevel::PARAMEDIC, $this->paramedicQuestions());
@@ -30,18 +28,22 @@ class QuestionSeeder extends Seeder
                 $targetLetters[$index],
             );
 
-            Question::create([
-                'certification_level' => $level,
-                'category' => $category,
-                'difficulty' => $difficulty,
-                'stem' => $stem,
-                'option_a' => $options['A'],
-                'option_b' => $options['B'],
-                'option_c' => $options['C'],
-                'option_d' => $options['D'],
-                'correct_option' => $targetLetters[$index],
-                'explanation' => $explanation,
-            ]);
+            Question::query()->updateOrCreate(
+                ['source_key' => $level.'-core-'.str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT)],
+                [
+                    'certification_level' => $level,
+                    'category' => $category,
+                    'difficulty' => $difficulty,
+                    'initial_difficulty' => $difficulty,
+                    'stem' => $stem,
+                    'option_a' => $options['A'],
+                    'option_b' => $options['B'],
+                    'option_c' => $options['C'],
+                    'option_d' => $options['D'],
+                    'correct_option' => $targetLetters[$index],
+                    'explanation' => $explanation,
+                ],
+            );
         }
     }
 
