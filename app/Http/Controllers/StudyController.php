@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\StudySession;
 use App\Services\CategoryProficiencyService;
 use App\Services\StudyService;
+use App\Support\PlatformExercise;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -21,20 +22,28 @@ class StudyController extends Controller
     {
         $level = $request->attributes->get('certification_level');
         $user = $request->user();
+        $unlocked = $user !== null && $user->hasSectionAccess($level);
 
-        if ($user !== null && $user->hasSectionAccess($level)) {
-            return view('study.index', [
-                'wrongByCategory' => $this->study->wrongCountsByCategory($user, $level),
-                'categoryStats' => $this->proficiency->forUser($user, $level),
-                'activeStudySession' => $this->study->activeSession($user, $level),
-                'totalMissed' => count($this->study->wrongQuestionIds($user, $level)),
-            ]);
-        }
+        $exercises = PlatformExercise::cardsForLevel($level, $user, $unlocked);
 
-        return view('study.paywall', [
+        $data = [
+            'exercises' => $exercises,
+            'flashcardsUnlocked' => $unlocked,
             'requiresAuth' => $user === null,
             'totalMissed' => $user !== null ? count($this->study->wrongQuestionIds($user, $level)) : null,
-        ]);
+            'wrongByCategory' => [],
+            'categoryStats' => collect(),
+            'activeStudySession' => null,
+        ];
+
+        if ($unlocked && $user !== null) {
+            $data['wrongByCategory'] = $this->study->wrongCountsByCategory($user, $level);
+            $data['categoryStats'] = $this->proficiency->forUser($user, $level);
+            $data['activeStudySession'] = $this->study->activeSession($user, $level);
+            $data['totalMissed'] = count($this->study->wrongQuestionIds($user, $level));
+        }
+
+        return view('study.index', $data);
     }
 
     public function start(Request $request): RedirectResponse

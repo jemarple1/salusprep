@@ -82,4 +82,18 @@
             </p>
         </div>
     </section>
+
+    @if (($exercises ?? []) !== [])
+        <section class="mt-16 border-t border-white/10 pt-12">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-white">Skill exercises</h2>
+                <p class="mt-2 max-w-2xl text-slate-400">
+                    SOAP charting, triage, GCS, burns, stroke scales, vitals, and more. Try the first scenario in each exercise free.
+                </p>
+            </div>
+            <div class="relative left-1/2 w-screen -translate-x-1/2">
+                <x-exercise-carousel :exercises="$exercises" />
+            </div>
+        </section>
+    @endif
 @endsection

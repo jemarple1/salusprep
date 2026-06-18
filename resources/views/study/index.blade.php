@@ -4,75 +4,124 @@
 
 @section('content')
     <div class="mb-8">
-        <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="text-sm font-semibold text-medic-light hover:text-medic hover:underline">← Back to dashboard</a>
-        <h1 class="mt-3 text-3xl font-bold text-white">Flashcard study</h1>
+        <a href="{{ auth()->check() ? route('platform.dashboard', $sectionSlug) : route('platform.home', $sectionSlug) }}" class="text-sm font-semibold text-medic-light hover:text-medic hover:underline">← Back</a>
+        <h1 class="mt-3 text-3xl font-bold text-white">Study hub</h1>
         <p class="mt-2 max-w-2xl text-slate-400">
-            Review questions you missed on quizzes. Flip each card, read the explanation, then mark whether you know it or want to see it again.
+            Flashcard review for missed quiz questions, plus skill exercises for hands-on practice.
         </p>
     </div>
 
-    @if ($activeStudySession)
-        <div class="mb-6 rounded-2xl border border-medic/30 bg-medic/10 px-5 py-4">
-            <p class="font-bold text-medic-light">Session in progress</p>
-            <p class="mt-1 text-sm text-slate-300">{{ $activeStudySession->remainingCount() }} cards left · {{ $activeStudySession->masteredCount() }} cleared</p>
-            <a href="{{ route('study.show', [$sectionSlug, $activeStudySession]) }}" class="mt-3 inline-block rounded-lg bg-medic px-4 py-2 text-sm font-bold text-white hover:bg-medic-dark">Continue studying</a>
-        </div>
-    @endif
-
-    @if ($totalMissed === 0)
-        <div class="rounded-2xl border border-white/10 bg-navy-light/80 px-6 py-12 text-center">
-            <p class="text-xl font-bold text-white">Nothing to review yet</p>
-            <p class="mt-2 text-slate-400">Complete a quiz and miss a few questions — they'll appear here for flashcard review.</p>
-            <form method="POST" action="{{ route('exam.start', $sectionSlug) }}" class="mt-6">
-                @csrf
-                <button type="submit" class="rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">Start a quiz</button>
-            </form>
-        </div>
-    @else
-        <div class="mb-6 rounded-2xl border border-white/10 bg-navy-light/80 p-6">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <p class="text-sm font-bold uppercase text-ems-light">All missed questions</p>
-                    <p class="mt-1 text-2xl font-bold text-white">{{ $totalMissed }} cards ready</p>
-                </div>
-                <form method="POST" action="{{ route('study.start', $sectionSlug) }}">
-                    @csrf
-                    <button type="submit" class="rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">Study all</button>
-                </form>
+    <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80 p-6">
+        <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <h2 class="text-lg font-bold text-white">Flashcard study</h2>
+                <p class="mt-1 text-sm text-slate-400">Review questions you missed on quizzes.</p>
             </div>
+            @if ($flashcardsUnlocked && $totalMissed > 0)
+                <span class="rounded-full bg-ems/20 px-3 py-1 text-sm font-bold text-ems-light">{{ $totalMissed }} cards</span>
+            @endif
         </div>
 
-        @if ($wrongByCategory !== [])
-            <div class="rounded-2xl border border-white/10 bg-navy-light/80">
-                <div class="border-b border-white/10 px-6 py-4">
-                    <h2 class="text-lg font-bold text-white">Study by category</h2>
-                    <p class="text-sm text-slate-400">Focus on the topics where you need the most work.</p>
-                </div>
-                <div class="grid gap-4 p-6 sm:grid-cols-2">
-                    @foreach ($wrongByCategory as $category => $count)
-                        @php
-                            $stat = $categoryStats->firstWhere('category', $category);
-                            $accuracy = $stat->accuracy_percent ?? null;
-                        @endphp
-                        <div class="rounded-xl border border-white/10 bg-navy/50 p-5 transition hover:border-medic/30">
-                            <div class="flex items-start justify-between gap-3">
-                                <div>
-                                    <p class="font-bold text-white">{{ $category }}</p>
-                                    <p class="mt-1 text-sm text-slate-400">{{ $count }} missed · {{ $accuracy !== null ? $accuracy.'% quiz accuracy' : 'No quiz data yet' }}</p>
-                                </div>
-                                <span class="rounded-full bg-rescue/20 px-2.5 py-1 text-xs font-bold text-red-200">{{ $count }}</span>
-                            </div>
-                            <form method="POST" action="{{ route('study.start', $sectionSlug) }}" class="mt-4">
-                                @csrf
-                                <input type="hidden" name="category" value="{{ $category }}">
-                                <button type="submit" class="w-full rounded-lg border border-medic/30 py-2.5 text-sm font-bold text-medic-light hover:bg-medic/10">
-                                    Start {{ $category }} deck
-                                </button>
-                            </form>
-                        </div>
-                    @endforeach
-                </div>
+        @if (! $flashcardsUnlocked)
+            <div class="rounded-xl border border-safety/20 bg-navy/60 p-6">
+                <p class="font-bold text-white">
+                    @if ($requiresAuth)
+                        Sign in to save and review your flashcard deck
+                    @else
+                        Unlock flashcards with your {{ $sectionLabel }} access
+                    @endif
+                </p>
+                <p class="mt-2 text-sm text-slate-400">
+                    @if ($requiresAuth)
+                        Missed questions are saved to your personal deck. Create a free account, then unlock for <x-section-price size="inline" />.
+                    @else
+                        You have {{ $totalMissed ?? 0 }} missed questions ready. Unlock once for <x-section-price size="inline" /> to flip cards, read explanations, and drill weak categories.
+                    @endif
+                </p>
+
+                @if ($requiresAuth)
+                    <div class="mt-5 flex flex-col gap-3 sm:flex-row">
+                        <a href="{{ route('register') }}" class="flex-1 rounded-xl bg-medic py-3 text-center font-bold text-white hover:bg-medic-dark">Create free account</a>
+                        <a href="{{ route('login') }}" class="flex-1 rounded-xl border border-medic/30 py-3 text-center font-semibold text-medic-light hover:bg-medic/10">Log in</a>
+                    </div>
+                @else
+                    <form method="POST" action="{{ route('platform.unlock', $sectionSlug) }}" class="mt-5">
+                        @csrf
+                        <button type="submit" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">Unlock — <x-section-price tone="safety" /></button>
+                    </form>
+                @endif
+            </div>
+        @elseif ($activeStudySession)
+            <div class="mb-6 rounded-xl border border-medic/30 bg-medic/10 px-5 py-4">
+                <p class="font-bold text-medic-light">Session in progress</p>
+                <p class="mt-1 text-sm text-slate-300">{{ $activeStudySession->remainingCount() }} cards left · {{ $activeStudySession->masteredCount() }} cleared</p>
+                <a href="{{ route('study.show', [$sectionSlug, $activeStudySession]) }}" class="mt-3 inline-block rounded-lg bg-medic px-4 py-2 text-sm font-bold text-white hover:bg-medic-dark">Continue studying</a>
             </div>
         @endif
+
+        @if ($flashcardsUnlocked)
+            @if ($totalMissed === 0)
+                <div class="rounded-xl border border-white/10 bg-navy/50 px-6 py-10 text-center">
+                    <p class="text-xl font-bold text-white">Nothing to review yet</p>
+                    <p class="mt-2 text-slate-400">Complete a quiz and miss a few questions — they'll appear here for flashcard review.</p>
+                    <form method="POST" action="{{ route('exam.start', $sectionSlug) }}" class="mt-6">
+                        @csrf
+                        <button type="submit" class="rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">Start a quiz</button>
+                    </form>
+                </div>
+            @else
+                <div class="mb-6 rounded-xl border border-white/10 bg-navy/50 p-5">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <p class="text-sm font-bold uppercase text-ems-light">All missed questions</p>
+                            <p class="mt-1 text-2xl font-bold text-white">{{ $totalMissed }} cards ready</p>
+                        </div>
+                        <form method="POST" action="{{ route('study.start', $sectionSlug) }}">
+                            @csrf
+                            <button type="submit" class="rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">Study all</button>
+                        </form>
+                    </div>
+                </div>
+
+                @if ($wrongByCategory !== [])
+                    <div class="border-t border-white/10 pt-6">
+                        <h3 class="text-base font-bold text-white">Study by category</h3>
+                        <p class="text-sm text-slate-400">Focus on the topics where you need the most work.</p>
+                        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                            @foreach ($wrongByCategory as $category => $count)
+                                @php
+                                    $stat = $categoryStats->firstWhere('category', $category);
+                                    $accuracy = $stat->accuracy_percent ?? null;
+                                @endphp
+                                <div class="rounded-xl border border-white/10 bg-navy/50 p-5 transition hover:border-medic/30">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p class="font-bold text-white">{{ $category }}</p>
+                                            <p class="mt-1 text-sm text-slate-400">{{ $count }} missed · {{ $accuracy !== null ? $accuracy.'% quiz accuracy' : 'No quiz data yet' }}</p>
+                                        </div>
+                                        <span class="rounded-full bg-rescue/20 px-2.5 py-1 text-xs font-bold text-red-200">{{ $count }}</span>
+                                    </div>
+                                    <form method="POST" action="{{ route('study.start', $sectionSlug) }}" class="mt-4">
+                                        @csrf
+                                        <input type="hidden" name="category" value="{{ $category }}">
+                                        <button type="submit" class="w-full rounded-lg border border-medic/30 py-2.5 text-sm font-bold text-medic-light hover:bg-medic/10">
+                                            Start {{ $category }} deck
+                                        </button>
+                                    </form>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            @endif
+        @endif
+    </div>
+
+    @if ($exercises !== [])
+        <x-exercise-grid
+            :exercises="$exercises"
+            title="Skill exercises"
+            description="Every exercise includes one free scenario. Unlock {{ $sectionLabel }} for the full set, unlimited quizzes, and flashcards."
+        />
     @endif
 @endsection

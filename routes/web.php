@@ -5,6 +5,7 @@ use App\Http\Controllers\LegalController;
 use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExamController;
+use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PlatformController;
@@ -58,6 +59,9 @@ Route::prefix('{section}')
         Route::post('/exam/{session}/finish', [ExamController::class, 'finish'])->name('exam.finish');
 
         Route::get('/study', [StudyController::class, 'index'])->name('study.index');
+
+        Route::get('/exercises/{exercise}', [ExerciseController::class, 'show'])->name('exercises.show');
+        Route::post('/exercises/{exercise}/check', [ExerciseController::class, 'check'])->name('exercises.check');
 
         Route::middleware('auth')->group(function () {
             Route::get('/dashboard', DashboardController::class)->name('platform.dashboard');

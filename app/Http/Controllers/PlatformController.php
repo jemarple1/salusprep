@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\GuestService;
 use App\Services\StripeCheckoutService;
 use App\Support\CertificationLevel;
+use App\Support\PlatformExercise;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -30,11 +31,13 @@ class PlatformController extends Controller
         if ($user !== null) {
             $access = $user->sectionAccessFor($level);
             $activeSession = $user->activeExamSession($level);
+            $unlocked = $user->hasSectionAccess($level);
 
             return view('platform.home', [
-                'unlocked' => $user->hasSectionAccess($level),
+                'unlocked' => $unlocked,
                 'freeRemaining' => $access?->freeQuestionsRemaining() ?? CertificationLevel::FREE_QUESTIONS,
                 'activeSession' => $activeSession,
+                'exercises' => PlatformExercise::cardsForLevel($level, $user, $unlocked),
             ]);
         }
 
@@ -46,6 +49,7 @@ class PlatformController extends Controller
             'unlocked' => false,
             'freeRemaining' => $progress->freeQuestionsRemaining(),
             'activeSession' => $activeSession,
+            'exercises' => PlatformExercise::cardsForLevel($level, null, false),
         ]);
     }
 }
