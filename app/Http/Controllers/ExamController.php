@@ -6,6 +6,7 @@ use App\Models\ExamSession;
 use App\Models\Question;
 use App\Services\AdaptiveExamService;
 use App\Services\GuestService;
+use App\Services\StudyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,6 +16,7 @@ class ExamController extends Controller
     public function __construct(
         private AdaptiveExamService $examService,
         private GuestService $guests,
+        private StudyService $study,
     ) {}
 
     public function start(Request $request): RedirectResponse
@@ -66,12 +68,22 @@ class ExamController extends Controller
 
         $lastAnswer = $session->answers()->with('question')->latest('id')->first();
 
+        $user = $request->user();
+        $canStudy = $user !== null && $user->hasSectionAccess($session->certification_level);
+        $activeStudySession = $canStudy ? $this->study->activeSession($user, $session->certification_level) : null;
+
         return view('exam.show', [
             'session' => $session,
             'question' => $question,
             'lastAnswer' => $lastAnswer,
             'questionNumber' => $session->questions_answered + 1,
             'totalQuestions' => $session->targetQuestionCount(),
+            'canStudy' => $canStudy,
+            'studyDeckUrl' => $canStudy
+                ? ($activeStudySession
+                    ? route('study.show', [$request->attributes->get('section_slug'), $activeStudySession])
+                    : route('study.index', $request->attributes->get('section_slug')))
+                : null,
         ]);
     }
 
