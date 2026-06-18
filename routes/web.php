@@ -42,6 +42,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/settings/account', [AccountSettingsController::class, 'destroy'])->name('settings.account.destroy');
 });
 
+Route::prefix('admin')->group(base_path('routes/admin.php'));
+
 Route::prefix('{section}')
     ->middleware(ResolveSection::class)
     ->group(function () {
