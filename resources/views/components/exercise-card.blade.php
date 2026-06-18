@@ -26,22 +26,17 @@
     href="{{ $exercise['url'] }}"
     {{ $attributes->class(['group flex h-full flex-col rounded-2xl border border-white/10 bg-navy-light/90 p-5 shadow-lg transition hover:-translate-y-0.5 hover:bg-navy-light', $sizeClass, $ring]) }}
 >
-    <div class="mb-3 flex items-start justify-between gap-3">
-        <div class="flex min-w-0 items-start gap-3">
-            <div @class([
-                'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-navy/60',
-                'text-ems-light' => ($exercise['color'] ?? 'ems') === 'ems',
-                'text-red-300' => ($exercise['color'] ?? '') === 'rescue',
-                'text-medic-light' => ($exercise['color'] ?? '') === 'medic',
-                'text-safety-light' => ($exercise['color'] ?? '') === 'safety',
-            ])>
-                <x-exercise-icon :icon="$exercise['icon'] ?? 'clipboard'" />
-            </div>
-            <span class="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider {{ $badge }}">{{ $exercise['category'] }}</span>
+    <div class="mb-3 flex items-start gap-3">
+        <div @class([
+            'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-navy/60',
+            'text-ems-light' => ($exercise['color'] ?? 'ems') === 'ems',
+            'text-red-300' => ($exercise['color'] ?? '') === 'rescue',
+            'text-medic-light' => ($exercise['color'] ?? '') === 'medic',
+            'text-safety-light' => ($exercise['color'] ?? '') === 'safety',
+        ])>
+            <x-exercise-icon :icon="$exercise['icon'] ?? 'clipboard'" />
         </div>
-        @if (($exercise['scenario_count'] ?? 1) > 1)
-            <span class="rounded-full bg-ems/20 px-2 py-0.5 text-[10px] font-bold uppercase text-ems-light">5 scenarios</span>
-        @endif
+        <span class="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider {{ $badge }}">{{ $exercise['category'] }}</span>
     </div>
 
     <h3 class="text-lg font-bold leading-snug text-white group-hover:text-medic-light">{{ $exercise['title'] }}</h3>
