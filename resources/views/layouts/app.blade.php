@@ -107,7 +107,7 @@
                     @endisset
                 </div>
 
-                <nav class="flex items-center gap-2 text-sm">
+                <nav class="hidden items-center gap-2 text-sm md:flex">
                     @isset($sectionSlug)
                         <a href="{{ route('skills.index', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-safety-light">Skills</a>
                         <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-medic-light">Test Center</a>
@@ -120,6 +120,8 @@
                         <a href="{{ route('register') }}" class="rounded-lg bg-medic px-4 py-2 font-bold text-white hover:bg-medic-dark">Sign up</a>
                     @endauth
                 </nav>
+
+                <x-mobile-nav />
             </div>
         </header>
 
