@@ -22,13 +22,18 @@ class StudyController extends Controller
         $level = $request->attributes->get('certification_level');
         $user = $request->user();
 
-        $this->requireUnlocked($user, $level);
+        if ($user !== null && $user->hasSectionAccess($level)) {
+            return view('study.index', [
+                'wrongByCategory' => $this->study->wrongCountsByCategory($user, $level),
+                'categoryStats' => $this->proficiency->forUser($user, $level),
+                'activeStudySession' => $this->study->activeSession($user, $level),
+                'totalMissed' => count($this->study->wrongQuestionIds($user, $level)),
+            ]);
+        }
 
-        return view('study.index', [
-            'wrongByCategory' => $this->study->wrongCountsByCategory($user, $level),
-            'categoryStats' => $this->proficiency->forUser($user, $level),
-            'activeStudySession' => $this->study->activeSession($user, $level),
-            'totalMissed' => count($this->study->wrongQuestionIds($user, $level)),
+        return view('study.paywall', [
+            'requiresAuth' => $user === null,
+            'totalMissed' => $user !== null ? count($this->study->wrongQuestionIds($user, $level)) : null,
         ]);
     }
 
@@ -110,7 +115,7 @@ class StudyController extends Controller
 
     private function requireUnlocked($user, string $level): void
     {
-        abort_unless($user->hasSectionAccess($level), 403, 'Unlock this section to access study tools and proficiency insights.');
+        abort_unless($user !== null && $user->hasSectionAccess($level), 403, 'Unlock this section to access study tools and proficiency insights.');
     }
 
     private function authorizeStudySession(Request $request, StudySession $studySession): void

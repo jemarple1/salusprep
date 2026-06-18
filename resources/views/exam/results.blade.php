@@ -40,6 +40,7 @@
                         <span class="rounded-full px-2 py-0.5 text-xs font-bold {{ $answer->is_correct ? 'bg-medic/15 text-medic-light' : 'bg-rescue/15 text-red-200' }}">
                             {{ $answer->is_correct ? 'Correct' : 'Incorrect' }}
                         </span>
+                        <x-question-platform-stat :percent="$platformCorrectPercents[$answer->question_id] ?? null" />
                     </div>
                     <p class="mt-2 text-white">{{ $answer->question->stem }}</p>
                     <p class="mt-2 text-sm text-slate-400">Your answer: {{ $answer->selected_option }} · Correct: {{ $answer->question->correct_option }}</p>

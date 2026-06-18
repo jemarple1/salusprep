@@ -56,9 +56,10 @@ Route::prefix('{section}')
         Route::get('/exam/{session}/results', [ExamController::class, 'results'])->name('exam.results');
         Route::post('/exam/{session}/finish', [ExamController::class, 'finish'])->name('exam.finish');
 
+        Route::get('/study', [StudyController::class, 'index'])->name('study.index');
+
         Route::middleware('auth')->group(function () {
             Route::get('/dashboard', DashboardController::class)->name('platform.dashboard');
-            Route::get('/study', [StudyController::class, 'index'])->name('study.index');
             Route::post('/study/start', [StudyController::class, 'start'])->name('study.start');
             Route::get('/study/{studySession}', [StudyController::class, 'show'])->name('study.show');
             Route::post('/study/{studySession}/advance', [StudyController::class, 'advance'])->name('study.advance');

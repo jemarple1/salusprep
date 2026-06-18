@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Question extends Model
 {
@@ -45,5 +46,43 @@ class Question extends Model
             'C' => $this->option_c,
             'D' => $this->option_d,
         ];
+    }
+
+    public function platformCorrectPercent(): ?int
+    {
+        $stats = self::platformCorrectPercentsFor([$this->id]);
+
+        return $stats[$this->id] ?? null;
+    }
+
+    /**
+     * @param  list<int>  $questionIds
+     * @return array<int, int>
+     */
+    public static function platformCorrectPercentsFor(array $questionIds): array
+    {
+        if ($questionIds === []) {
+            return [];
+        }
+
+        $rows = DB::table('exam_answers')
+            ->whereIn('question_id', $questionIds)
+            ->groupBy('question_id')
+            ->select('question_id')
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) as correct')
+            ->get();
+
+        $percents = [];
+
+        foreach ($rows as $row) {
+            if ((int) $row->total < 1) {
+                continue;
+            }
+
+            $percents[(int) $row->question_id] = (int) round(((int) $row->correct / (int) $row->total) * 100);
+        }
+
+        return $percents;
     }
 }

@@ -21,23 +21,6 @@
         <div class="h-full rounded-full bg-medic transition-all" style="width: {{ $session->progressPercent() }}%"></div>
     </div>
 
-    @if ($lastAnswer)
-        <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-stretch">
-            <div class="min-w-0 flex-1 rounded-2xl border px-5 py-4 {{ $lastAnswer->is_correct ? 'border-medic/40 bg-medic/10' : 'border-rescue/40 bg-rescue/10' }}">
-                <p class="font-bold {{ $lastAnswer->is_correct ? 'text-medic-light' : 'text-red-200' }}">
-                    {{ $lastAnswer->is_correct ? 'Correct' : 'Incorrect' }} · Difficulty now {{ $session->current_difficulty }}/5
-                </p>
-                @if ($lastAnswer->question->explanation)
-                    <p class="mt-2 text-sm leading-relaxed text-slate-300">{{ $lastAnswer->question->explanation }}</p>
-                @endif
-            </div>
-
-            @if (! $lastAnswer->is_correct && ($canStudy ?? false) && ($studyDeckUrl ?? null))
-                <x-study-deck-notice :href="$studyDeckUrl" />
-            @endif
-        </div>
-    @endif
-
     <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 sm:p-8">
         <div class="mb-4 flex items-center justify-between gap-4">
             <span class="rounded-full bg-ems/20 px-3 py-1 text-xs font-bold uppercase text-ems-light">{{ $question->category }}</span>
@@ -72,4 +55,24 @@
             </form>
         @endif
     </div>
+
+    @if ($lastAnswer)
+        <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-stretch">
+            <div class="min-w-0 flex-1 rounded-2xl border px-5 py-4 {{ $lastAnswer->is_correct ? 'border-medic/40 bg-medic/10' : 'border-rescue/40 bg-rescue/10' }}">
+                <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                    <p class="font-bold {{ $lastAnswer->is_correct ? 'text-medic-light' : 'text-red-200' }}">
+                        {{ $lastAnswer->is_correct ? 'Correct' : 'Incorrect' }} · Difficulty now {{ $session->current_difficulty }}/5
+                    </p>
+                    <x-question-platform-stat :percent="$lastAnswer->question->platformCorrectPercent()" />
+                </div>
+                @if ($lastAnswer->question->explanation)
+                    <p class="mt-2 text-sm leading-relaxed text-slate-300">{{ $lastAnswer->question->explanation }}</p>
+                @endif
+            </div>
+
+            @if (! $lastAnswer->is_correct)
+                <x-study-deck-notice :href="$studyDeckUrl" />
+            @endif
+        </div>
+    @endif
 @endsection

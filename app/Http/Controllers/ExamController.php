@@ -69,8 +69,12 @@ class ExamController extends Controller
         $lastAnswer = $session->answers()->with('question')->latest('id')->first();
 
         $user = $request->user();
+        $slug = $request->attributes->get('section_slug');
         $canStudy = $user !== null && $user->hasSectionAccess($session->certification_level);
         $activeStudySession = $canStudy ? $this->study->activeSession($user, $session->certification_level) : null;
+        $studyDeckUrl = $canStudy && $activeStudySession
+            ? route('study.show', [$slug, $activeStudySession])
+            : route('study.index', $slug);
 
         return view('exam.show', [
             'session' => $session,
@@ -78,12 +82,7 @@ class ExamController extends Controller
             'lastAnswer' => $lastAnswer,
             'questionNumber' => $session->questions_answered + 1,
             'totalQuestions' => $session->targetQuestionCount(),
-            'canStudy' => $canStudy,
-            'studyDeckUrl' => $canStudy
-                ? ($activeStudySession
-                    ? route('study.show', [$request->attributes->get('section_slug'), $activeStudySession])
-                    : route('study.index', $request->attributes->get('section_slug')))
-                : null,
+            'studyDeckUrl' => $studyDeckUrl,
         ]);
     }
 
@@ -140,7 +139,14 @@ class ExamController extends Controller
 
         $session->load(['answers.question']);
 
-        return view('exam.results', ['session' => $session]);
+        $platformCorrectPercents = Question::platformCorrectPercentsFor(
+            $session->answers->pluck('question_id')->unique()->all(),
+        );
+
+        return view('exam.results', [
+            'session' => $session,
+            'platformCorrectPercents' => $platformCorrectPercents,
+        ]);
     }
 
     public function finish(Request $request, string $section, ExamSession $session): RedirectResponse
