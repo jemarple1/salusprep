@@ -9,6 +9,19 @@ use Illuminate\View\View;
 
 class ExerciseController extends Controller
 {
+    public function index(Request $request): View
+    {
+        $level = $request->attributes->get('certification_level');
+        $user = $request->user();
+        $unlocked = $user !== null && $user->hasSectionAccess($level);
+
+        return view('exercises.index', [
+            'exercises' => PlatformExercise::cardsForLevel($level, $user, $unlocked),
+            'unlocked' => $unlocked,
+            'requiresAuth' => $user === null,
+        ]);
+    }
+
     public function show(Request $request, string $section, string $exercise): View
     {
         $level = $request->attributes->get('certification_level');
@@ -44,6 +57,8 @@ class ExerciseController extends Controller
             'vitals-panel' => 'exercises.vitals-panel',
             'triage-priority' => 'exercises.triage-priority',
             'salt-triage' => 'exercises.salt-triage',
+            'pharma-yesno' => 'exercises.pharma-yesno',
+            'pharma-choice' => 'exercises.pharma-choice',
             'scenario' => 'exercises.scenario',
             default => abort(404),
         };
@@ -97,7 +112,7 @@ class ExerciseController extends Controller
         ])['answer'];
 
         $correct = match ($ui) {
-            'triage-tags', 'salt-triage', 'triage-priority', 'stroke-fast', 'vitals-panel', 'scenario' => $answer === $scenario['correct'],
+            'triage-tags', 'salt-triage', 'triage-priority', 'stroke-fast', 'vitals-panel', 'pharma-yesno', 'pharma-choice', 'scenario' => $answer === $scenario['correct'],
             default => false,
         };
 

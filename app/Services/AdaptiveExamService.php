@@ -54,7 +54,7 @@ class AdaptiveExamService
         $existing = $user->activeExamSession($certificationLevel);
 
         if ($existing !== null) {
-            return $existing;
+            throw new RuntimeException('Finish or continue your current quiz before starting a new one.');
         }
 
         return ExamSession::create([
@@ -77,7 +77,7 @@ class AdaptiveExamService
         $existing = $this->guests->activeExamSession($guestToken, $certificationLevel);
 
         if ($existing !== null) {
-            return $existing;
+            throw new RuntimeException('Finish or continue your current quiz before starting a new one.');
         }
 
         return ExamSession::create([

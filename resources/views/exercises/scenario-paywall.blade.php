@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="mx-auto max-w-2xl">
-        <a href="{{ route('study.index', $sectionSlug) }}" class="text-sm font-semibold text-medic-light hover:text-medic hover:underline">← Study hub</a>
+        <a href="{{ route('skills.index', $sectionSlug) }}" class="text-sm font-semibold text-medic-light hover:text-medic hover:underline">← Skills</a>
         <p class="mt-2 text-sm font-bold uppercase tracking-wider text-ems-light">{{ $exercise['category'] }}</p>
         <h1 class="mt-1 text-3xl font-bold text-white">{{ $exercise['title'] }}</h1>
         <p class="mt-2 text-lg text-slate-300">{{ $scenario['title'] ?? 'Additional scenario' }}</p>
@@ -28,7 +28,7 @@
                 <li class="flex gap-2"><span class="text-medic-light">✓</span> All skill exercises &amp; scenarios (SOAP, triage, GCS, burns, stroke, vitals)</li>
                 <li class="flex gap-2"><span class="text-medic-light">✓</span> Unlimited adaptive quizzes</li>
                 <li class="flex gap-2"><span class="text-medic-light">✓</span> Flashcard study deck for missed questions</li>
-                <li class="flex gap-2"><span class="text-medic-light">✓</span> Dashboard, proficiency charts &amp; progress tracking</li>
+                <li class="flex gap-2"><span class="text-medic-light">✓</span> Test Center charts, trends &amp; progress tracking</li>
             </ul>
 
             <p class="mt-5 text-xs text-slate-500">One-time purchase · this platform only · no subscription</p>

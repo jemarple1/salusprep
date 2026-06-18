@@ -4,7 +4,7 @@
 
 @if ($exercises !== [])
     <div class="exercise-carousel cursor-grab overflow-x-auto overflow-y-hidden py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" id="exercise-carousel">
-        <div class="exercise-carousel-track flex w-max gap-4 px-4 sm:px-6">
+        <div class="flex w-max gap-4 px-4 sm:px-6">
             @foreach ($exercises as $exercise)
                 <x-exercise-card :exercise="$exercise" />
             @endforeach
@@ -31,6 +31,7 @@
             });
 
             window.addEventListener('mouseup', function () {
+                if (!isDragging) return;
                 isDragging = false;
                 carousel.classList.remove('cursor-grabbing');
                 carousel.classList.add('cursor-grab');

@@ -51,7 +51,7 @@
 
                 @auth
                     <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-xl border border-white/10 px-6 py-3 font-semibold text-slate-200 hover:bg-white/5">
-                        Dashboard
+                        Test Center
                     </a>
                 @else
                     <p class="self-center text-sm text-slate-500">No signup required until question 25.</p>
@@ -85,11 +85,16 @@
 
     @if (($exercises ?? []) !== [])
         <section class="mt-16 border-t border-white/10 pt-12">
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-white">Skill exercises</h2>
-                <p class="mt-2 max-w-2xl text-slate-400">
-                    SOAP charting, triage, GCS, burns, stroke scales, vitals, and more. Try the first scenario in each exercise free.
-                </p>
+            <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Skill exercises</h2>
+                    <p class="mt-2 max-w-2xl text-slate-400">
+                        SOAP charting, triage, GCS, burns, stroke scales, vitals, and more. Try the first scenario in each exercise free.
+                    </p>
+                </div>
+                <a href="{{ route('skills.index', $sectionSlug) }}" class="rounded-xl border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-200 hover:bg-white/5">
+                    View all skills →
+                </a>
             </div>
             <div class="relative left-1/2 w-screen -translate-x-1/2">
                 <x-exercise-carousel :exercises="$exercises" />

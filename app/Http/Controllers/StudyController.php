@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\StudySession;
 use App\Services\CategoryProficiencyService;
 use App\Services\StudyService;
-use App\Support\PlatformExercise;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -24,16 +23,14 @@ class StudyController extends Controller
         $user = $request->user();
         $unlocked = $user !== null && $user->hasSectionAccess($level);
 
-        $exercises = PlatformExercise::cardsForLevel($level, $user, $unlocked);
-
         $data = [
-            'exercises' => $exercises,
             'flashcardsUnlocked' => $unlocked,
             'requiresAuth' => $user === null,
             'totalMissed' => $user !== null ? count($this->study->wrongQuestionIds($user, $level)) : null,
             'wrongByCategory' => [],
             'categoryStats' => collect(),
             'activeStudySession' => null,
+            'activeExamSession' => $user?->activeExamSession($level),
         ];
 
         if ($unlocked && $user !== null) {

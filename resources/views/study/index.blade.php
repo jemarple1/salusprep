@@ -1,21 +1,21 @@
 @extends('layouts.app')
 
-@section('title', $sectionLabel.' Study')
+@section('title', $sectionLabel.' Flashcards')
 
 @section('content')
     <div class="mb-8">
         <a href="{{ auth()->check() ? route('platform.dashboard', $sectionSlug) : route('platform.home', $sectionSlug) }}" class="text-sm font-semibold text-medic-light hover:text-medic hover:underline">← Back</a>
-        <h1 class="mt-3 text-3xl font-bold text-white">Study hub</h1>
+        <h1 class="mt-3 text-3xl font-bold text-white">Flashcards</h1>
         <p class="mt-2 max-w-2xl text-slate-400">
-            Flashcard review for missed quiz questions, plus skill exercises for hands-on practice.
+            Review questions you missed on quizzes, organized by category.
         </p>
     </div>
 
-    <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80 p-6">
+    <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-6">
         <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
             <div>
-                <h2 class="text-lg font-bold text-white">Flashcard study</h2>
-                <p class="mt-1 text-sm text-slate-400">Review questions you missed on quizzes.</p>
+                <h2 class="text-lg font-bold text-white">Your deck</h2>
+                <p class="mt-1 text-sm text-slate-400">Missed quiz questions saved for spaced review.</p>
             </div>
             @if ($flashcardsUnlocked && $totalMissed > 0)
                 <span class="rounded-full bg-ems/20 px-3 py-1 text-sm font-bold text-ems-light">{{ $totalMissed }} cards</span>
@@ -64,10 +64,18 @@
                 <div class="rounded-xl border border-white/10 bg-navy/50 px-6 py-10 text-center">
                     <p class="text-xl font-bold text-white">Nothing to review yet</p>
                     <p class="mt-2 text-slate-400">Complete a quiz and miss a few questions — they'll appear here for flashcard review.</p>
-                    <form method="POST" action="{{ route('exam.start', $sectionSlug) }}" class="mt-6">
-                        @csrf
-                        <button type="submit" class="rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">Start a quiz</button>
-                    </form>
+                    @if ($activeExamSession ?? null)
+                        @if ($activeExamSession->requiresPayment())
+                            <a href="{{ route('exam.paywall', [$sectionSlug, $activeExamSession]) }}" class="mt-6 inline-block rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">Continue current quiz</a>
+                        @else
+                            <a href="{{ route('exam.show', [$sectionSlug, $activeExamSession]) }}" class="mt-6 inline-block rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">Continue current quiz</a>
+                        @endif
+                    @else
+                        <form method="POST" action="{{ route('exam.start', $sectionSlug) }}" class="mt-6">
+                            @csrf
+                            <button type="submit" class="rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">Start a quiz</button>
+                        </form>
+                    @endif
                 </div>
             @else
                 <div class="mb-6 rounded-xl border border-white/10 bg-navy/50 p-5">
@@ -116,12 +124,4 @@
             @endif
         @endif
     </div>
-
-    @if ($exercises !== [])
-        <x-exercise-grid
-            :exercises="$exercises"
-            title="Skill exercises"
-            description="Every exercise includes one free scenario. Unlock {{ $sectionLabel }} for the full set, unlimited quizzes, and flashcards."
-        />
-    @endif
 @endsection

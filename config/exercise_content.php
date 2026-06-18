@@ -2,6 +2,11 @@
 
 return [
     'emt_basic' => [
+        'pharma-contraindications' => require __DIR__.'/exercise_content/emt_basic/pharma_contraindications.php',
+        'pharma-assist' => require __DIR__.'/exercise_content/emt_basic/pharma_assist.php',
+        'pharma-matching' => require __DIR__.'/exercise_content/emt_basic/pharma_matching.php',
+        'pharma-outcomes' => require __DIR__.'/exercise_content/emt_basic/pharma_outcomes.php',
+        'pharma-dosage' => require __DIR__.'/exercise_content/emt_basic/pharma_dosage.php',
         'soap-charting' => require __DIR__.'/exercise_content/emt_basic/soap_charting.php',
         'triage-start' => require __DIR__.'/exercise_content/emt_basic/triage_start.php',
         'triage-jumpstart' => require __DIR__.'/exercise_content/emt_basic/triage_jumpstart.php',

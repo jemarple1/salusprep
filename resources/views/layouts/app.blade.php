@@ -37,6 +37,7 @@
                             safety: { DEFAULT: '#f59e0b', dark: '#d97706', light: '#fbbf24' },
                             ems: { DEFAULT: '#006bb6', dark: '#004d84', light: '#3399cc' },
                             medic: { DEFAULT: '#16a34a', dark: '#15803d', light: '#4ade80' },
+                            pharma: { DEFAULT: '#8b5cf6', dark: '#7c3aed', light: '#c4b5fd' },
                             rescue: { DEFAULT: '#dc2626', dark: '#991b1b' },
                             navy: { DEFAULT: '#0f172a', light: '#1e293b' },
                         }
@@ -107,13 +108,12 @@
                 </div>
 
                 <nav class="flex items-center gap-2 text-sm">
+                    @isset($sectionSlug)
+                        <a href="{{ route('skills.index', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-safety-light">Skills</a>
+                        <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-medic-light">Test Center</a>
+                        <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-ems-light">Flashcards</a>
+                    @endisset
                     @auth
-                        @isset($sectionSlug)
-                            <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-medic-light">Dashboard</a>
-                            @if (auth()->user()->hasSectionAccess($sectionLevel ?? 'emt_basic'))
-                                <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-ems-light">Study</a>
-                            @endif
-                        @endisset
                         <x-user-menu />
                     @else
                         <a href="{{ route('login') }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-white">Log in</a>

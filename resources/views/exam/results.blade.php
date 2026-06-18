@@ -53,10 +53,18 @@
     </div>
 
     <div class="mt-8 flex flex-wrap gap-3">
-        <form method="POST" action="{{ route('exam.start', $sectionSlug) }}">
-            @csrf
-            <button type="submit" class="rounded-xl bg-medic px-5 py-3 font-bold text-white hover:bg-medic-dark">Start new quiz</button>
-        </form>
+        @if ($activeExamSession ?? null)
+            @if ($activeExamSession->requiresPayment())
+                <a href="{{ route('exam.paywall', [$sectionSlug, $activeExamSession]) }}" class="rounded-xl bg-safety px-5 py-3 font-bold text-navy hover:bg-safety-light">Continue current quiz</a>
+            @else
+                <a href="{{ route('exam.show', [$sectionSlug, $activeExamSession]) }}" class="rounded-xl bg-medic px-5 py-3 font-bold text-white hover:bg-medic-dark">Continue current quiz</a>
+            @endif
+        @else
+            <form method="POST" action="{{ route('exam.start', $sectionSlug) }}">
+                @csrf
+                <button type="submit" class="rounded-xl bg-medic px-5 py-3 font-bold text-white hover:bg-medic-dark">Start new quiz</button>
+            </form>
+        @endif
         @auth
             @if (auth()->user()->hasSectionAccess($sectionLevel) && $session->answers->where('is_correct', false)->isNotEmpty())
                 <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-xl border border-ems/40 bg-ems/10 px-5 py-3 font-bold text-ems-light hover:bg-ems/20">Review missed with flashcards</a>

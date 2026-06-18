@@ -5,7 +5,7 @@
 @section('content')
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-            <a href="{{ route('study.index', $sectionSlug) }}" class="text-sm font-semibold text-medic-light hover:text-medic hover:underline">← Study hub</a>
+            <a href="{{ route('study.index', $sectionSlug) }}" class="text-sm font-semibold text-medic-light hover:text-medic hover:underline">← Flashcards</a>
             <p class="mt-2 text-sm font-bold uppercase tracking-wider text-medic-light">
                 Card {{ $cardNumber }} · {{ $studySession->remainingCount() }} remaining
                 @if ($studySession->filter_category)

@@ -27,7 +27,8 @@ class ExamController extends Controller
             $session = $this->examService->startSession($request, $request->attributes->get('certification_level'));
         } catch (\RuntimeException $exception) {
             return redirect()
-                ->route('platform.home', $slug)
+                ->back()
+                ->withInput()
                 ->withErrors(['exam' => $exception->getMessage()]);
         }
 
@@ -170,7 +171,20 @@ class ExamController extends Controller
         return view('exam.results', [
             'session' => $session,
             'platformCorrectPercents' => $platformCorrectPercents,
+            'activeExamSession' => $this->activeExamSessionFor($request),
         ]);
+    }
+
+    private function activeExamSessionFor(Request $request): ?ExamSession
+    {
+        $level = $request->attributes->get('certification_level');
+        $user = $request->user();
+
+        if ($user !== null) {
+            return $user->activeExamSession($level);
+        }
+
+        return $this->guests->activeExamSession($this->guests->token($request), $level);
     }
 
     public function finish(Request $request, string $section, ExamSession $session): RedirectResponse

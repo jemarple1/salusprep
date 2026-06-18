@@ -6,7 +6,7 @@
 ])
 
 <div class="mb-6">
-    <a href="{{ route('study.index', $sectionSlug) }}" class="text-sm font-semibold text-medic-light hover:text-medic hover:underline">← Study hub</a>
+    <a href="{{ route('skills.index', $sectionSlug) }}" class="text-sm font-semibold text-medic-light hover:text-medic hover:underline">← Skills</a>
     <p class="mt-2 text-sm font-bold uppercase tracking-wider text-ems-light">{{ $exercise['category'] }}</p>
     <h1 class="mt-1 text-3xl font-bold text-white">{{ $exercise['title'] }}</h1>
     <p class="mt-2 max-w-3xl text-slate-400">{{ $scenario['title'] ?? $exercise['description'] }}</p>

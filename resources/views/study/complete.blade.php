@@ -15,7 +15,7 @@
         </p>
 
         <div class="mt-8 flex flex-wrap justify-center gap-3">
-            <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-xl border border-white/10 px-6 py-3 font-bold text-slate-200 hover:bg-white/5">Study hub</a>
+            <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-xl border border-white/10 px-6 py-3 font-bold text-slate-200 hover:bg-white/5">Flashcards</a>
             <form method="POST" action="{{ route('study.start', $sectionSlug) }}">
                 @csrf
                 @if ($studySession->filter_category)
@@ -23,7 +23,7 @@
                 @endif
                 <button type="submit" class="rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">Study again</button>
             </form>
-            <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-xl border border-medic/30 px-6 py-3 font-bold text-medic-light hover:bg-medic/10">Dashboard</a>
+            <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-xl border border-medic/30 px-6 py-3 font-bold text-medic-light hover:bg-medic/10">Test Center</a>
         </div>
     </div>
 @endsection
