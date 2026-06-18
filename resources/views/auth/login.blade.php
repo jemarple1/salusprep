@@ -18,7 +18,10 @@
                 </div>
 
                 <div>
-                    <label for="password" class="mb-1 block text-sm font-medium text-slate-300">Password</label>
+                    <div class="mb-1 flex items-center justify-between gap-4">
+                        <label for="password" class="block text-sm font-medium text-slate-300">Password</label>
+                        <a href="{{ route('password.request') }}" class="text-sm font-semibold text-safety-light hover:text-safety">Forgot password?</a>
+                    </div>
                     <input id="password" name="password" type="password" required
                         class="w-full rounded-xl border border-white/10 bg-navy px-4 py-3 text-white outline-none focus:ring-2 focus:ring-safety">
                 </div>

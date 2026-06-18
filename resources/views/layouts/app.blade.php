@@ -103,10 +103,7 @@
                                 <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-ems-light">Study</a>
                             @endif
                         @endisset
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-white">Log out</button>
-                        </form>
+                        <x-user-menu />
                     @else
                         <a href="{{ route('login') }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-white">Log in</a>
                         <a href="{{ route('register') }}" class="rounded-lg bg-medic px-4 py-2 font-bold text-white hover:bg-medic-dark">Sign up</a>
@@ -139,6 +136,7 @@
             <div class="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-4 py-6 text-sm text-slate-500 sm:flex-row sm:px-6">
                 <p>&copy; {{ date('Y') }} SalusPrep. All rights reserved.</p>
                 <nav class="flex items-center gap-4">
+                    <a href="{{ route('legal.about') }}" class="hover:text-medic-light">About &amp; Contact</a>
                     <a href="{{ route('legal.terms') }}" class="hover:text-medic-light">Terms of Service</a>
                     <a href="{{ route('legal.privacy') }}" class="hover:text-medic-light">Privacy Policy</a>
                     <x-theme-toggle />
@@ -146,6 +144,8 @@
             </div>
         </footer>
     </div>
+
+    <x-cookie-consent />
 
     @isset($platformSections)
     <script>
@@ -179,6 +179,38 @@
         })();
     </script>
     @endisset
+
+    @auth
+    <script>
+        (function () {
+            var menu = document.getElementById('user-menu');
+            var btn = document.getElementById('user-menu-btn');
+            if (!menu || !btn) return;
+
+            function setExpanded(isOpen) {
+                btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            }
+
+            menu.addEventListener('mouseenter', function () {
+                setExpanded(true);
+            });
+
+            menu.addEventListener('mouseleave', function () {
+                setExpanded(false);
+            });
+
+            menu.addEventListener('focusin', function () {
+                setExpanded(true);
+            });
+
+            menu.addEventListener('focusout', function () {
+                if (!menu.contains(document.activeElement)) {
+                    setExpanded(false);
+                }
+            });
+        })();
+    </script>
+    @endauth
 
     @unless (file_exists(public_path('build/manifest.json')))
     <script>
@@ -219,6 +251,42 @@
 
             document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
                 button.addEventListener('click', toggleTheme);
+            });
+        })();
+    </script>
+    <script>
+        (function () {
+            var consentKey = 'salusprep-cookie-consent';
+
+            function hideBanner() {
+                var banner = document.getElementById('cookie-consent');
+                if (banner) {
+                    banner.classList.add('hidden');
+                }
+            }
+
+            function acceptCookies() {
+                try {
+                    localStorage.setItem(consentKey, 'accepted');
+                } catch (e) {}
+
+                hideBanner();
+            }
+
+            try {
+                if (localStorage.getItem(consentKey) === 'accepted') {
+                    hideBanner();
+                    return;
+                }
+            } catch (e) {}
+
+            var banner = document.getElementById('cookie-consent');
+            if (banner) {
+                banner.classList.remove('hidden');
+            }
+
+            document.querySelectorAll('[data-cookie-accept]').forEach(function (button) {
+                button.addEventListener('click', acceptCookies);
             });
         })();
     </script>

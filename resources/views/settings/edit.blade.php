@@ -1,0 +1,100 @@
+@extends('layouts.app')
+
+@section('title', 'Account settings')
+
+@section('content')
+    <div class="mx-auto max-w-2xl space-y-8">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Account settings</h1>
+            <p class="mt-2 text-sm text-slate-400">Update your profile, change your password, or delete your account.</p>
+        </div>
+
+        <section class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 sm:p-8">
+            <h2 class="text-lg font-bold text-white">Profile</h2>
+            <p class="mt-1 text-sm text-slate-400">Update your name and email address.</p>
+
+            <form method="POST" action="{{ route('settings.profile.update') }}" class="mt-6 space-y-4">
+                @csrf
+                @method('PUT')
+
+                <div>
+                    <label for="name" class="mb-1 block text-sm font-medium text-slate-300">Name</label>
+                    <input id="name" name="name" type="text" value="{{ old('name', $user->name) }}" required
+                        class="w-full rounded-xl border border-white/10 bg-navy px-4 py-3 text-white outline-none focus:ring-2 focus:ring-medic">
+                </div>
+
+                <div>
+                    <label for="email" class="mb-1 block text-sm font-medium text-slate-300">Email</label>
+                    <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" required
+                        class="w-full rounded-xl border border-white/10 bg-navy px-4 py-3 text-white outline-none focus:ring-2 focus:ring-medic">
+                </div>
+
+                <div>
+                    <label for="profile_current_password" class="mb-1 block text-sm font-medium text-slate-300">Current password</label>
+                    <input id="profile_current_password" name="current_password" type="password" required
+                        class="w-full rounded-xl border border-white/10 bg-navy px-4 py-3 text-white outline-none focus:ring-2 focus:ring-medic">
+                    <p class="mt-1 text-xs text-slate-500">Required to save profile changes.</p>
+                </div>
+
+                <button type="submit" class="rounded-xl bg-medic px-5 py-2.5 font-bold text-white hover:bg-medic-dark">
+                    Save profile
+                </button>
+            </form>
+        </section>
+
+        <section class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 sm:p-8">
+            <h2 class="text-lg font-bold text-white">Password</h2>
+            <p class="mt-1 text-sm text-slate-400">Choose a new password for your account.</p>
+
+            <form method="POST" action="{{ route('settings.password.update') }}" class="mt-6 space-y-4">
+                @csrf
+                @method('PUT')
+
+                <div>
+                    <label for="password_current_password" class="mb-1 block text-sm font-medium text-slate-300">Current password</label>
+                    <input id="password_current_password" name="current_password" type="password" required
+                        class="w-full rounded-xl border border-white/10 bg-navy px-4 py-3 text-white outline-none focus:ring-2 focus:ring-medic">
+                </div>
+
+                <div>
+                    <label for="password" class="mb-1 block text-sm font-medium text-slate-300">New password</label>
+                    <input id="password" name="password" type="password" required
+                        class="w-full rounded-xl border border-white/10 bg-navy px-4 py-3 text-white outline-none focus:ring-2 focus:ring-medic">
+                </div>
+
+                <div>
+                    <label for="password_confirmation" class="mb-1 block text-sm font-medium text-slate-300">Confirm new password</label>
+                    <input id="password_confirmation" name="password_confirmation" type="password" required
+                        class="w-full rounded-xl border border-white/10 bg-navy px-4 py-3 text-white outline-none focus:ring-2 focus:ring-medic">
+                </div>
+
+                <button type="submit" class="rounded-xl bg-medic px-5 py-2.5 font-bold text-white hover:bg-medic-dark">
+                    Update password
+                </button>
+            </form>
+        </section>
+
+        <section class="rounded-2xl border border-rescue/30 bg-rescue/5 p-6 sm:p-8">
+            <h2 class="text-lg font-bold text-white">Delete account</h2>
+            <p class="mt-1 text-sm text-slate-400">
+                Permanently delete your account and all associated quiz history, study progress, and section access. This cannot be undone.
+            </p>
+
+            <form method="POST" action="{{ route('settings.account.destroy') }}" class="mt-6 space-y-4"
+                onsubmit="return confirm('Delete your SalusPrep account permanently? This cannot be undone.');">
+                @csrf
+                @method('DELETE')
+
+                <div>
+                    <label for="delete_current_password" class="mb-1 block text-sm font-medium text-slate-300">Current password</label>
+                    <input id="delete_current_password" name="current_password" type="password" required
+                        class="w-full rounded-xl border border-white/10 bg-navy px-4 py-3 text-white outline-none focus:ring-2 focus:ring-rescue">
+                </div>
+
+                <button type="submit" class="rounded-xl border border-rescue/40 bg-rescue/20 px-5 py-2.5 font-bold text-red-200 hover:bg-rescue/30">
+                    Delete my account
+                </button>
+            </form>
+        </section>
+    </div>
+@endsection

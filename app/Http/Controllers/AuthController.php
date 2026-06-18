@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\WelcomeMail;
 use App\Models\User;
 use App\Services\GuestService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
@@ -38,6 +40,8 @@ class AuthController extends Controller
 
         $this->guests->mergeIntoUser($request, $user);
 
+        Mail::to($user->email)->send(new WelcomeMail($user));
+
         return redirect()->intended(route('platform.home', 'emt-basic'));
     }
 
@@ -55,6 +59,8 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+
+            $request->user()->update(['last_login_at' => now()]);
 
             $this->guests->mergeIntoUser($request, Auth::user());
 

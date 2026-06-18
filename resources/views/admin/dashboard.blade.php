@@ -1,0 +1,142 @@
+@extends('admin.layout')
+
+@section('title', 'Dashboard')
+
+@section('content')
+    @php
+        $formatMoney = fn (int $cents) => '$'.number_format($cents / 100, 2);
+    @endphp
+
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-white">Growth dashboard</h1>
+        <p class="mt-2 text-sm text-slate-400">Signups, revenue, activity, and user list — last updated {{ now()->format('M j, Y g:i A T') }}.</p>
+    </div>
+
+    <div class="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-xl border border-white/10 bg-navy-light/80 p-5">
+            <p class="text-3xl font-bold text-white">{{ number_format($summary['total_users']) }}</p>
+            <p class="mt-1 text-sm text-slate-400">Total users</p>
+        </div>
+        <div class="rounded-xl border border-white/10 bg-navy-light/80 p-5">
+            <p class="text-3xl font-bold text-medic-light">{{ number_format($summary['signups_30d']) }}</p>
+            <p class="mt-1 text-sm text-slate-400">Signups (30d) · {{ number_format($summary['signups_today']) }} today</p>
+        </div>
+        <div class="rounded-xl border border-white/10 bg-navy-light/80 p-5">
+            <p class="text-3xl font-bold text-ems-light">{{ number_format($summary['total_purchases']) }}</p>
+            <p class="mt-1 text-sm text-slate-400">Purchases · {{ number_format($summary['purchases_7d']) }} this week</p>
+        </div>
+        <div class="rounded-xl border border-white/10 bg-navy-light/80 p-5">
+            <p class="text-3xl font-bold text-safety-light">{{ $formatMoney($summary['total_revenue_cents']) }}</p>
+            <p class="mt-1 text-sm text-slate-400">Total revenue · {{ $formatMoney($summary['revenue_30d_cents']) }} (30d)</p>
+        </div>
+    </div>
+
+    <div class="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-xl border border-white/10 bg-navy-light/80 p-5">
+            <p class="text-2xl font-bold text-white">{{ number_format($summary['signups_7d']) }}</p>
+            <p class="mt-1 text-sm text-slate-400">Signups (7d)</p>
+        </div>
+        <div class="rounded-xl border border-white/10 bg-navy-light/80 p-5">
+            <p class="text-2xl font-bold text-white">{{ number_format($summary['active_users_7d']) }}</p>
+            <p class="mt-1 text-sm text-slate-400">Active logins (7d)</p>
+        </div>
+        <div class="rounded-xl border border-white/10 bg-navy-light/80 p-5">
+            <p class="text-2xl font-bold text-white">{{ number_format($summary['unlocked_sections']) }}</p>
+            <p class="mt-1 text-sm text-slate-400">Section unlocks</p>
+        </div>
+        <div class="rounded-xl border border-white/10 bg-navy-light/80 p-5">
+            <p class="text-2xl font-bold text-white">{{ number_format($summary['completed_quizzes']) }}</p>
+            <p class="mt-1 text-sm text-slate-400">Completed quizzes</p>
+        </div>
+    </div>
+
+    <div class="mb-8 grid gap-6 lg:grid-cols-2">
+        <x-admin.line-chart title="Daily signups (30 days)" :points="$signupChart" value-label="signups" />
+        <x-admin.line-chart title="Daily purchases (30 days)" :points="$purchaseChart" value-label="purchases" stroke="#3399cc" fill="rgba(51, 153, 204, 0.12)" />
+    </div>
+
+    <div class="mb-8 grid gap-6 lg:grid-cols-3">
+        <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-5">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Recent signups</h2>
+            <ul class="mt-4 space-y-3">
+                @forelse ($recentSignups as $user)
+                    <li class="border-b border-white/5 pb-3 last:border-0 last:pb-0">
+                        <p class="font-semibold text-white">{{ $user->name }}</p>
+                        <p class="text-xs text-slate-400">{{ $user->email }}</p>
+                        <p class="mt-1 text-xs text-slate-500">{{ $user->created_at->diffForHumans() }}</p>
+                    </li>
+                @empty
+                    <li class="text-sm text-slate-500">No users yet.</li>
+                @endforelse
+            </ul>
+        </div>
+
+        <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-5">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Recently logged in</h2>
+            <ul class="mt-4 space-y-3">
+                @forelse ($recentLogins as $user)
+                    <li class="border-b border-white/5 pb-3 last:border-0 last:pb-0">
+                        <p class="font-semibold text-white">{{ $user->name }}</p>
+                        <p class="text-xs text-slate-400">{{ $user->email }}</p>
+                        <p class="mt-1 text-xs text-medic-light">Last login {{ $user->last_login_at?->diffForHumans() }}</p>
+                    </li>
+                @empty
+                    <li class="text-sm text-slate-500">No login activity recorded yet.</li>
+                @endforelse
+            </ul>
+        </div>
+
+        <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-5">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Recent purchases</h2>
+            <ul class="mt-4 space-y-3">
+                @forelse ($recentPurchases as $payment)
+                    <li class="border-b border-white/5 pb-3 last:border-0 last:pb-0">
+                        <p class="font-semibold text-white">{{ $payment->user?->name ?? 'Unknown user' }}</p>
+                        <p class="text-xs text-slate-400">{{ $payment->sectionLabel() }} · {{ $payment->formattedAmount() }}</p>
+                        <p class="mt-1 text-xs text-slate-500">{{ $payment->paid_at?->diffForHumans() }}</p>
+                    </li>
+                @empty
+                    <li class="text-sm text-slate-500">No purchases yet.</li>
+                @endforelse
+            </ul>
+        </div>
+    </div>
+
+    <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-5 sm:p-6">
+        <div class="mb-4 flex items-center justify-between gap-4">
+            <h2 class="text-lg font-bold text-white">All users</h2>
+            <p class="text-sm text-slate-400">{{ number_format($users->total()) }} total</p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-sm">
+                <thead class="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
+                    <tr>
+                        <th class="px-3 py-3 font-semibold">Name</th>
+                        <th class="px-3 py-3 font-semibold">Email</th>
+                        <th class="px-3 py-3 font-semibold">Signed up</th>
+                        <th class="px-3 py-3 font-semibold">Last login</th>
+                        <th class="px-3 py-3 font-semibold">Quizzes</th>
+                        <th class="px-3 py-3 font-semibold">Purchases</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    @foreach ($users as $user)
+                        <tr class="text-slate-300">
+                            <td class="px-3 py-3 font-medium text-white">{{ $user->name }}</td>
+                            <td class="px-3 py-3">{{ $user->email }}</td>
+                            <td class="px-3 py-3 whitespace-nowrap">{{ $user->created_at->format('M j, Y') }}</td>
+                            <td class="px-3 py-3 whitespace-nowrap">{{ $user->last_login_at?->format('M j, Y g:i A') ?? '—' }}</td>
+                            <td class="px-3 py-3">{{ number_format($user->exam_sessions_count) }}</td>
+                            <td class="px-3 py-3">{{ number_format($user->purchases_count) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-6">
+            {{ $users->links() }}
+        </div>
+    </div>
+@endsection
