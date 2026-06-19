@@ -50,6 +50,9 @@ class QuestionBankGenerator
         /** @var list<array<string, mixed>> $rows */
         $rows = require $path;
 
-        return $rows;
+        return array_map(
+            fn (array $row) => \App\Support\QuestionOptionRandomizer::redistribute($row),
+            $rows,
+        );
     }
 }

@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') — SalusPrep{{ isset($sectionLabel) ? ' '.$sectionLabel : '' }}</title>
 
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.png') }}">
+
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18250454039"></script>
     <script>
@@ -147,14 +152,19 @@
         </main>
 
         <footer class="theme-footer relative z-10 border-t border-white/10 bg-[#1e293b]">
-            <div class="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-4 py-6 text-sm text-slate-500 sm:flex-row sm:px-6">
-                <p>&copy; {{ date('Y') }} SalusPrep. All rights reserved.</p>
-                <nav class="flex items-center gap-4">
-                    <a href="{{ route('legal.about') }}" class="hover:text-medic-light">About &amp; Contact</a>
-                    <a href="{{ route('legal.terms') }}" class="hover:text-medic-light">Terms of Service</a>
-                    <a href="{{ route('legal.privacy') }}" class="hover:text-medic-light">Privacy Policy</a>
-                    <x-theme-toggle />
-                </nav>
+            <div class="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+                <div class="flex flex-col items-center justify-between gap-3 text-sm text-slate-500 sm:flex-row">
+                    <p>&copy; {{ date('Y') }} SalusPrep. All rights reserved.</p>
+                    <nav class="flex items-center gap-4">
+                        <a href="{{ route('legal.about') }}" class="hover:text-medic-light">About &amp; Contact</a>
+                        <a href="{{ route('legal.terms') }}" class="hover:text-medic-light">Terms of Service</a>
+                        <a href="{{ route('legal.privacy') }}" class="hover:text-medic-light">Privacy Policy</a>
+                        <x-theme-toggle />
+                    </nav>
+                </div>
+                <div class="mt-3 text-center sm:text-left">
+                    <x-footer-affiliation-notice />
+                </div>
             </div>
         </footer>
     </div>

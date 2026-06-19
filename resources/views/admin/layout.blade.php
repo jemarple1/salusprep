@@ -4,6 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') — SalusPrep Admin</title>
+
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.png') }}">
+
     @if (file_exists(public_path('build/manifest.json')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @else
@@ -64,6 +70,16 @@
 
         @yield('content')
     </main>
+
+    <footer class="border-t border-white/10 bg-[#1e293b]">
+        <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+            <p class="text-sm text-slate-500">&copy; {{ date('Y') }} SalusPrep. All rights reserved.</p>
+            <div class="mt-3">
+                <x-footer-affiliation-notice />
+            </div>
+        </div>
+    </footer>
+
     @stack('scripts')
 </body>
 </html>
