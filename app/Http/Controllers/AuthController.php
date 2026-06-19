@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\WelcomeMail;
 use App\Models\User;
 use App\Services\GuestService;
+use App\Services\LogSnagService;
 use App\Services\SignupGeoService;
 use App\Support\CertificationLevel;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +23,7 @@ class AuthController extends Controller
     public function __construct(
         private GuestService $guests,
         private SignupGeoService $signupGeo,
+        private LogSnagService $logSnag,
     ) {}
 
     public function showRegister(): View
@@ -51,6 +53,8 @@ class AuthController extends Controller
         Auth::login($user);
 
         Mail::to($user->email)->send(new WelcomeMail($user));
+
+        $this->logSnag->notifySignup($user);
 
         return $this->redirectAfterAuth($request, $user);
     }

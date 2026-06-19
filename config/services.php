@@ -48,4 +48,12 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    'logsnag' => [
+        'token' => env('LOGSNAG_TOKEN'),
+        'project' => env('LOGSNAG_PROJECT', 'words-of-the-lotus-born'),
+        'channel' => env('LOGSNAG_CHANNEL', 'salusprep'),
+        'signup_event' => env('LOGSNAG_SIGNUP_EVENT', 'new sign up'),
+        'icon' => env('LOGSNAG_ICON', '🚑'),
+    ],
+
 ];
