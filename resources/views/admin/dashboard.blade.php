@@ -207,6 +207,8 @@
                         <th class="px-3 py-3 font-semibold">Last login</th>
                         <th class="px-3 py-3 font-semibold">Quizzes</th>
                         <th class="px-3 py-3 font-semibold">Purchases</th>
+                        <th class="px-3 py-3 font-semibold">Unlocks</th>
+                        <th class="px-3 py-3 font-semibold text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-white/5">
@@ -218,6 +220,21 @@
                             <td class="px-3 py-3 whitespace-nowrap">{{ $user->last_login_at?->format('M j, Y g:i A') ?? '—' }}</td>
                             <td class="px-3 py-3">{{ number_format($user->exam_sessions_count) }}</td>
                             <td class="px-3 py-3">{{ number_format($user->purchases_count) }}</td>
+                            <td class="px-3 py-3">{{ number_format($user->unlocked_sections_count) }}</td>
+                            <td class="px-3 py-3 text-right">
+                                <form
+                                    method="POST"
+                                    action="{{ route('admin.users.destroy', $user) }}"
+                                    class="inline"
+                                    onsubmit="return confirm('Delete {{ $user->email }}? This permanently removes their account, purchases, section unlocks, quiz history, and progress.')"
+                                >
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="rounded-lg border border-rescue/40 px-3 py-1.5 text-xs font-semibold text-red-200 hover:border-rescue hover:bg-rescue/10">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>

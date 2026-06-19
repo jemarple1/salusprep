@@ -49,6 +49,14 @@ class AdaptiveExamService
             $focusCategory = null;
         }
 
+        if (Question::query()->where('certification_level', $certificationLevel)->doesntExist()) {
+            $message = app()->environment('local')
+                ? 'No questions are loaded for this platform. Run php artisan db:seed in your local project.'
+                : 'No questions are available for this platform yet. Please try again later.';
+
+            throw new RuntimeException($message);
+        }
+
         $user = $request->user();
 
         if ($user !== null) {

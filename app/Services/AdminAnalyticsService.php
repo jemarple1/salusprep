@@ -118,6 +118,7 @@ class AdminAnalyticsService
     {
         return User::query()
             ->withCount(['payments as purchases_count' => fn ($query) => $query->where('status', Payment::STATUS_COMPLETED)])
+            ->withCount(['sectionAccesses as unlocked_sections_count' => fn ($query) => $query->whereNotNull('unlocked_at')])
             ->withCount('examSessions')
             ->latest()
             ->paginate($perPage);
