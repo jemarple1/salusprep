@@ -11,6 +11,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\PlatformPaywallController;
 use App\Http\Controllers\PaywallFocusController;
+use App\Http\Controllers\PlatformWelcomeController;
 use App\Http\Controllers\StudyController;
 use App\Http\Middleware\ResolveSection;
 use Illuminate\Support\Facades\Route;
@@ -57,6 +58,8 @@ Route::prefix('{section}')
         Route::middleware('auth')->group(function () {
             Route::post('/unlock', [PaymentController::class, 'checkoutSection'])->name('platform.unlock');
             Route::get('/checkout', [PaymentController::class, 'startSectionCheckout'])->name('platform.checkout');
+            Route::get('/welcome', [PlatformWelcomeController::class, 'show'])->name('platform.welcome');
+            Route::post('/welcome/exam-date', [PlatformWelcomeController::class, 'updateExamDate'])->name('platform.welcome.exam-date');
             Route::get('/exam/{session}/payment/success', [PaymentController::class, 'success'])->name('payment.success');
             Route::post('/exam/{session}/pay', [PaymentController::class, 'checkout'])->name('exam.pay');
         });

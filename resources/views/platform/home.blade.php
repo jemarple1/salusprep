@@ -3,12 +3,6 @@
 @section('title', $sectionLabel)
 
 @section('content')
-    @if (request('checkout') === 'success')
-        <div class="mb-6 rounded-xl border border-medic/40 bg-medic/10 px-4 py-3 text-sm font-medium text-medic-light">
-            Payment successful! If access isn't active yet, wait a moment and refresh.
-        </div>
-    @endif
-
     <section class="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
         <div class="space-y-6">
             <p class="inline-flex rounded-full border border-medic/40 bg-medic/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-medic-light">

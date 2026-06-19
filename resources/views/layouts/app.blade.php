@@ -109,6 +109,7 @@
 
                 <nav class="hidden items-center gap-2 text-sm md:flex">
                     @isset($sectionSlug)
+                        <x-exam-countdown />
                         <a href="{{ route('skills.index', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-safety-light">Skills</a>
                         <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-medic-light">Test Center</a>
                         <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-ems-light">Flashcards</a>

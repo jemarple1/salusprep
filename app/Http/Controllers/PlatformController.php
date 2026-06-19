@@ -7,6 +7,7 @@ use App\Services\GuestService;
 use App\Services\PreviewAccessService;
 use App\Services\StripeCheckoutService;
 use App\Support\PlatformExercise;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -19,7 +20,7 @@ class PlatformController extends Controller
         private FocusCategoryService $focusCategory,
     ) {}
 
-    public function __invoke(Request $request): View
+    public function __invoke(Request $request): View|RedirectResponse
     {
         $level = $request->attributes->get('certification_level');
         $user = $request->user();
@@ -28,6 +29,10 @@ class PlatformController extends Controller
             $sessionId = $request->query('session_id');
             if (is_string($sessionId) && $sessionId !== '') {
                 $this->stripe->fulfillFromCheckoutSessionId($sessionId);
+            }
+
+            if ($user->fresh()->hasSectionAccess($level)) {
+                return redirect()->route('platform.welcome', $request->attributes->get('section_slug'));
             }
         }
 

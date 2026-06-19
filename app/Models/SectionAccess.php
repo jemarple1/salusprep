@@ -13,12 +13,14 @@ class SectionAccess extends Model
         'preview_actions_used',
         'unlocked_at',
         'pinned_focus_category',
+        'exam_date',
     ];
 
     protected function casts(): array
     {
         return [
             'unlocked_at' => 'datetime',
+            'exam_date' => 'date',
         ];
     }
 

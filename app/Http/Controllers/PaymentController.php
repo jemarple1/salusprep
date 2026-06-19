@@ -52,7 +52,7 @@ class PaymentController extends Controller
             user: $user,
             productName: CertificationLevel::label($level).' — Full Access',
             productDescription: CertificationLevel::unlockProductDescription($level),
-            successUrl: route('platform.home', $slug).'?checkout=success&session_id={CHECKOUT_SESSION_ID}',
+            successUrl: route('platform.welcome', $slug).'?session_id={CHECKOUT_SESSION_ID}',
             cancelUrl: route('platform.paywall', $slug).'?checkout=cancelled',
             metadata: [
                 'user_id' => (string) $user->id,
@@ -152,7 +152,10 @@ class PaymentController extends Controller
         $this->examService->unlockSection($user, $level);
 
         return redirect()
-            ->route('platform.home', $slug)
-            ->with('success', 'Full Access unlocked (mock mode — add STRIPE_SECRET to use Stripe).');
+            ->route('platform.welcome', $slug)
+            ->with([
+                'success' => 'Full Access unlocked (mock mode — add STRIPE_SECRET to use Stripe).',
+                'track_purchase_conversion' => true,
+            ]);
     }
 }

@@ -21,6 +21,11 @@
         <div class="overflow-hidden rounded-xl border border-slate-600 bg-[#1e293b] shadow-2xl">
             @isset($sectionSlug)
                 <p class="border-b border-slate-600 bg-[#0f172a] px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-400">Study tools</p>
+                @if ($examCountdown ?? null)
+                    <div class="border-b border-slate-600 px-4 py-3">
+                        <x-exam-countdown :compact="true" />
+                    </div>
+                @endif
                 <a href="{{ route('skills.index', $sectionSlug) }}" role="menuitem" class="block px-4 py-3 text-sm font-medium text-slate-200 hover:bg-slate-700">Skills</a>
                 <a href="{{ route('platform.dashboard', $sectionSlug) }}" role="menuitem" class="block px-4 py-3 text-sm font-medium text-slate-200 hover:bg-slate-700">Test Center</a>
                 <a href="{{ route('study.index', $sectionSlug) }}" role="menuitem" class="block px-4 py-3 text-sm font-medium text-slate-200 hover:bg-slate-700">Flashcards</a>
