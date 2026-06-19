@@ -22,6 +22,15 @@
 
     <script>
         (function () {
+            var fullres = document.createElement('script');
+            fullres.async = true;
+            fullres.src = 'https://t.fullres.net/salusprep.js?' + (new Date() - new Date() % 43200000);
+            document.head.appendChild(fullres);
+        })();
+    </script>
+
+    <script>
+        (function () {
             try {
                 var theme = localStorage.getItem('salusprep-theme');
                 document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
