@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -77,6 +78,32 @@ class SignupGeoService
         ];
     }
 
+    /** @return array{lat: float, lon: float, country: ?string}|null */
+    public function mapPointForUser(User $user): ?array
+    {
+        if ($user->signup_latitude !== null && $user->signup_longitude !== null) {
+            return [
+                'lat' => (float) $user->signup_latitude,
+                'lon' => (float) $user->signup_longitude,
+                'country' => $user->signup_country_name,
+            ];
+        }
+
+        $countryCode = strtoupper((string) ($user->signup_country_code ?? ''));
+
+        if ($countryCode === '') {
+            return null;
+        }
+
+        [$lat, $lon] = $this->countryCentroid($countryCode);
+
+        return [
+            'lat' => $lat,
+            'lon' => $lon,
+            'country' => $user->signup_country_name ?: $this->countryName($countryCode),
+        ];
+    }
+
     private function isPrivateIp(string $ip): bool
     {
         return ! filter_var(
@@ -87,7 +114,7 @@ class SignupGeoService
     }
 
     /** @return array{0: float, 1: float} */
-    private function countryCentroid(string $countryCode): array
+    public function countryCentroid(string $countryCode): array
     {
         $centroids = [
             'US' => [39.8283, -98.5795],

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Services\AdminAnalyticsService;
 use App\Services\PreviewAccessService;
+use App\Support\CertificationLevel;
 use Illuminate\View\View;
 
 class AdminDashboardController extends Controller
@@ -28,6 +29,7 @@ class AdminDashboardController extends Controller
             'users' => $this->analytics->usersPaginated(),
             'marketingSubscribers' => $this->analytics->marketingEmailSubscribers(),
             'marketingEmailsExport' => $this->analytics->marketingEmailsExport(),
+            'certificationLevels' => CertificationLevel::labels(),
         ]);
     }
 }

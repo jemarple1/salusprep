@@ -5,26 +5,28 @@
 ])
 
 @php
-    $width = 720;
-    $height = 360;
-    $pad = 16;
-
-    $project = function (float $lat, float $lon) use ($width, $height, $pad): array {
-        $x = $pad + (($lon + 180) / 360) * ($width - $pad * 2);
-        $y = $pad + ((90 - $lat) / 180) * ($height - $pad * 2);
-
-        return ['x' => round($x, 1), 'y' => round($y, 1)];
-    };
-
-    $mapped = [];
-    foreach ($points as $point) {
-        $jitterLat = (crc32($point['id'].'lat') % 200 - 100) / 2500;
-        $jitterLon = (crc32($point['id'].'lon') % 200 - 100) / 2500;
-        $mapped[] = array_merge($point, $project($point['lat'] + $jitterLat, $point['lon'] + $jitterLon));
-    }
-
-    $locatedCount = count($mapped);
+    $mapId = 'signup-map-'.substr(md5($title), 0, 8);
+    $locatedCount = count($points);
 @endphp
+
+@push('styles')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <style>
+        #{{ $mapId }} { background: #0b1220; }
+        #{{ $mapId }} .leaflet-tile-pane { filter: brightness(0.75) contrast(1.1) saturate(0.85); }
+        #{{ $mapId }} .leaflet-control-zoom a {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        #{{ $mapId }} .leaflet-control-attribution {
+            background: rgba(15, 23, 42, 0.85);
+            color: #94a3b8;
+            font-size: 10px;
+        }
+        #{{ $mapId }} .leaflet-control-attribution a { color: #94a3b8; }
+    </style>
+@endpush
 
 <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-5">
     <div class="flex flex-wrap items-end justify-between gap-3">
@@ -39,39 +41,49 @@
             Location data will appear for new signups once country detection is available.
         </div>
     @else
-        <div class="mt-4 overflow-x-auto">
-            <svg viewBox="0 0 {{ $width }} {{ $height }}" class="w-full min-w-[320px] rounded-xl bg-[#0b1220]" role="img" aria-label="{{ $title }}">
-                <title>{{ $title }}</title>
-
-                <rect x="{{ $pad }}" y="{{ $pad }}" width="{{ $width - $pad * 2 }}" height="{{ $height - $pad * 2 }}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" rx="4" />
-
-                @foreach ([-60, -30, 0, 30, 60] as $lat)
-                    @php $coords = $project($lat, -180); $coords2 = $project($lat, 180); @endphp
-                    <line x1="{{ $coords['x'] }}" y1="{{ $coords['y'] }}" x2="{{ $coords2['x'] }}" y2="{{ $coords2['y'] }}" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
-                @endforeach
-
-                @foreach ([-120, -60, 0, 60, 120] as $lon)
-                    @php $coords = $project(90, $lon); $coords2 = $project(-90, $lon); @endphp
-                    <line x1="{{ $coords['x'] }}" y1="{{ $coords['y'] }}" x2="{{ $coords2['x'] }}" y2="{{ $coords2['y'] }}" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
-                @endforeach
-
-                @php
-                    $equator = $project(0, -180);
-                    $equatorEnd = $project(0, 180);
-                    $prime = $project(90, 0);
-                    $primeEnd = $project(-90, 0);
-                @endphp
-                <line x1="{{ $equator['x'] }}" y1="{{ $equator['y'] }}" x2="{{ $equatorEnd['x'] }}" y2="{{ $equatorEnd['y'] }}" stroke="rgba(51,153,204,0.25)" stroke-width="1.5" stroke-dasharray="4 4" />
-                <line x1="{{ $prime['x'] }}" y1="{{ $prime['y'] }}" x2="{{ $primeEnd['x'] }}" y2="{{ $primeEnd['y'] }}" stroke="rgba(51,153,204,0.25)" stroke-width="1.5" stroke-dasharray="4 4" />
-
-                @foreach ($mapped as $dot)
-                    <g>
-                        <circle cx="{{ $dot['x'] }}" cy="{{ $dot['y'] }}" r="5" fill="#4ade80" fill-opacity="0.9" stroke="#0f172a" stroke-width="1.5" />
-                        <title>{{ $dot['label'] }} · {{ $dot['country'] ?? 'Unknown' }}</title>
-                    </g>
-                @endforeach
-            </svg>
-        </div>
-        <p class="mt-2 text-xs text-slate-500">Each dot is one signup. Hover for name and country. Slight jitter prevents overlapping dots in the same region.</p>
+        <div id="{{ $mapId }}" class="mt-4 h-80 w-full min-w-[320px] overflow-hidden rounded-xl border border-white/10" role="img" aria-label="{{ $title }}"></div>
+        <p class="mt-2 text-xs text-slate-500">Each marker is one signup. Click for name and country. Country-only signups use approximate country centroids.</p>
     @endif
 </div>
+
+@if ($locatedCount > 0)
+    @push('scripts')
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <script>
+            (function () {
+                const points = @json($points);
+                const map = L.map(@json($mapId), {
+                    scrollWheelZoom: false,
+                    worldCopyJump: true,
+                }).setView([20, 0], 2);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 18,
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                }).addTo(map);
+
+                const jitter = (id, axis) => ((id * (axis === 'lat' ? 17 : 31)) % 200 - 100) / 2500;
+
+                points.forEach((point) => {
+                    const lat = point.lat + jitter(point.id, 'lat');
+                    const lon = point.lon + jitter(point.id, 'lon');
+                    const country = point.country || 'Unknown';
+
+                    L.circleMarker([lat, lon], {
+                        radius: 6,
+                        color: '#0f172a',
+                        weight: 1.5,
+                        fillColor: '#4ade80',
+                        fillOpacity: 0.9,
+                    })
+                        .bindPopup(`<strong>${point.label}</strong><br>${country}`)
+                        .addTo(map);
+                });
+
+                if (points.length === 1) {
+                    map.setView([points[0].lat, points[0].lon], 4);
+                }
+            })();
+        </script>
+    @endpush
+@endif

@@ -220,20 +220,49 @@
                             <td class="px-3 py-3 whitespace-nowrap">{{ $user->last_login_at?->format('M j, Y g:i A') ?? '—' }}</td>
                             <td class="px-3 py-3">{{ number_format($user->exam_sessions_count) }}</td>
                             <td class="px-3 py-3">{{ number_format($user->purchases_count) }}</td>
-                            <td class="px-3 py-3">{{ number_format($user->unlocked_sections_count) }}</td>
+                            <td class="px-3 py-3">
+                                @if ($user->sectionAccesses->isNotEmpty())
+                                    <div class="flex flex-wrap gap-1">
+                                        @foreach ($user->sectionAccesses as $access)
+                                            <span class="rounded-full bg-medic/20 px-2 py-0.5 text-xs font-medium text-medic-light">
+                                                {{ $certificationLevels[$access->certification_level] ?? $access->certification_level }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <span class="text-slate-500">—</span>
+                                @endif
+                            </td>
                             <td class="px-3 py-3 text-right">
-                                <form
-                                    method="POST"
-                                    action="{{ route('admin.users.destroy', $user) }}"
-                                    class="inline"
-                                    onsubmit="return confirm('Delete {{ $user->email }}? This permanently removes their account, purchases, section unlocks, quiz history, and progress.')"
-                                >
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="rounded-lg border border-rescue/40 px-3 py-1.5 text-xs font-semibold text-red-200 hover:border-rescue hover:bg-rescue/10">
-                                        Delete
-                                    </button>
-                                </form>
+                                <div class="flex flex-wrap items-center justify-end gap-2">
+                                    <form method="POST" action="{{ route('admin.users.unlock', $user) }}" class="inline-flex items-center gap-1">
+                                        @csrf
+                                        <select
+                                            name="certification_level"
+                                            class="max-w-[9rem] rounded-lg border border-white/10 bg-navy px-2 py-1.5 text-xs text-white"
+                                            required
+                                        >
+                                            @foreach ($certificationLevels as $level => $label)
+                                                <option value="{{ $level }}">{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button type="submit" class="rounded-lg border border-medic/40 px-3 py-1.5 text-xs font-semibold text-medic-light hover:border-medic hover:bg-medic/10">
+                                            Unlock
+                                        </button>
+                                    </form>
+                                    <form
+                                        method="POST"
+                                        action="{{ route('admin.users.destroy', $user) }}"
+                                        class="inline"
+                                        onsubmit="return confirm('Delete {{ $user->email }}? This permanently removes their account, purchases, section unlocks, quiz history, and progress.')"
+                                    >
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="rounded-lg border border-rescue/40 px-3 py-1.5 text-xs font-semibold text-red-200 hover:border-rescue hover:bg-rescue/10">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @endforeach

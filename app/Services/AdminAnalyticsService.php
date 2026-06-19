@@ -117,6 +117,7 @@ class AdminAnalyticsService
     public function usersPaginated(int $perPage = 25)
     {
         return User::query()
+            ->with(['sectionAccesses' => fn ($query) => $query->whereNotNull('unlocked_at')])
             ->withCount(['payments as purchases_count' => fn ($query) => $query->where('status', Payment::STATUS_COMPLETED)])
             ->withCount(['sectionAccesses as unlocked_sections_count' => fn ($query) => $query->whereNotNull('unlocked_at')])
             ->withCount('examSessions')
@@ -150,19 +151,35 @@ class AdminAnalyticsService
     /** @return list<array{id: int, lat: float, lon: float, label: string, country: ?string}> */
     public function signupGeoPoints(int $limit = 500): array
     {
+        $geo = app(SignupGeoService::class);
+
         return User::query()
-            ->whereNotNull('signup_latitude')
-            ->whereNotNull('signup_longitude')
+            ->where(function ($query) {
+                $query->where(function ($inner) {
+                    $inner->whereNotNull('signup_latitude')
+                        ->whereNotNull('signup_longitude');
+                })->orWhereNotNull('signup_country_code');
+            })
             ->latest()
             ->limit($limit)
-            ->get(['id', 'name', 'signup_country_name', 'signup_latitude', 'signup_longitude'])
-            ->map(fn (User $user) => [
-                'id' => $user->id,
-                'lat' => (float) $user->signup_latitude,
-                'lon' => (float) $user->signup_longitude,
-                'label' => $user->name,
-                'country' => $user->signup_country_name,
-            ])
+            ->get(['id', 'name', 'signup_country_code', 'signup_country_name', 'signup_latitude', 'signup_longitude'])
+            ->map(function (User $user) use ($geo) {
+                $point = $geo->mapPointForUser($user);
+
+                if ($point === null) {
+                    return null;
+                }
+
+                return [
+                    'id' => $user->id,
+                    'lat' => $point['lat'],
+                    'lon' => $point['lon'],
+                    'label' => $user->name,
+                    'country' => $point['country'],
+                ];
+            })
+            ->filter()
+            ->values()
             ->all();
     }
 

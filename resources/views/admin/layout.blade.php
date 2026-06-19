@@ -31,6 +31,8 @@
         </script>
         <style>{!! file_get_contents(resource_path('css/theme.css')) !!}</style>
     @endif
+
+    @stack('styles')
 </head>
 <body class="min-h-screen bg-navy text-slate-100 antialiased">
     <header class="border-b border-white/10 bg-[#1e293b]">

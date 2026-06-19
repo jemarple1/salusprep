@@ -18,5 +18,6 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::post('/settings/preview-limit', [\App\Http\Controllers\Admin\AdminSettingsController::class, 'updatePreviewLimit'])
         ->name('admin.settings.preview-limit');
+    Route::post('/users/{user}/unlock', [AdminUserController::class, 'unlock'])->name('admin.users.unlock');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
 });
