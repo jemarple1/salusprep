@@ -6,7 +6,7 @@
     </p>
 
     <p style="margin: 0 0 16px; font-size: 16px; line-height: 1.6; color: #cbd5e1;">
-        Each certification platform includes 25 free questions to try before you unlock unlimited access. Pick your section and start a 40-question adaptive quiz whenever you're ready.
+        Each certification platform is ready to explore — quizzes, skill exercises, flashcards, and Test Center analytics. Pick your section and start a 25-question focus quiz whenever you're ready.
     </p>
 
     <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.6; color: #cbd5e1;">

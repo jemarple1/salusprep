@@ -15,4 +15,6 @@ Route::post('/logout', [AdminAuthController::class, 'logout'])
 
 Route::middleware('auth:admin')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    Route::post('/settings/preview-limit', [\App\Http\Controllers\Admin\AdminSettingsController::class, 'updatePreviewLimit'])
+        ->name('admin.settings.preview-limit');
 });

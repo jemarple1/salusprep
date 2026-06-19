@@ -14,6 +14,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
 
+        $middleware->web(append: [
+            \App\Http\Middleware\EnsurePreviewDevice::class,
+        ]);
+
+        $middleware->alias([
+            'preview' => \App\Http\Middleware\EnsurePreviewAccess::class,
+        ]);
+
         $middleware->redirectGuestsTo(function (Request $request): string {
             if ($request->is('admin', 'admin/*')) {
                 return route('admin.login');

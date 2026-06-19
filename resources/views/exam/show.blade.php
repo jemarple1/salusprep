@@ -9,9 +9,15 @@
                 Question {{ $questionNumber }} of {{ $totalQuestions }}
             </p>
             <h1 class="mt-1 text-2xl font-bold text-white">{{ $sectionLabel }}</h1>
+            @if ($session->hasFocusCategory())
+                @php $focusStyles = \App\Support\QuestionCategory::styles($session->focus_category); @endphp
+                <p class="mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase {{ $focusStyles['badge'] }}">
+                    {{ $session->focus_category }} focus · 75% weighted
+                </p>
+            @endif
         </div>
-        <div class="flex flex-wrap gap-3 text-sm">
-            <span class="rounded-full border border-ems/30 bg-ems/10 px-3 py-1 font-semibold text-ems-light">Difficulty {{ $session->current_difficulty }}/5</span>
+        <div class="flex flex-wrap items-center gap-4 text-sm">
+            <x-exam-difficulty-bar :difficulty="$session->current_difficulty" />
             <span class="rounded-full border border-medic/30 bg-medic/10 px-3 py-1 font-semibold text-medic-light">{{ $session->scorePercent() }}% correct</span>
             <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-slate-300">{{ $session->questions_answered }}/{{ $totalQuestions }} answered</span>
         </div>
@@ -23,11 +29,12 @@
 
     <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 sm:p-8">
         <div class="mb-4 flex items-center justify-between gap-4">
-            <span class="rounded-full bg-ems/20 px-3 py-1 text-xs font-bold uppercase text-ems-light">{{ $question->category }}</span>
+            <span @class([
+                'rounded-full px-3 py-1 text-xs font-bold uppercase',
+                \App\Support\QuestionCategory::styles($question->category)['badge'],
+            ])>{{ $question->category }}</span>
             @if ($session->sectionIsUnlocked())
                 <span class="text-xs font-semibold text-medic-light">Unlimited access</span>
-            @else
-                <span class="text-xs font-semibold text-safety-light">{{ $session->freeQuestionsRemaining() }} free left in {{ $sectionLabel }}</span>
             @endif
         </div>
 
@@ -96,10 +103,11 @@
     @if ($reviewMode && $lastAnswer)
         <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-stretch">
             <div class="min-w-0 flex-1 rounded-2xl border px-5 py-4 {{ $lastAnswer->is_correct ? 'border-medic/40 bg-medic/10' : 'border-rescue/40 bg-rescue/10' }}">
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
                     <p class="font-bold {{ $lastAnswer->is_correct ? 'text-medic-light' : 'text-red-200' }}">
-                        {{ $lastAnswer->is_correct ? 'Correct' : 'Incorrect' }} · Difficulty now {{ $session->current_difficulty }}/5
+                        {{ $lastAnswer->is_correct ? 'Correct' : 'Incorrect' }}
                     </p>
+                    <x-exam-difficulty-bar :difficulty="$session->current_difficulty" class="rounded-full border border-white/10 bg-navy/40 px-3 py-1.5" />
                     <x-question-platform-stat :percent="$lastAnswer->question->platformCorrectPercent()" />
                 </div>
                 @if ($lastAnswer->question->explanation)

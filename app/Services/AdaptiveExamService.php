@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\ExamAnswer;
 use App\Models\ExamSession;
-use App\Models\GuestSectionProgress;
 use App\Models\Question;
 use App\Models\SectionAccess;
 use App\Models\User;
@@ -15,7 +14,11 @@ use RuntimeException;
 
 class AdaptiveExamService
 {
-    public function __construct(private GuestService $guests) {}
+    public function __construct(
+        private GuestService $guests,
+        private PreviewAccessService $preview,
+        private FocusCategoryService $focusCategory,
+    ) {}
 
     public function sectionAccess(User $user, string $certificationLevel): SectionAccess
     {
@@ -24,33 +27,39 @@ class AdaptiveExamService
                 'user_id' => $user->id,
                 'certification_level' => $certificationLevel,
             ],
-            ['free_questions_used' => 0],
+            ['preview_actions_used' => 0],
         );
     }
 
-    public function startSession(Request $request, string $certificationLevel): ExamSession
+    public function startSession(Request $request, string $certificationLevel, ?string $focusCategory = null): ExamSession
     {
         if (! CertificationLevel::isValid($certificationLevel)) {
             throw new RuntimeException('Invalid certification level.');
         }
 
+        if ($this->preview->requiresPaywall($request, $certificationLevel)) {
+            throw new RuntimeException('Unlock this section to start a new quiz.');
+        }
+
+        if ($focusCategory === null) {
+            $focusCategory = $this->focusCategory->get($request, $certificationLevel);
+        }
+
+        if ($focusCategory !== null && ! $this->focusCategory->isValidCategory($certificationLevel, $focusCategory)) {
+            $focusCategory = null;
+        }
+
         $user = $request->user();
 
         if ($user !== null) {
-            return $this->startUserSession($user, $certificationLevel);
+            return $this->startUserSession($user, $certificationLevel, $focusCategory);
         }
 
-        return $this->startGuestSession($request, $certificationLevel);
+        return $this->startGuestSession($request, $certificationLevel, $focusCategory);
     }
 
-    private function startUserSession(User $user, string $certificationLevel): ExamSession
+    private function startUserSession(User $user, string $certificationLevel, ?string $focusCategory): ExamSession
     {
-        $access = $this->sectionAccess($user, $certificationLevel);
-
-        if ($access->requiresPayment()) {
-            throw new RuntimeException('This section requires payment before starting a new quiz.');
-        }
-
         $existing = $user->activeExamSession($certificationLevel);
 
         if ($existing !== null) {
@@ -60,19 +69,15 @@ class AdaptiveExamService
         return ExamSession::create([
             'user_id' => $user->id,
             'certification_level' => $certificationLevel,
+            'focus_category' => $focusCategory,
             'current_difficulty' => 2,
             'status' => ExamSession::STATUS_IN_PROGRESS,
         ]);
     }
 
-    private function startGuestSession(Request $request, string $certificationLevel): ExamSession
+    private function startGuestSession(Request $request, string $certificationLevel, ?string $focusCategory): ExamSession
     {
         $guestToken = $this->guests->token($request);
-        $progress = $this->guests->progress($guestToken, $certificationLevel);
-
-        if ($progress->requiresPayment()) {
-            throw new RuntimeException('Create a free account to continue after your 25 preview questions.');
-        }
 
         $existing = $this->guests->activeExamSession($guestToken, $certificationLevel);
 
@@ -83,6 +88,7 @@ class AdaptiveExamService
         return ExamSession::create([
             'guest_token' => $guestToken,
             'certification_level' => $certificationLevel,
+            'focus_category' => $focusCategory,
             'current_difficulty' => 2,
             'status' => ExamSession::STATUS_IN_PROGRESS,
         ]);
@@ -94,38 +100,107 @@ class AdaptiveExamService
             return null;
         }
 
-        if ($session->requiresPayment()) {
-            return null;
-        }
-
         if ($session->hasReachedQuestionLimit()) {
             return null;
         }
 
         $answeredIds = $session->answers()->pluck('question_id');
+        $pickFocus = $session->hasFocusCategory() && $this->shouldPickFocusCategory($session);
 
-        $question = Question::query()
-            ->where('certification_level', $session->certification_level)
-            ->where('difficulty', $session->current_difficulty)
-            ->whereNotIn('id', $answeredIds)
-            ->inRandomOrder()
-            ->first();
+        $question = $this->pickQuestion(
+            $session,
+            $answeredIds,
+            $pickFocus ? $session->focus_category : null,
+        );
 
         if ($question !== null) {
             return $question;
         }
 
-        return Question::query()
+        if ($pickFocus) {
+            $question = $this->pickQuestion($session, $answeredIds, null);
+
+            if ($question !== null) {
+                return $question;
+            }
+        }
+
+        return $this->pickQuestion($session, $answeredIds, null, strictCategory: false);
+    }
+
+    /** @param  \Illuminate\Support\Collection<int, int>|list<int>  $answeredIds */
+    private function pickQuestion(
+        ExamSession $session,
+        $answeredIds,
+        ?string $category,
+        bool $strictCategory = true,
+    ): ?Question {
+        $query = Question::query()
             ->where('certification_level', $session->certification_level)
-            ->whereNotIn('id', $answeredIds)
+            ->where('difficulty', $session->current_difficulty)
+            ->whereNotIn('id', $answeredIds);
+
+        if ($category !== null) {
+            $query->where('category', $category);
+        } elseif ($strictCategory && $session->hasFocusCategory()) {
+            $query->where('category', '!=', $session->focus_category);
+        }
+
+        $question = $query->inRandomOrder()->first();
+
+        if ($question !== null) {
+            return $question;
+        }
+
+        $fallback = Question::query()
+            ->where('certification_level', $session->certification_level)
+            ->whereNotIn('id', $answeredIds);
+
+        if ($category !== null) {
+            $fallback->where('category', $category);
+        } elseif ($strictCategory && $session->hasFocusCategory()) {
+            $fallback->where('category', '!=', $session->focus_category);
+        }
+
+        return $fallback
             ->orderByRaw('ABS(difficulty - ?)', [$session->current_difficulty])
             ->inRandomOrder()
             ->first();
     }
 
-    public function submitAnswer(ExamSession $session, Question $question, string $selectedOption): ExamAnswer
+    private function shouldPickFocusCategory(ExamSession $session): bool
     {
-        if ($session->requiresPayment() || $session->isComplete()) {
+        $target = $session->targetQuestionCount();
+        $focusQuota = (int) round($target * (CertificationLevel::FOCUS_CATEGORY_PERCENT / 100));
+        $nonFocusQuota = $target - $focusQuota;
+
+        $focusAnswered = $session->answers()
+            ->whereHas('question', fn ($query) => $query->where('category', $session->focus_category))
+            ->count();
+
+        $answered = $session->questions_answered;
+        $nonFocusAnswered = $answered - $focusAnswered;
+        $remaining = $target - $answered;
+        $focusRemaining = $focusQuota - $focusAnswered;
+
+        if ($focusRemaining <= 0) {
+            return false;
+        }
+
+        if ($nonFocusAnswered >= $nonFocusQuota) {
+            return true;
+        }
+
+        if ($focusRemaining >= $remaining) {
+            return true;
+        }
+
+        return random_int(1, 100) <= CertificationLevel::FOCUS_CATEGORY_PERCENT;
+    }
+
+    public function submitAnswer(Request $request, ExamSession $session, Question $question, string $selectedOption): ExamAnswer
+    {
+        if ($session->isComplete()) {
             throw new RuntimeException('This exam session cannot accept answers.');
         }
 
@@ -136,7 +211,7 @@ class AdaptiveExamService
         $selectedOption = strtoupper($selectedOption);
         $isCorrect = $selectedOption === strtoupper($question->correct_option);
 
-        return DB::transaction(function () use ($session, $question, $selectedOption, $isCorrect) {
+        return DB::transaction(function () use ($request, $session, $question, $selectedOption, $isCorrect) {
             $answer = ExamAnswer::create([
                 'exam_session_id' => $session->id,
                 'question_id' => $question->id,
@@ -153,33 +228,11 @@ class AdaptiveExamService
                 $session->current_difficulty = max(1, $session->current_difficulty - 1);
             }
 
-            if ($session->user_id !== null) {
-                $access = $this->sectionAccess($session->user, $session->certification_level);
-
-                if (! $access->isUnlocked()) {
-                    $access->increment('free_questions_used');
-
-                    if ($access->fresh()->requiresPayment()) {
-                        $session->status = ExamSession::STATUS_PAYWALL;
-                    }
-                }
-            } elseif ($session->guest_token !== null) {
-                $progress = GuestSectionProgress::query()
-                    ->where('guest_token', $session->guest_token)
-                    ->where('certification_level', $session->certification_level)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($progress !== null && $progress->free_questions_used < CertificationLevel::FREE_QUESTIONS) {
-                    $progress->increment('free_questions_used');
-
-                    if ($progress->fresh()->requiresPayment()) {
-                        $session->status = ExamSession::STATUS_PAYWALL;
-                    }
-                }
+            if (! $session->sectionIsUnlocked()) {
+                $this->preview->recordAction($request, $session->certification_level);
             }
 
-            if ($session->hasReachedQuestionLimit() && $session->status !== ExamSession::STATUS_PAYWALL) {
+            if ($session->hasReachedQuestionLimit()) {
                 $session->status = ExamSession::STATUS_COMPLETED;
                 $session->completed_at = now();
             }
@@ -204,11 +257,6 @@ class AdaptiveExamService
     {
         $access = $this->sectionAccess($user, $certificationLevel);
         $access->update(['unlocked_at' => now()]);
-
-        $user->examSessions()
-            ->where('certification_level', $certificationLevel)
-            ->where('status', ExamSession::STATUS_PAYWALL)
-            ->update(['status' => ExamSession::STATUS_IN_PROGRESS]);
 
         return $access->fresh();
     }

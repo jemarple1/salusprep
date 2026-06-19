@@ -20,6 +20,7 @@ class ExamSession extends Model
         'user_id',
         'guest_token',
         'certification_level',
+        'focus_category',
         'current_difficulty',
         'questions_answered',
         'correct_count',
@@ -85,7 +86,7 @@ class ExamSession extends Model
 
     public function requiresPayment(): bool
     {
-        return $this->status === self::STATUS_PAYWALL;
+        return false;
     }
 
     public function isComplete(): bool
@@ -107,6 +108,16 @@ class ExamSession extends Model
         return (int) round(($this->correct_count / $this->questions_answered) * 100);
     }
 
+    public function hasFocusCategory(): bool
+    {
+        return $this->focus_category !== null && $this->focus_category !== '';
+    }
+
+    public function focusCategoryLabel(): ?string
+    {
+        return $this->focus_category;
+    }
+
     public function targetQuestionCount(): int
     {
         return CertificationLevel::QUIZ_QUESTIONS;
@@ -126,15 +137,6 @@ class ExamSession extends Model
     public function hasReachedQuestionLimit(): bool
     {
         return $this->questions_answered >= $this->targetQuestionCount();
-    }
-
-    public function freeQuestionsRemaining(): int
-    {
-        if ($this->user_id !== null) {
-            return $this->sectionAccess()?->freeQuestionsRemaining() ?? CertificationLevel::FREE_QUESTIONS;
-        }
-
-        return $this->guestProgress()?->freeQuestionsRemaining() ?? CertificationLevel::FREE_QUESTIONS;
     }
 
     /** @return array<int, int> Session ID => quiz number (1-based, per user/guest and certification level). */

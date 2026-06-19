@@ -6,8 +6,6 @@ use App\Models\User;
 
 class PlatformExercise
 {
-    public const FREE_SCENARIOS_PER_EXERCISE = 1;
-
     /** @return list<array<string, mixed>> */
     public static function forLevel(string $level): array
     {
@@ -53,23 +51,15 @@ class PlatformExercise
         return self::scenarios($level, $slug)[$index] ?? null;
     }
 
-    public static function canAccessScenario(?User $user, string $level, bool $unlocked, int $scenarioIndex): bool
+    public static function canAccessScenario(bool $hasPlatformAccess): bool
     {
-        if ($scenarioIndex < self::FREE_SCENARIOS_PER_EXERCISE) {
-            return true;
-        }
-
-        if ($user === null) {
-            return false;
-        }
-
-        return $unlocked || $user->hasSectionAccess($level);
+        return $hasPlatformAccess;
     }
 
     /**
      * @return list<array<string, mixed>>
      */
-    public static function cardsForLevel(string $level, ?User $user, bool $unlocked): array
+    public static function cardsForLevel(string $level): array
     {
         return collect(self::forLevel($level))
             ->map(function (array $exercise) use ($level) {
@@ -79,9 +69,9 @@ class PlatformExercise
                     ...$exercise,
                     'scenario_count' => $scenarioCount,
                     'url' => route('exercises.show', [
-                    'section' => CertificationLevel::slug($level),
-                    'exercise' => $exercise['slug'],
-                ]),
+                        'section' => CertificationLevel::slug($level),
+                        'exercise' => $exercise['slug'],
+                    ]),
                 ];
             })
             ->values()
@@ -91,7 +81,7 @@ class PlatformExercise
     /**
      * @return list<array{index: int, title: string, accessible: bool, url: string}>
      */
-    public static function scenarioLinks(string $level, string $slug, ?User $user, bool $unlocked): array
+    public static function scenarioLinks(string $level, string $slug, bool $hasPlatformAccess): array
     {
         $sectionSlug = CertificationLevel::slug($level);
 
@@ -100,7 +90,7 @@ class PlatformExercise
             ->map(fn (array $scenario, int $index) => [
                 'index' => $index,
                 'title' => $scenario['title'] ?? 'Scenario '.($index + 1),
-                'accessible' => self::canAccessScenario($user, $level, $unlocked, $index),
+                'accessible' => self::canAccessScenario($hasPlatformAccess),
                 'url' => route('exercises.show', [
                     'section' => $sectionSlug,
                     'exercise' => $slug,

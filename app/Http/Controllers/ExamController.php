@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\ExamSession;
 use App\Models\Question;
 use App\Services\AdaptiveExamService;
+use App\Services\FocusCategoryService;
 use App\Services\GuestService;
+use App\Services\PreviewAccessService;
 use App\Services\StudyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,23 +19,36 @@ class ExamController extends Controller
         private AdaptiveExamService $examService,
         private GuestService $guests,
         private StudyService $study,
+        private PreviewAccessService $preview,
+        private FocusCategoryService $focusCategory,
     ) {}
 
     public function start(Request $request): RedirectResponse
     {
         $slug = $request->attributes->get('section_slug');
+        $level = $request->attributes->get('certification_level');
+
+        $validated = $request->validate([
+            'focus_category' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $focusCategory = $validated['focus_category'] ?? null;
+
+        if ($focusCategory !== null && $this->focusCategory->isValidCategory($level, $focusCategory)) {
+            $this->focusCategory->pin($request, $level, $focusCategory);
+        }
 
         try {
-            $session = $this->examService->startSession($request, $request->attributes->get('certification_level'));
+            $session = $this->examService->startSession(
+                $request,
+                $level,
+                $focusCategory,
+            );
         } catch (\RuntimeException $exception) {
             return redirect()
                 ->back()
                 ->withInput()
                 ->withErrors(['exam' => $exception->getMessage()]);
-        }
-
-        if ($session->requiresPayment()) {
-            return redirect()->route('exam.paywall', [$slug, $session]);
         }
 
         return redirect()->route('exam.show', [$slug, $session]);
@@ -42,10 +57,6 @@ class ExamController extends Controller
     public function show(Request $request, string $section, ExamSession $session): View|RedirectResponse
     {
         $this->authorizeSession($request, $session);
-
-        if ($session->requiresPayment()) {
-            return redirect()->route('exam.paywall', [$section, $session]);
-        }
 
         if ($session->isComplete()) {
             return redirect()->route('exam.results', [$section, $session]);
@@ -81,7 +92,8 @@ class ExamController extends Controller
 
         $user = $request->user();
         $slug = $request->attributes->get('section_slug');
-        $canStudy = $user !== null && $user->hasSectionAccess($session->certification_level);
+        $hasAccess = $this->preview->hasAccess($request, $session->certification_level);
+        $canStudy = $user !== null && $hasAccess;
         $activeStudySession = $canStudy ? $this->study->activeSession($user, $session->certification_level) : null;
         $studyDeckUrl = $canStudy && $activeStudySession
             ? route('study.show', [$slug, $activeStudySession])
@@ -119,12 +131,12 @@ class ExamController extends Controller
             'selected_option' => ['required', 'in:A,B,C,D'],
         ]);
 
-        $this->examService->submitAnswer($session, $question, $validated['selected_option']);
+        $this->examService->submitAnswer($request, $session, $question, $validated['selected_option']);
 
         $session->refresh();
 
-        if ($session->requiresPayment()) {
-            return redirect()->route('exam.paywall', [$section, $session]);
+        if ($this->preview->requiresPaywall($request, $session->certification_level)) {
+            return redirect()->route('platform.paywall', $section);
         }
 
         if ($session->isComplete()) {
@@ -134,28 +146,11 @@ class ExamController extends Controller
         return redirect()->route('exam.show', [$section, $session]);
     }
 
-    public function paywall(Request $request, string $section, ExamSession $session): View|RedirectResponse
+    public function paywall(Request $request, string $section, ExamSession $session): RedirectResponse
     {
         $this->authorizeSession($request, $session);
 
-        if ($session->sectionIsUnlocked()) {
-            $session->update(['status' => ExamSession::STATUS_IN_PROGRESS]);
-
-            return redirect()->route('exam.show', [$section, $session]);
-        }
-
-        if (! $session->requiresPayment()) {
-            return redirect()->route('exam.show', [$section, $session]);
-        }
-
-        if ($request->user() === null) {
-            $request->session()->put('url.intended', route('exam.paywall', [$section, $session]));
-        }
-
-        return view('exam.paywall', [
-            'session' => $session,
-            'requiresAuth' => $request->user() === null,
-        ]);
+        return redirect()->route('platform.paywall', $section);
     }
 
     public function results(Request $request, string $section, ExamSession $session): View
@@ -172,6 +167,7 @@ class ExamController extends Controller
             'session' => $session,
             'platformCorrectPercents' => $platformCorrectPercents,
             'activeExamSession' => $this->activeExamSessionFor($request),
+            'hasAccess' => $this->preview->hasAccess($request, $session->certification_level),
         ]);
     }
 

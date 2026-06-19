@@ -6,6 +6,7 @@ use App\Mail\WelcomeMail;
 use App\Models\User;
 use App\Services\GuestService;
 use App\Services\SignupGeoService;
+use App\Support\CertificationLevel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,8 @@ use Illuminate\View\View;
 
 class AuthController extends Controller
 {
+    public const PAYWALL_CHECKOUT_SESSION_KEY = 'paywall.auto_checkout_section';
+
     public function __construct(
         private GuestService $guests,
         private SignupGeoService $signupGeo,
@@ -47,11 +50,9 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        $this->guests->mergeIntoUser($request, $user);
-
         Mail::to($user->email)->send(new WelcomeMail($user));
 
-        return redirect()->intended(route('platform.home', 'emt-basic'));
+        return $this->redirectAfterAuth($request, $user);
     }
 
     public function showLogin(): View
@@ -71,9 +72,7 @@ class AuthController extends Controller
 
             $request->user()->update(['last_login_at' => now()]);
 
-            $this->guests->mergeIntoUser($request, Auth::user());
-
-            return redirect()->intended(route('platform.home', 'emt-basic'));
+            return $this->redirectAfterAuth($request, $request->user());
         }
 
         return back()
@@ -89,5 +88,22 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('platform.home', 'emt-basic');
+    }
+
+    private function redirectAfterAuth(Request $request, User $user): RedirectResponse
+    {
+        $this->guests->mergeIntoUser($request, $user);
+
+        $autoCheckoutSlug = $request->session()->pull(self::PAYWALL_CHECKOUT_SESSION_KEY);
+
+        if (is_string($autoCheckoutSlug) && $autoCheckoutSlug !== '') {
+            $level = CertificationLevel::fromSlug($autoCheckoutSlug);
+
+            if ($level !== null && ! $user->hasSectionAccess($level)) {
+                return redirect()->route('platform.checkout', $autoCheckoutSlug);
+            }
+        }
+
+        return redirect()->intended(route('platform.home', 'emt-basic'));
     }
 }

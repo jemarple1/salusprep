@@ -15,11 +15,11 @@ class PlatformExerciseTest extends TestCase
         }
     }
 
-    public function test_first_scenario_is_free_for_guests(): void
+    public function test_scenario_access_follows_platform_access_flag(): void
     {
         foreach (PlatformExercise::forLevel(CertificationLevel::EMT_BASIC) as $exercise) {
-            $this->assertTrue(PlatformExercise::canAccessScenario(null, CertificationLevel::EMT_BASIC, false, 0));
-            $this->assertFalse(PlatformExercise::canAccessScenario(null, CertificationLevel::EMT_BASIC, false, 1));
+            $this->assertTrue(PlatformExercise::canAccessScenario(true));
+            $this->assertFalse(PlatformExercise::canAccessScenario(false));
         }
     }
 }

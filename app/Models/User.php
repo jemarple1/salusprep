@@ -63,7 +63,7 @@ class User extends Authenticatable
     public function activeExamSession(?string $certificationLevel = null): ?ExamSession
     {
         $query = $this->examSessions()
-            ->whereIn('status', [ExamSession::STATUS_IN_PROGRESS, ExamSession::STATUS_PAYWALL]);
+            ->where('status', ExamSession::STATUS_IN_PROGRESS);
 
         if ($certificationLevel !== null) {
             $query->where('certification_level', $certificationLevel);

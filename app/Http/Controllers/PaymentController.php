@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ExamSession;
 use App\Models\Payment;
 use App\Services\AdaptiveExamService;
+use App\Services\PreviewAccessService;
 use App\Services\StripeCheckoutService;
 use App\Support\CertificationLevel;
 use App\Support\SectionPricing;
@@ -18,9 +19,20 @@ class PaymentController extends Controller
     public function __construct(
         private AdaptiveExamService $examService,
         private StripeCheckoutService $stripe,
+        private PreviewAccessService $preview,
     ) {}
 
     public function checkoutSection(Request $request): RedirectResponse
+    {
+        return $this->beginSectionCheckout($request);
+    }
+
+    public function startSectionCheckout(Request $request): RedirectResponse
+    {
+        return $this->beginSectionCheckout($request);
+    }
+
+    private function beginSectionCheckout(Request $request): RedirectResponse
     {
         $level = $request->attributes->get('certification_level');
         $slug = $request->attributes->get('section_slug');
@@ -38,10 +50,10 @@ class PaymentController extends Controller
 
         $checkoutSession = $this->stripe->createCheckoutSession(
             user: $user,
-            productName: CertificationLevel::label($level).' — Unlimited Quizzes',
+            productName: CertificationLevel::label($level).' — Full Access',
             productDescription: CertificationLevel::unlockProductDescription($level),
             successUrl: route('platform.home', $slug).'?checkout=success&session_id={CHECKOUT_SESSION_ID}',
-            cancelUrl: route('platform.home', $slug).'?checkout=cancelled',
+            cancelUrl: route('platform.paywall', $slug).'?checkout=cancelled',
             metadata: [
                 'user_id' => (string) $user->id,
                 'certification_level' => $level,
@@ -64,38 +76,8 @@ class PaymentController extends Controller
     {
         abort_unless($session->user_id === $request->user()->id, 403);
         abort_unless($session->certification_level === $request->attributes->get('certification_level'), 403);
-        abort_unless($session->requiresPayment(), 403);
 
-        $slug = $request->attributes->get('section_slug');
-
-        if (! $this->stripe->isConfigured()) {
-            return $this->mockExamCheckout($request, $session, $slug);
-        }
-
-        $checkoutSession = $this->stripe->createCheckoutSession(
-            user: $request->user(),
-            productName: CertificationLevel::label($session->certification_level).' — Unlimited Quizzes',
-            productDescription: CertificationLevel::unlockProductDescription($session->certification_level),
-            successUrl: route('payment.success', [$slug, $session]).'?checkout=success&session_id={CHECKOUT_SESSION_ID}',
-            cancelUrl: route('exam.paywall', [$slug, $session]).'?checkout=cancelled',
-            metadata: [
-                'user_id' => (string) $request->user()->id,
-                'exam_session_id' => (string) $session->id,
-                'certification_level' => $session->certification_level,
-            ],
-        );
-
-        Payment::create([
-            'user_id' => $request->user()->id,
-            'exam_session_id' => $session->id,
-            'certification_level' => $session->certification_level,
-            'amount_cents' => SectionPricing::priceCents(),
-            'status' => Payment::STATUS_PENDING,
-            'provider' => 'stripe',
-            'stripe_checkout_session_id' => $checkoutSession->id,
-        ]);
-
-        return redirect()->away($checkoutSession->url);
+        return redirect()->route('platform.paywall', $section);
     }
 
     public function success(Request $request, string $section, ExamSession $session): RedirectResponse
@@ -112,7 +94,7 @@ class PaymentController extends Controller
         }
 
         return redirect()
-            ->route('exam.paywall', [$section, $session])
+            ->route('platform.paywall', $section)
             ->with('success', 'Payment received. Unlocking your section…');
     }
 
@@ -171,26 +153,6 @@ class PaymentController extends Controller
 
         return redirect()
             ->route('platform.home', $slug)
-            ->with('success', 'Unlimited quizzes unlocked (mock mode — add STRIPE_SECRET to use Stripe).');
-    }
-
-    private function mockExamCheckout(Request $request, ExamSession $session, string $slug): RedirectResponse
-    {
-        Payment::create([
-            'user_id' => $request->user()->id,
-            'exam_session_id' => $session->id,
-            'certification_level' => $session->certification_level,
-            'amount_cents' => SectionPricing::priceCents(),
-            'status' => Payment::STATUS_COMPLETED,
-            'provider' => 'mock',
-            'reference' => 'mock_'.uniqid(),
-            'paid_at' => now(),
-        ]);
-
-        $this->examService->unlockSection($request->user(), $session->certification_level);
-
-        return redirect()
-            ->route('exam.show', [$slug, $session])
-            ->with('success', 'Payment successful (mock mode — add STRIPE_SECRET to use Stripe).');
+            ->with('success', 'Full Access unlocked (mock mode — add STRIPE_SECRET to use Stripe).');
     }
 }

@@ -27,7 +27,9 @@
                 }),
             })
                 .then(function (r) { return r.json(); })
-                .then(showFeedback)
+                .then(function (data) {
+                    window.SalusExercise.afterCheck(data, showFeedback);
+                })
                 .finally(function () {
                     document.querySelectorAll('.pharma-yesno-btn').forEach(function (btn) {
                         btn.disabled = false;

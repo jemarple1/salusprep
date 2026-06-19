@@ -11,30 +11,18 @@
         </div>
 
         <div class="flex flex-wrap gap-2">
-            @if ($unlocked && $activeStudySession)
+            @if ($hasAccess && $activeStudySession)
                 <a href="{{ route('study.show', [$sectionSlug, $activeStudySession]) }}" class="rounded-xl border border-medic/40 bg-medic/10 px-5 py-3 font-bold text-medic-light hover:bg-medic/20">Resume flashcards</a>
-            @elseif ($unlocked && $totalMissed > 0)
+            @elseif ($hasAccess && $totalMissed > 0)
                 <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-xl border border-ems/40 bg-ems/10 px-5 py-3 font-bold text-ems-light hover:bg-ems/20">Review missed ({{ $totalMissed }})</a>
             @endif
 
             @if ($activeSession)
-                @if ($activeSession->requiresPayment())
-                    <a href="{{ route('exam.paywall', [$sectionSlug, $activeSession]) }}" class="rounded-xl bg-safety px-5 py-3 font-bold text-navy hover:bg-safety-light">Unlock &amp; continue</a>
-                @else
-                    <a href="{{ route('exam.show', [$sectionSlug, $activeSession]) }}" class="rounded-xl bg-medic px-5 py-3 font-bold text-white hover:bg-medic-dark">Resume quiz</a>
-                @endif
-            @elseif ($unlocked || $freeRemaining > 0)
-                <form method="POST" action="{{ route('exam.start', $sectionSlug) }}">
-                    @csrf
-                    <button type="submit" class="rounded-xl bg-medic px-5 py-3 font-bold text-white hover:bg-medic-dark">Start new quiz</button>
-                </form>
+                <a href="{{ route('exam.show', [$sectionSlug, $activeSession]) }}" class="rounded-xl bg-medic px-5 py-3 font-bold text-white hover:bg-medic-dark">Resume quiz</a>
             @elseif ($requiresAuth ?? false)
                 <a href="{{ route('register') }}" class="rounded-xl bg-medic px-5 py-3 font-bold text-white hover:bg-medic-dark">Create free account</a>
             @else
-                <form method="POST" action="{{ route('platform.unlock', $sectionSlug) }}">
-                    @csrf
-                    <button type="submit" class="rounded-xl bg-safety px-5 py-3 font-bold text-navy hover:bg-safety-light">Unlock — <x-section-price tone="safety" /></button>
-                </form>
+                <a href="{{ route('platform.paywall', $sectionSlug) }}" class="rounded-xl bg-safety px-5 py-3 font-bold text-navy hover:bg-safety-light">Unlock full access</a>
             @endif
         </div>
     </div>
@@ -43,15 +31,20 @@
         <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-6">
             @if ($unlocked)
                 <p class="text-sm font-bold uppercase text-medic-light">Access</p>
-                <p class="mt-1 text-2xl font-bold text-white">Unlimited {{ $sectionLabel }} quizzes</p>
+                <p class="mt-1 text-2xl font-bold text-white">Full Access · {{ $sectionLabel }}</p>
                 <p class="mt-2 text-sm text-slate-400">Includes accuracy trends, category breakdowns, and flashcard review.</p>
+            @elseif ($hasAccess)
+                <p class="text-sm font-bold uppercase text-medic-light">Preview</p>
+                <p class="mt-1 text-2xl font-bold text-white">Full platform access</p>
+                <p class="mt-2 text-sm text-slate-400">Quizzes, skills, flashcards, and analytics while you explore.</p>
             @else
-                <p class="text-sm font-bold uppercase text-safety-light">Free preview</p>
-                <p class="mt-1 text-2xl font-bold text-white">{{ $freeRemaining }} questions remaining</p>
+                <p class="text-sm font-bold uppercase text-safety-light">Preview ended</p>
+                <p class="mt-1 text-2xl font-bold text-white">Get Full Access</p>
+                <a href="{{ route('platform.paywall', $sectionSlug) }}" class="mt-3 inline-block text-sm font-semibold text-safety-light hover:underline">View unlock options →</a>
             @endif
         </div>
 
-        @if ($unlocked && $overallStats['total'] > 0)
+        @if ($hasAccess && $overallStats['total'] > 0)
             <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-6">
                 <p class="text-sm font-bold uppercase text-ems-light">Overall accuracy</p>
                 <p class="mt-1 text-2xl font-bold text-white">{{ $overallStats['accuracy_percent'] }}%</p>
@@ -59,13 +52,39 @@
                     {{ $overallStats['correct'] }} correct · {{ $overallStats['incorrect'] }} missed · {{ $overallStats['total'] }} total
                 </p>
             </div>
-        @elseif ($unlocked)
+        @elseif ($hasAccess)
             <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-6">
                 <p class="text-sm font-bold uppercase text-ems-light">Overall accuracy</p>
                 <p class="mt-1 text-lg font-semibold text-slate-300">Complete a quiz to see your stats</p>
             </div>
         @endif
     </div>
+
+    @if ($hasAccess && ($focusExamOptions ?? collect())->isNotEmpty())
+        <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80">
+            <div class="border-b border-white/10 px-6 py-4">
+                <h2 class="text-lg font-bold text-white">Focus exams</h2>
+                <p class="text-sm text-slate-400">
+                    Click a card to start a 25-question quiz. Weakest topics appear first after General knowledge.
+                </p>
+                @if ($activeSession)
+                    <p class="mt-2 text-sm text-safety-light">Finish or resume your current quiz before starting another.</p>
+                @endif
+            </div>
+            <div class="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3">
+                @foreach ($focusExamOptions as $option)
+                    <x-focus-exam-card
+                        :category="$option->category"
+                        :focus-category="$option->focus_category"
+                        :accuracy="$option->accuracy_percent"
+                        :is-general="$option->is_general"
+                        start-on-click
+                        :disabled="(bool) $activeSession"
+                    />
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80">
         <div class="border-b border-white/10 px-6 py-4">
@@ -85,13 +104,14 @@
                             </p>
                             <p class="mt-1 text-sm text-slate-400">
                                 {{ $session->questions_answered }}/{{ $session->targetQuestionCount() }} answered · {{ $session->scorePercent() }}% · difficulty {{ $session->current_difficulty }}/5
+                                @if ($session->hasFocusCategory())
+                                    · <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase {{ \App\Support\QuestionCategory::styles($session->focus_category)['badge'] }}">{{ $session->focus_category }} focus</span>
+                                @endif
                             </p>
                         </div>
                         <div class="flex gap-2">
                             @if ($session->isComplete())
                                 <a href="{{ route('exam.results', [$sectionSlug, $session]) }}" class="rounded-lg border border-white/10 px-4 py-2 text-sm hover:bg-white/5">Results</a>
-                            @elseif ($session->requiresPayment())
-                                <a href="{{ route('exam.paywall', [$sectionSlug, $session]) }}" class="rounded-lg bg-safety/20 px-4 py-2 text-sm font-bold text-safety-light">Unlock</a>
                             @else
                                 <a href="{{ route('exam.show', [$sectionSlug, $session]) }}" class="rounded-lg border border-medic/30 px-4 py-2 text-sm text-medic-light hover:bg-medic/10">Continue</a>
                             @endif
@@ -102,7 +122,7 @@
         @endif
     </div>
 
-    @if ($unlocked)
+    @if ($hasAccess)
         <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80">
             <div class="border-b border-white/10 px-6 py-4">
                 <h2 class="text-lg font-bold text-white">Accuracy trend</h2>
@@ -128,7 +148,7 @@
                     <h2 class="text-lg font-bold text-white">Category proficiency</h2>
                     <p class="text-sm text-slate-400">Accuracy by topic — focus flashcard review where you miss most.</p>
                 </div>
-                @if ($totalMissed > 0)
+                @if ($totalMissed > 0 && auth()->check())
                     <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-lg bg-medic/20 px-4 py-2 text-sm font-bold text-medic-light hover:bg-medic/30">Open flashcards</a>
                 @endif
             </div>
@@ -141,19 +161,15 @@
                 <div class="space-y-5 p-6">
                     @foreach ($categoryStats as $stat)
                         @php
-                            $barColor = match (true) {
-                                $stat->accuracy_percent >= 80 => 'bg-medic',
-                                $stat->accuracy_percent >= 60 => 'bg-safety',
-                                default => 'bg-rescue',
-                            };
+                            $styles = \App\Support\QuestionCategory::styles($stat->category);
                             $missedInCategory = $wrongByCategory[$stat->category] ?? 0;
                         @endphp
                         <div>
                             <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
                                 <div class="flex items-center gap-3">
-                                    <span class="font-semibold text-white">{{ $stat->category }}</span>
+                                    <span class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase {{ $styles['badge'] }}">{{ $stat->category }}</span>
                                     @if ($missedInCategory > 0)
-                                        <span class="rounded-full bg-rescue/20 px-2 py-0.5 text-xs font-bold text-red-200">{{ $missedInCategory }} to review</span>
+                                        <span class="rounded-full bg-white/10 px-2 py-0.5 text-xs text-slate-400">{{ $missedInCategory }} to review</span>
                                     @endif
                                 </div>
                                 <div class="text-sm text-slate-400">
@@ -164,10 +180,10 @@
                                     {{ $stat->total }} Q
                                 </div>
                             </div>
-                            <div class="h-3 overflow-hidden rounded-full bg-rescue/20 ring-1 ring-white/5">
-                                <div class="{{ $barColor }} h-full rounded-full transition-all" style="width: {{ max($stat->accuracy_percent, 2) }}%"></div>
+                            <div class="h-3 overflow-hidden rounded-full bg-white/10 ring-1 ring-white/5">
+                                <div class="{{ $styles['bar'] }} h-full rounded-full transition-all" style="width: {{ max($stat->accuracy_percent, 2) }}%"></div>
                             </div>
-                            @if ($missedInCategory > 0)
+                            @if ($missedInCategory > 0 && auth()->check())
                                 <form method="POST" action="{{ route('study.start', $sectionSlug) }}" class="mt-2">
                                     @csrf
                                     <input type="hidden" name="category" value="{{ $stat->category }}">
@@ -181,49 +197,13 @@
                 </div>
             @endif
         </div>
-    @else
-        <div class="relative mb-8 overflow-hidden rounded-2xl border border-safety/30 bg-navy-light/80">
-            <div class="pointer-events-none select-none blur-sm">
-                <div class="space-y-6 p-6">
-                    <div class="h-32 rounded-xl bg-navy/80 p-4">
-                        <div class="mb-3 h-3 w-24 rounded bg-medic/30"></div>
-                        <svg viewBox="0 0 400 100" class="h-20 w-full">
-                            <polyline points="20,80 100,60 180,50 260,40 340,25" fill="none" stroke="#4ade80" stroke-width="2" opacity="0.5" />
-                        </svg>
-                    </div>
-                    @foreach (['Airway', 'Trauma', 'Cardiology', 'Operations'] as $demo)
-                        <div>
-                            <div class="mb-2 flex justify-between text-sm">
-                                <span class="font-semibold text-white">{{ $demo }}</span>
-                                <span class="text-slate-400">—% correct</span>
-                            </div>
-                            <div class="h-3 rounded-full bg-navy/80">
-                                <div class="h-full w-2/3 rounded-full bg-medic/40"></div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-            <div class="absolute inset-0 flex flex-col items-center justify-center bg-navy/60 px-6 text-center">
-                <p class="text-lg font-bold text-white">Quiz trends &amp; category breakdowns</p>
-                <p class="mt-2 max-w-md text-sm text-slate-300">
-                    @if ($requiresAuth ?? false)
-                        Sign in to track quiz history, accuracy trends, and category proficiency. Unlock {{ $sectionLabel }} for <x-section-price size="inline" tone="overlay" /> to see everything.
-                    @else
-                        Unlock {{ $sectionLabel }} for <x-section-price size="inline" tone="overlay" /> to see category breakdowns, accuracy trends over time, and review missed questions with flashcards.
-                    @endif
-                </p>
-                @if ($requiresAuth ?? false)
-                    <div class="mt-4 flex flex-wrap justify-center gap-3">
-                        <a href="{{ route('register') }}" class="rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">Create free account</a>
-                        <a href="{{ route('login') }}" class="rounded-xl border border-white/15 px-6 py-3 font-semibold text-slate-200 hover:bg-white/5">Log in</a>
-                    </div>
-                @else
-                    <form method="POST" action="{{ route('platform.unlock', $sectionSlug) }}" class="mt-4">
-                        @csrf
-                        <button type="submit" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">Unlock — <x-section-price tone="safety" /></button>
-                    </form>
-                @endif
+    @elseif ($requiresAuth ?? false)
+        <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80 p-8 text-center">
+            <p class="text-lg font-bold text-white">Sign in to track your progress</p>
+            <p class="mt-2 text-sm text-slate-400">Create a free account to save quiz history, trends, and flashcard decks.</p>
+            <div class="mt-4 flex flex-wrap justify-center gap-3">
+                <a href="{{ route('register') }}" class="rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">Create free account</a>
+                <a href="{{ route('login') }}" class="rounded-xl border border-white/15 px-6 py-3 font-semibold text-slate-200 hover:bg-white/5">Log in</a>
             </div>
         </div>
     @endif

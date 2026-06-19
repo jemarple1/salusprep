@@ -23,7 +23,9 @@
                     }),
                 })
                     .then(function (r) { return r.json(); })
-                    .then(showFeedback);
+                    .then(function (data) {
+                        window.SalusExercise.afterCheck(data, showFeedback);
+                    });
             });
         });
     })();

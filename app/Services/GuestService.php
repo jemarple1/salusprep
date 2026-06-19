@@ -7,11 +7,14 @@ use App\Models\GuestSectionProgress;
 use App\Models\SectionAccess;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Str;
 
 class GuestService
 {
     public const SESSION_KEY = 'guest_token';
+
+    public const DEVICE_COOKIE_KEY = 'salusprep_preview_device';
 
     public function token(Request $request): string
     {
@@ -25,14 +28,56 @@ class GuestService
         return $token;
     }
 
-    public function progress(string $guestToken, string $certificationLevel): GuestSectionProgress
+    /**
+     * Persistent device identifier (long-lived cookie) so preview usage survives
+     * new sessions, logout, and incognito-style session resets.
+     */
+    public function deviceId(Request $request): string
+    {
+        $deviceId = $request->cookie(self::DEVICE_COOKIE_KEY);
+
+        if (is_string($deviceId) && Str::isUuid($deviceId)) {
+            return $deviceId;
+        }
+
+        $deviceId = (string) Str::uuid();
+
+        Cookie::queue($this->deviceCookie($deviceId));
+
+        return $deviceId;
+    }
+
+    public function progressForRequest(Request $request, string $certificationLevel): GuestSectionProgress
+    {
+        return $this->progressByDevice($this->deviceId($request), $certificationLevel);
+    }
+
+    public function progressByDevice(string $deviceId, string $certificationLevel): GuestSectionProgress
     {
         return GuestSectionProgress::firstOrCreate(
             [
-                'guest_token' => $guestToken,
+                'device_id' => $deviceId,
                 'certification_level' => $certificationLevel,
             ],
-            ['free_questions_used' => 0],
+            [
+                'guest_token' => $deviceId,
+                'preview_actions_used' => 0,
+            ],
+        );
+    }
+
+    /** @return \Symfony\Component\HttpFoundation\Cookie */
+    public function deviceCookie(string $deviceId)
+    {
+        return cookie(
+            name: self::DEVICE_COOKIE_KEY,
+            value: $deviceId,
+            minutes: 60 * 24 * 400,
+            path: '/',
+            secure: config('session.secure', false),
+            httpOnly: true,
+            raw: false,
+            sameSite: 'lax',
         );
     }
 
@@ -42,41 +87,53 @@ class GuestService
             ->where('guest_token', $guestToken)
             ->whereNull('user_id')
             ->where('certification_level', $certificationLevel)
-            ->whereIn('status', [ExamSession::STATUS_IN_PROGRESS, ExamSession::STATUS_PAYWALL])
+            ->where('status', ExamSession::STATUS_IN_PROGRESS)
             ->latest()
             ->first();
     }
 
     public function mergeIntoUser(Request $request, User $user): void
     {
-        $guestToken = $request->session()->get(self::SESSION_KEY);
-
-        if (! is_string($guestToken) || $guestToken === '') {
-            return;
+        $deviceId = $request->cookie(self::DEVICE_COOKIE_KEY);
+        if (! is_string($deviceId) || ! Str::isUuid($deviceId)) {
+            $deviceId = $this->deviceId($request);
         }
 
-        foreach (GuestSectionProgress::where('guest_token', $guestToken)->get() as $guestProgress) {
+        $this->mergeDeviceProgressIntoUser($user, $deviceId);
+
+        $guestToken = $request->session()->get(self::SESSION_KEY);
+
+        if (is_string($guestToken) && $guestToken !== '') {
+            ExamSession::query()
+                ->where('guest_token', $guestToken)
+                ->whereNull('user_id')
+                ->update([
+                    'user_id' => $user->id,
+                    'guest_token' => null,
+                ]);
+        }
+
+        app(FocusCategoryService::class)->persistSessionToUser($request, $user);
+
+        GuestSectionProgress::query()
+            ->where('device_id', $deviceId)
+            ->delete();
+    }
+
+    private function mergeDeviceProgressIntoUser(User $user, string $deviceId): void
+    {
+        foreach (GuestSectionProgress::where('device_id', $deviceId)->get() as $guestProgress) {
             $access = SectionAccess::firstOrCreate(
                 [
                     'user_id' => $user->id,
                     'certification_level' => $guestProgress->certification_level,
                 ],
-                ['free_questions_used' => 0],
+                ['preview_actions_used' => 0],
             );
 
-            if ($guestProgress->free_questions_used > $access->free_questions_used) {
-                $access->update(['free_questions_used' => $guestProgress->free_questions_used]);
+            if ($guestProgress->preview_actions_used > $access->preview_actions_used) {
+                $access->update(['preview_actions_used' => $guestProgress->preview_actions_used]);
             }
         }
-
-        ExamSession::query()
-            ->where('guest_token', $guestToken)
-            ->whereNull('user_id')
-            ->update([
-                'user_id' => $user->id,
-                'guest_token' => null,
-            ]);
-
-        GuestSectionProgress::where('guest_token', $guestToken)->delete();
     }
 }

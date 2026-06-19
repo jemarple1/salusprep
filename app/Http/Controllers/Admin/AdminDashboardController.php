@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Services\AdminAnalyticsService;
+use App\Services\PreviewAccessService;
 use Illuminate\View\View;
 
 class AdminDashboardController extends Controller
@@ -14,6 +16,7 @@ class AdminDashboardController extends Controller
     {
         return view('admin.dashboard', [
             'summary' => $this->analytics->summary(),
+            'previewActionsLimit' => Setting::getInt(PreviewAccessService::LIMIT_KEY, PreviewAccessService::DEFAULT_LIMIT),
             'signupChart' => $this->analytics->signupChart(),
             'purchaseChart' => $this->analytics->purchaseChart(),
             'platformQuizSlices' => $this->analytics->platformQuizSlices(),

@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\FocusCategoryService;
 use App\Services\GuestService;
+use App\Services\PreviewAccessService;
 use App\Services\StripeCheckoutService;
-use App\Support\CertificationLevel;
 use App\Support\PlatformExercise;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -14,6 +15,8 @@ class PlatformController extends Controller
     public function __construct(
         private GuestService $guests,
         private StripeCheckoutService $stripe,
+        private PreviewAccessService $preview,
+        private FocusCategoryService $focusCategory,
     ) {}
 
     public function __invoke(Request $request): View
@@ -28,28 +31,30 @@ class PlatformController extends Controller
             }
         }
 
+        $unlocked = $user !== null && $user->hasSectionAccess($level);
+        $hasAccess = $this->preview->hasAccess($request, $level);
+
         if ($user !== null) {
-            $access = $user->sectionAccessFor($level);
             $activeSession = $user->activeExamSession($level);
-            $unlocked = $user->hasSectionAccess($level);
 
             return view('platform.home', [
                 'unlocked' => $unlocked,
-                'freeRemaining' => $access?->freeQuestionsRemaining() ?? CertificationLevel::FREE_QUESTIONS,
+                'hasAccess' => $hasAccess,
                 'activeSession' => $activeSession,
-                'exercises' => PlatformExercise::cardsForLevel($level, $user, $unlocked),
+                'exercises' => PlatformExercise::cardsForLevel($level),
+                'pinnedFocus' => $this->focusCategory->get($request, $level),
             ]);
         }
 
         $guestToken = $this->guests->token($request);
-        $progress = $this->guests->progress($guestToken, $level);
         $activeSession = $this->guests->activeExamSession($guestToken, $level);
 
         return view('platform.home', [
             'unlocked' => false,
-            'freeRemaining' => $progress->freeQuestionsRemaining(),
+            'hasAccess' => $hasAccess,
             'activeSession' => $activeSession,
-            'exercises' => PlatformExercise::cardsForLevel($level, null, false),
+            'exercises' => PlatformExercise::cardsForLevel($level),
+            'pinnedFocus' => $this->focusCategory->get($request, $level),
         ]);
     }
 }

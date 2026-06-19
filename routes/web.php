@@ -9,6 +9,8 @@ use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PlatformController;
+use App\Http\Controllers\PlatformPaywallController;
+use App\Http\Controllers\PaywallFocusController;
 use App\Http\Controllers\StudyController;
 use App\Http\Middleware\ResolveSection;
 use Illuminate\Support\Facades\Route;
@@ -49,28 +51,37 @@ Route::prefix('{section}')
     ->middleware(ResolveSection::class)
     ->group(function () {
         Route::get('/', PlatformController::class)->name('platform.home');
-
-        Route::post('/exam/start', [ExamController::class, 'start'])->name('exam.start');
-        Route::get('/exam/{session}', [ExamController::class, 'show'])->name('exam.show');
-        Route::post('/exam/{session}/questions/{question}', [ExamController::class, 'answer'])->name('exam.answer');
-        Route::post('/exam/{session}/continue', [ExamController::class, 'continue'])->name('exam.continue');
-        Route::get('/exam/{session}/paywall', [ExamController::class, 'paywall'])->name('exam.paywall');
-        Route::get('/exam/{session}/results', [ExamController::class, 'results'])->name('exam.results');
-        Route::post('/exam/{session}/finish', [ExamController::class, 'finish'])->name('exam.finish');
-
-        Route::get('/study', [StudyController::class, 'index'])->name('study.index');
-        Route::get('/skills', [ExerciseController::class, 'index'])->name('skills.index');
-        Route::get('/dashboard', DashboardController::class)->name('platform.dashboard');
-
-        Route::get('/exercises/{exercise}', [ExerciseController::class, 'show'])->name('exercises.show');
-        Route::post('/exercises/{exercise}/check', [ExerciseController::class, 'check'])->name('exercises.check');
+        Route::get('/unlock', PlatformPaywallController::class)->name('platform.paywall');
+        Route::post('/unlock/focus', PaywallFocusController::class)->name('platform.paywall.focus');
 
         Route::middleware('auth')->group(function () {
-            Route::post('/study/start', [StudyController::class, 'start'])->name('study.start');
-            Route::get('/study/{studySession}', [StudyController::class, 'show'])->name('study.show');
-            Route::post('/study/{studySession}/advance', [StudyController::class, 'advance'])->name('study.advance');
-            Route::post('/exam/{session}/pay', [PaymentController::class, 'checkout'])->name('exam.pay');
             Route::post('/unlock', [PaymentController::class, 'checkoutSection'])->name('platform.unlock');
+            Route::get('/checkout', [PaymentController::class, 'startSectionCheckout'])->name('platform.checkout');
             Route::get('/exam/{session}/payment/success', [PaymentController::class, 'success'])->name('payment.success');
+            Route::post('/exam/{session}/pay', [PaymentController::class, 'checkout'])->name('exam.pay');
+        });
+
+        Route::get('/exam/{session}/paywall', [ExamController::class, 'paywall'])->name('exam.paywall');
+
+        Route::middleware('preview')->group(function () {
+            Route::post('/exam/start', [ExamController::class, 'start'])->name('exam.start');
+            Route::get('/exam/{session}', [ExamController::class, 'show'])->name('exam.show');
+            Route::post('/exam/{session}/questions/{question}', [ExamController::class, 'answer'])->name('exam.answer');
+            Route::post('/exam/{session}/continue', [ExamController::class, 'continue'])->name('exam.continue');
+            Route::get('/exam/{session}/results', [ExamController::class, 'results'])->name('exam.results');
+            Route::post('/exam/{session}/finish', [ExamController::class, 'finish'])->name('exam.finish');
+
+            Route::get('/study', [StudyController::class, 'index'])->name('study.index');
+            Route::get('/skills', [ExerciseController::class, 'index'])->name('skills.index');
+            Route::get('/dashboard', DashboardController::class)->name('platform.dashboard');
+
+            Route::get('/exercises/{exercise}', [ExerciseController::class, 'show'])->name('exercises.show');
+            Route::post('/exercises/{exercise}/check', [ExerciseController::class, 'check'])->name('exercises.check');
+
+            Route::middleware('auth')->group(function () {
+                Route::post('/study/start', [StudyController::class, 'start'])->name('study.start');
+                Route::get('/study/{studySession}', [StudyController::class, 'show'])->name('study.show');
+                Route::post('/study/{studySession}/advance', [StudyController::class, 'advance'])->name('study.advance');
+            });
         });
     });

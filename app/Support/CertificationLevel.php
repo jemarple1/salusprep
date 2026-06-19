@@ -16,9 +16,9 @@ class CertificationLevel
 
     public const NCLEX_PN_MARK = 'NCLEX-PN®';
 
-    public const FREE_QUESTIONS = 25;
+    public const QUIZ_QUESTIONS = 25;
 
-    public const QUIZ_QUESTIONS = 40;
+    public const FOCUS_CATEGORY_PERCENT = 75;
 
     public const PRICE_CENTS = 899;
 
@@ -89,10 +89,10 @@ class CertificationLevel
     public static function unlockProductDescription(string $level): string
     {
         if (self::isNclex($level)) {
-            return 'One-time unlock for unlimited adaptive '.self::NCLEX_PN_MARK.' practice.';
+            return 'One-time Full Access for unlimited adaptive '.self::NCLEX_PN_MARK.' practice.';
         }
 
-        return 'One-time unlock for unlimited adaptive '.self::NREMT_MARK.' practice.';
+        return 'One-time Full Access for unlimited adaptive '.self::NREMT_MARK.' practice.';
     }
 
     public static function isNclex(string $level): bool

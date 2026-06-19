@@ -60,33 +60,54 @@
                     </div>
                 @endif
 
-                <p class="mt-8 text-center text-sm text-slate-400">How well do you know this now?</p>
+                <div id="study-rating" class="mt-8 opacity-40 pointer-events-none transition-opacity">
+                    <p class="text-center text-sm font-semibold text-slate-300">How well do you know this now?</p>
+                    <div class="mt-4 flex flex-wrap items-center justify-center gap-4">
+                        <form method="POST" action="{{ route('study.advance', [$sectionSlug, $studySession]) }}" class="study-rating-form">
+                            @csrf
+                            <input type="hidden" name="action" value="weak">
+                            <button
+                                type="submit"
+                                class="group/btn flex flex-col items-center gap-2 rounded-xl border border-safety/40 bg-safety/10 px-6 py-4 font-bold text-safety-light transition hover:bg-safety/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-safety/60"
+                                aria-label="Still learning — show this card again soon"
+                            >
+                                <svg class="h-8 w-8 rotate-180 transition group-hover/btn:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M7 10v12" />
+                                    <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
+                                </svg>
+                                <span class="text-xs uppercase tracking-wider">Still learning</span>
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ route('study.advance', [$sectionSlug, $studySession]) }}" class="study-rating-form">
+                            @csrf
+                            <input type="hidden" name="action" value="strong">
+                            <button
+                                type="submit"
+                                class="group/btn flex flex-col items-center gap-2 rounded-xl border border-medic/40 bg-medic/20 px-6 py-4 font-bold text-medic-light transition hover:bg-medic/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-medic/60"
+                                aria-label="Got it — clear this card for now"
+                            >
+                                <svg class="h-8 w-8 transition group-hover/btn:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M7 10v12" />
+                                    <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
+                                </svg>
+                                <span class="text-xs uppercase tracking-wider">Got it</span>
+                            </button>
+                        </form>
+                    </div>
+                    <p class="mt-4 text-center text-xs text-slate-500">Cards you mark still learning come back sooner and rise to the top next session.</p>
+                </div>
             </div>
         </div>
-    </div>
-
-    <div id="study-actions" class="mx-auto mt-8 flex max-w-2xl flex-wrap justify-center gap-3 opacity-40 pointer-events-none transition-opacity">
-        <form method="POST" action="{{ route('study.advance', [$sectionSlug, $studySession]) }}">
-            @csrf
-            <input type="hidden" name="action" value="review">
-            <button type="submit" class="rounded-xl border border-safety/40 bg-safety/10 px-6 py-3 font-bold text-safety-light hover:bg-safety/20">
-                Still learning
-            </button>
-        </form>
-        <form method="POST" action="{{ route('study.advance', [$sectionSlug, $studySession]) }}">
-            @csrf
-            <input type="hidden" name="action" value="mastered">
-            <button type="submit" class="rounded-xl bg-medic px-8 py-3 font-bold text-white hover:bg-medic-dark">
-                Got it ✓
-            </button>
-        </form>
     </div>
 
     <style>
         #flashcard.is-flipped #flashcard-inner {
             transform: rotateY(180deg);
         }
-        #study-actions.is-ready {
+        #flashcard.is-flipped {
+            cursor: default;
+        }
+        #study-rating.is-ready {
             opacity: 1;
             pointer-events: auto;
         }
@@ -96,12 +117,13 @@
         (function () {
             var card = document.getElementById('flashcard');
             var inner = document.getElementById('flashcard-inner');
-            var actions = document.getElementById('study-actions');
-            if (!card || !inner || !actions) return;
+            var rating = document.getElementById('study-rating');
+            if (!card || !inner || !rating) return;
 
             function flip() {
+                if (card.classList.contains('is-flipped')) return;
                 card.classList.add('is-flipped');
-                actions.classList.add('is-ready');
+                rating.classList.add('is-ready');
             }
 
             card.addEventListener('click', flip);
@@ -110,6 +132,12 @@
                     e.preventDefault();
                     flip();
                 }
+            });
+
+            card.querySelectorAll('.study-rating-form').forEach(function (form) {
+                form.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
             });
         })();
     </script>

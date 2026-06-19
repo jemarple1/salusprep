@@ -1,6 +1,7 @@
 @props([
     'exercise',
     'variant' => 'carousel',
+    'showcase' => false,
 ])
 
 @php
@@ -29,15 +30,20 @@
         'medic' => 'group-hover:text-medic-light',
         default => 'group-hover:text-ems-light',
     };
+    $tag = $showcase ? 'div' : 'a';
+    $linkAttrs = $showcase ? '' : 'href="'.$exercise['url'].'"';
+    $surfaceClass = $showcase
+        ? 'border-white/10 bg-navy-light'
+        : 'border-white/10 bg-navy-light/90 shadow-lg';
 @endphp
 
-<a
-    href="{{ $exercise['url'] }}"
-    {{ $attributes->class(['group flex h-full flex-col rounded-2xl border border-white/10 bg-navy-light/90 p-5 shadow-lg transition hover:-translate-y-0.5 hover:bg-navy-light', $sizeClass, $ring]) }}
+<{{ $tag }}
+    {!! $linkAttrs !!}
+    {{ $attributes->class(['group flex h-full flex-col rounded-2xl border p-5 transition', $surfaceClass, $showcase ? '' : 'hover:-translate-y-0.5 hover:bg-navy-light', $sizeClass, $showcase ? '' : $ring]) }}
 >
     <div class="mb-3 flex items-start gap-3">
         <div @class([
-            'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-navy/60',
+            'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/10',
             'text-ems-light' => ($exercise['color'] ?? 'ems') === 'ems',
             'text-red-300' => ($exercise['color'] ?? '') === 'rescue',
             'text-medic-light' => ($exercise['color'] ?? '') === 'medic',
@@ -49,7 +55,9 @@
         <span class="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider {{ $badge }}">{{ $exercise['category'] }}</span>
     </div>
 
-    <h3 class="text-lg font-bold leading-snug text-white {{ $hoverTitle }}">{{ $exercise['title'] }}</h3>
-    <p class="mt-2 flex-1 text-sm leading-relaxed text-slate-400">{{ $exercise['description'] }}</p>
-    <p class="mt-4 text-xs font-semibold text-slate-500 group-hover:text-ems-light">Open exercise →</p>
-</a>
+    <h3 class="text-lg font-bold leading-snug text-white {{ $showcase ? '' : $hoverTitle }}">{{ $exercise['title'] }}</h3>
+    <p class="mt-2 flex-1 text-sm leading-relaxed {{ $showcase ? 'text-slate-300' : 'text-slate-400' }}">{{ $exercise['description'] }}</p>
+    @if (! $showcase)
+        <p class="mt-4 text-xs font-semibold text-slate-500 group-hover:text-ems-light">Open exercise →</p>
+    @endif
+</{{ $tag }}>

@@ -6,6 +6,12 @@
     <div class="mb-8">
         <p class="text-sm font-bold uppercase tracking-wider text-medic-light">{{ $sectionLabel }}</p>
         <h1 class="mt-1 text-3xl font-bold text-white">Quiz results</h1>
+        @if ($session->hasFocusCategory())
+            @php $focusStyles = \App\Support\QuestionCategory::styles($session->focus_category); @endphp
+            <p class="mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase {{ $focusStyles['badge'] }}">
+                {{ $session->focus_category }} focus exam · 75% weighted
+            </p>
+        @endif
     </div>
 
     <div class="mb-8 grid gap-4 sm:grid-cols-4">
@@ -22,8 +28,13 @@
             <p class="mt-1 text-sm text-slate-500">Accuracy</p>
         </div>
         <div class="rounded-xl border border-white/10 bg-navy-light/80 p-5">
-            <p class="text-3xl font-bold text-ems-light">{{ $session->current_difficulty }}/5</p>
-            <p class="mt-1 text-sm text-slate-500">Final difficulty</p>
+            <p class="text-sm text-slate-500">Final difficulty</p>
+            <x-exam-difficulty-bar
+                :difficulty="$session->current_difficulty"
+                :show-level="true"
+                :show-label="false"
+                class="mt-3"
+            />
         </div>
     </div>
 
@@ -54,11 +65,7 @@
 
     <div class="mt-8 flex flex-wrap gap-3">
         @if ($activeExamSession ?? null)
-            @if ($activeExamSession->requiresPayment())
-                <a href="{{ route('exam.paywall', [$sectionSlug, $activeExamSession]) }}" class="rounded-xl bg-safety px-5 py-3 font-bold text-navy hover:bg-safety-light">Continue current quiz</a>
-            @else
-                <a href="{{ route('exam.show', [$sectionSlug, $activeExamSession]) }}" class="rounded-xl bg-medic px-5 py-3 font-bold text-white hover:bg-medic-dark">Continue current quiz</a>
-            @endif
+            <a href="{{ route('exam.show', [$sectionSlug, $activeExamSession]) }}" class="rounded-xl bg-medic px-5 py-3 font-bold text-white hover:bg-medic-dark">Continue current quiz</a>
         @else
             <form method="POST" action="{{ route('exam.start', $sectionSlug) }}">
                 @csrf
@@ -66,7 +73,7 @@
             </form>
         @endif
         @auth
-            @if (auth()->user()->hasSectionAccess($sectionLevel) && $session->answers->where('is_correct', false)->isNotEmpty())
+            @if (($hasAccess ?? false) && $session->answers->where('is_correct', false)->isNotEmpty())
                 <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-xl border border-ems/40 bg-ems/10 px-5 py-3 font-bold text-ems-light hover:bg-ems/20">Review missed with flashcards</a>
             @endif
         @endauth

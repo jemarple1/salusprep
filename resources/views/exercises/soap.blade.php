@@ -94,6 +94,7 @@
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.SalusExercise.csrf, 'Accept': 'application/json' },
                     body: JSON.stringify({ scenario: window.SalusExercise.scenarioIndex, placements: placements }),
                 }).then(function (r) { return r.json(); }).then(function (data) {
+                    window.SalusExercise.afterCheck(data, function (data) {
                     chips().forEach(function (chip) {
                         chip.classList.remove('border-medic/50', 'border-rescue/50');
                         var result = data.results[chip.dataset.id];
@@ -102,6 +103,7 @@
                     var el = document.getElementById('soap-result');
                     el.textContent = data.correct ? 'Perfect — all statements placed correctly.' : 'Score: ' + data.score + ' / ' + data.total + '.';
                     el.className = 'text-sm font-semibold ' + (data.correct ? 'text-medic-light' : 'text-safety-light');
+                    });
                 });
             });
             updatePlaceholders();

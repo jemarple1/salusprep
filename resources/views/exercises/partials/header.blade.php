@@ -34,5 +34,14 @@
         checkUrl: @json(route('exercises.check', [$sectionSlug, $exercise['slug']])),
         scenarioIndex: @json($scenarioIndex),
         csrf: @json(csrf_token()),
+        afterCheck: function (data, callback) {
+            if (data.paywall_url) {
+                window.location.href = data.paywall_url;
+                return;
+            }
+            if (callback) {
+                callback(data);
+            }
+        },
     };
 </script>

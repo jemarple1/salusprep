@@ -5,42 +5,64 @@ namespace App\Http\Controllers;
 use App\Models\ExamSession;
 use App\Services\AccuracyTrendService;
 use App\Services\CategoryProficiencyService;
+use App\Services\FocusCategoryService;
+use App\Services\FocusExamService;
 use App\Services\GuestService;
+use App\Services\PreviewAccessService;
 use App\Services\StudyService;
 use App\Models\StudySession;
-use App\Support\CertificationLevel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function __construct(private GuestService $guests) {}
+    public function __construct(
+        private GuestService $guests,
+        private PreviewAccessService $preview,
+    ) {}
 
     public function __invoke(
         Request $request,
         CategoryProficiencyService $proficiency,
         StudyService $study,
         AccuracyTrendService $accuracyTrend,
+        FocusCategoryService $focusCategory,
+        FocusExamService $focusExams,
     ): View {
         $level = $request->attributes->get('certification_level');
         $user = $request->user();
+        $hasAccess = $this->preview->hasAccess($request, $level);
 
         if ($user === null) {
             $guestToken = $this->guests->token($request);
-            $progress = $this->guests->progress($guestToken, $level);
+            $categoryStats = $hasAccess ? $proficiency->forGuest($guestToken, $level) : collect();
+            $overallStats = $hasAccess
+                ? $proficiency->overallForGuest($guestToken, $level)
+                : ['total' => 0, 'correct' => 0, 'incorrect' => 0, 'accuracy_percent' => 0];
+
+            $weakCategories = $categoryStats->sortBy('accuracy_percent')->take(3)->values();
+            $focusExamOptions = $focusExams->optionsForLevel(
+                $level,
+                $categoryStats,
+                ($overallStats['total'] ?? 0) > 0 ? $overallStats['accuracy_percent'] : null,
+            );
 
             return view('dashboard', $this->baseViewData(
                 sessions: collect(),
                 quizNumbers: [],
                 unlocked: false,
+                hasAccess: $hasAccess,
                 requiresAuth: true,
-                freeRemaining: $progress->freeQuestionsRemaining(),
                 activeSession: $this->guests->activeExamSession($guestToken, $level),
+                categoryStats: $categoryStats,
+                overallStats: $overallStats,
+                weakCategories: $weakCategories,
+                pinnedFocus: $focusCategory->resolvePinned($request, $level, $weakCategories),
+                focusExamOptions: $focusExamOptions,
             ));
         }
 
-        $access = $user->sectionAccessFor($level);
         $unlocked = $user->hasSectionAccess($level);
 
         $sessions = $user->examSessions()
@@ -58,7 +80,7 @@ class DashboardController extends Controller
         $activeStudySession = null;
         $accuracyTrendData = ['points' => [], 'trend' => 'insufficient', 'trend_delta' => 0, 'trend_message' => '', 'total_quizzes' => 0];
 
-        if ($unlocked) {
+        if ($hasAccess) {
             $categoryStats = $proficiency->forUser($user, $level);
             $overallStats = $proficiency->overall($user, $level);
             $wrongByCategory = $study->wrongCountsByCategory($user, $level);
@@ -67,12 +89,20 @@ class DashboardController extends Controller
             $accuracyTrendData = $accuracyTrend->forUser($user, $level);
         }
 
+        $weakCategories = $categoryStats->sortBy('accuracy_percent')->take(3)->values();
+        $pinnedFocus = $focusCategory->resolvePinned($request, $level, $weakCategories);
+        $focusExamOptions = $focusExams->optionsForLevel(
+            $level,
+            $categoryStats,
+            ($overallStats['total'] ?? 0) > 0 ? $overallStats['accuracy_percent'] : null,
+        );
+
         return view('dashboard', $this->baseViewData(
             sessions: $sessions,
             quizNumbers: $quizNumbers,
             unlocked: $unlocked,
+            hasAccess: $hasAccess,
             requiresAuth: false,
-            freeRemaining: $access?->freeQuestionsRemaining() ?? CertificationLevel::FREE_QUESTIONS,
             activeSession: $user->activeExamSession($level),
             categoryStats: $categoryStats,
             overallStats: $overallStats,
@@ -80,6 +110,9 @@ class DashboardController extends Controller
             totalMissed: $totalMissed,
             activeStudySession: $activeStudySession,
             accuracyTrend: $accuracyTrendData,
+            weakCategories: $weakCategories,
+            pinnedFocus: $pinnedFocus,
+            focusExamOptions: $focusExamOptions,
         ));
     }
 
@@ -88,8 +121,8 @@ class DashboardController extends Controller
         iterable $sessions,
         array $quizNumbers,
         bool $unlocked,
+        bool $hasAccess,
         bool $requiresAuth,
-        int $freeRemaining,
         ?ExamSession $activeSession,
         Collection $categoryStats = new Collection,
         array $overallStats = ['total' => 0, 'correct' => 0, 'incorrect' => 0, 'accuracy_percent' => 0],
@@ -97,13 +130,16 @@ class DashboardController extends Controller
         int $totalMissed = 0,
         ?StudySession $activeStudySession = null,
         array $accuracyTrend = ['points' => [], 'trend' => 'insufficient', 'trend_delta' => 0, 'trend_message' => '', 'total_quizzes' => 0],
+        $weakCategories = new Collection,
+        ?string $pinnedFocus = null,
+        Collection $focusExamOptions = new Collection,
     ): array {
         return [
             'sessions' => $sessions,
             'quizNumbers' => $quizNumbers,
             'unlocked' => $unlocked,
+            'hasAccess' => $hasAccess,
             'requiresAuth' => $requiresAuth,
-            'freeRemaining' => $freeRemaining,
             'activeSession' => $activeSession,
             'categoryStats' => $categoryStats,
             'overallStats' => $overallStats,
@@ -111,6 +147,9 @@ class DashboardController extends Controller
             'totalMissed' => $totalMissed,
             'activeStudySession' => $activeStudySession,
             'accuracyTrend' => $accuracyTrend,
+            'weakCategories' => $weakCategories,
+            'pinnedFocus' => $pinnedFocus,
+            'focusExamOptions' => $focusExamOptions,
         ];
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\StudySession;
 use App\Services\CategoryProficiencyService;
+use App\Services\PreviewAccessService;
 use App\Services\StudyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,16 +16,18 @@ class StudyController extends Controller
     public function __construct(
         private StudyService $study,
         private CategoryProficiencyService $proficiency,
+        private PreviewAccessService $preview,
     ) {}
 
     public function index(Request $request): View
     {
         $level = $request->attributes->get('certification_level');
         $user = $request->user();
+        $hasAccess = $this->preview->hasAccess($request, $level);
         $unlocked = $user !== null && $user->hasSectionAccess($level);
 
         $data = [
-            'flashcardsUnlocked' => $unlocked,
+            'flashcardsAvailable' => $hasAccess,
             'requiresAuth' => $user === null,
             'totalMissed' => $user !== null ? count($this->study->wrongQuestionIds($user, $level)) : null,
             'wrongByCategory' => [],
@@ -33,7 +36,7 @@ class StudyController extends Controller
             'activeExamSession' => $user?->activeExamSession($level),
         ];
 
-        if ($unlocked && $user !== null) {
+        if ($hasAccess && $user !== null) {
             $data['wrongByCategory'] = $this->study->wrongCountsByCategory($user, $level);
             $data['categoryStats'] = $this->proficiency->forUser($user, $level);
             $data['activeStudySession'] = $this->study->activeSession($user, $level);
@@ -49,7 +52,7 @@ class StudyController extends Controller
         $slug = $request->attributes->get('section_slug');
         $user = $request->user();
 
-        $this->requireUnlocked($user, $level);
+        $this->requirePlatformAccess($request, $user, $level);
 
         $validated = $request->validate([
             'category' => ['nullable', 'string', 'max:100'],
@@ -111,17 +114,24 @@ class StudyController extends Controller
         }
 
         $validated = $request->validate([
-            'action' => ['required', 'in:mastered,review'],
+            'action' => ['required', 'in:weak,strong,review,mastered'],
         ]);
 
-        $this->study->advance($studySession, $validated['action']);
+        $this->study->advance($studySession, $validated['action'], $request->user());
+
+        $this->preview->recordAction($request, $studySession->certification_level);
+
+        if ($this->preview->requiresPaywall($request, $studySession->certification_level)) {
+            return redirect()->route('platform.paywall', $section);
+        }
 
         return redirect()->route('study.show', [$section, $studySession->fresh()]);
     }
 
-    private function requireUnlocked($user, string $level): void
+    private function requirePlatformAccess(Request $request, $user, string $level): void
     {
-        abort_unless($user !== null && $user->hasSectionAccess($level), 403, 'Unlock this section to access study tools and proficiency insights.');
+        abort_unless($user !== null, 403, 'Sign in to use flashcards.');
+        abort_unless($this->preview->hasAccess($request, $level), 403);
     }
 
     private function authorizeStudySession(Request $request, StudySession $studySession): void
@@ -133,6 +143,6 @@ class StudyController extends Controller
 
         abort_unless($studySession->user_id === $request->user()?->id, 403);
 
-        $this->requireUnlocked($request->user(), $studySession->certification_level);
+        $this->requirePlatformAccess($request, $request->user(), $studySession->certification_level);
     }
 }

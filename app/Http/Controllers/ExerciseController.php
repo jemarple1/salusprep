@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\PreviewAccessService;
 use App\Support\PlatformExercise;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -9,24 +10,21 @@ use Illuminate\View\View;
 
 class ExerciseController extends Controller
 {
+    public function __construct(private PreviewAccessService $preview) {}
+
     public function index(Request $request): View
     {
         $level = $request->attributes->get('certification_level');
-        $user = $request->user();
-        $unlocked = $user !== null && $user->hasSectionAccess($level);
 
         return view('exercises.index', [
-            'exercises' => PlatformExercise::cardsForLevel($level, $user, $unlocked),
-            'unlocked' => $unlocked,
-            'requiresAuth' => $user === null,
+            'exercises' => PlatformExercise::cardsForLevel($level),
         ]);
     }
 
     public function show(Request $request, string $section, string $exercise): View
     {
         $level = $request->attributes->get('certification_level');
-        $user = $request->user();
-        $unlocked = $user !== null && $user->hasSectionAccess($level);
+        $hasAccess = $this->preview->hasAccess($request, $level);
 
         $meta = PlatformExercise::find($level, $exercise);
         abort_if($meta === null, 404);
@@ -35,18 +33,7 @@ class ExerciseController extends Controller
         $scenario = PlatformExercise::scenario($level, $exercise, $scenarioIndex);
         abort_if($scenario === null, 404);
 
-        $scenarioLinks = PlatformExercise::scenarioLinks($level, $exercise, $user, $unlocked);
-
-        if (! PlatformExercise::canAccessScenario($user, $level, $unlocked, $scenarioIndex)) {
-            return view('exercises.scenario-paywall', [
-                'exercise' => $meta,
-                'scenario' => $scenario,
-                'scenarioIndex' => $scenarioIndex,
-                'scenarioLinks' => $scenarioLinks,
-                'requiresAuth' => $user === null,
-                'unlocked' => $unlocked,
-            ]);
-        }
+        $scenarioLinks = PlatformExercise::scenarioLinks($level, $exercise, $hasAccess);
 
         $view = match ($meta['ui'] ?? $meta['type']) {
             'soap' => 'exercises.soap',
@@ -68,15 +55,12 @@ class ExerciseController extends Controller
             'scenario' => $scenario,
             'scenarioIndex' => $scenarioIndex,
             'scenarioLinks' => $scenarioLinks,
-            'unlocked' => $unlocked,
         ]);
     }
 
     public function check(Request $request, string $section, string $exercise): JsonResponse
     {
         $level = $request->attributes->get('certification_level');
-        $user = $request->user();
-        $unlocked = $user !== null && $user->hasSectionAccess($level);
 
         $meta = PlatformExercise::find($level, $exercise);
         abort_if($meta === null, 404);
@@ -85,28 +69,32 @@ class ExerciseController extends Controller
             'scenario' => ['required', 'integer', 'min:0'],
         ]);
 
-        abort_unless(
-            PlatformExercise::canAccessScenario($user, $level, $unlocked, $validated['scenario']),
-            403,
-        );
-
         $scenario = PlatformExercise::scenario($level, $exercise, $validated['scenario']);
         abort_if($scenario === null, 404);
 
         $ui = $meta['ui'] ?? $meta['type'];
 
-        if ($ui === 'soap') {
-            return $this->checkSoap($request, $scenario);
+        $response = match ($ui) {
+            'soap' => $this->checkSoap($request, $scenario),
+            'burn-map' => $this->checkBurnMap($request, $scenario),
+            'gcs-picker' => $this->checkGcs($request, $scenario),
+            default => $this->checkSimple($request, $scenario, $ui),
+        };
+
+        $limitReached = $this->preview->recordAction($request, $level);
+
+        if ($limitReached) {
+            $response->setData(array_merge($response->getData(true), [
+                'paywall_url' => route('platform.paywall', $section),
+            ]));
         }
 
-        if ($ui === 'burn-map') {
-            return $this->checkBurnMap($request, $scenario);
-        }
+        return $response;
+    }
 
-        if ($ui === 'gcs-picker') {
-            return $this->checkGcs($request, $scenario);
-        }
-
+    /** @param  array<string, mixed>  $scenario */
+    private function checkSimple(Request $request, array $scenario, string $ui): JsonResponse
+    {
         $answer = $request->validate([
             'answer' => ['required', 'string'],
         ])['answer'];

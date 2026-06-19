@@ -6,7 +6,7 @@
     <div class="mx-auto max-w-md">
         <div class="rounded-2xl border border-safety/20 bg-navy-light/80 p-8">
             <h1 class="text-2xl font-bold text-white">Create your account</h1>
-            <p class="mt-2 text-sm text-slate-400">25 free adaptive questions per section — EMT-Basic, EMT-Advanced, Paramedic, and NCLEX-PN®.</p>
+            <p class="mt-2 text-sm text-slate-400">Adaptive exam prep for EMT-Basic, EMT-Advanced, Paramedic, and NCLEX-PN®.</p>
 
             <form method="POST" action="{{ route('register') }}" class="mt-6 space-y-4">
                 @csrf
