@@ -22,16 +22,17 @@ return new class extends Migration
             $table->uuid('guest_token')->nullable();
             $table->string('certification_level');
             $table->string('exercise_slug');
+            $table->unsignedTinyInteger('exercise_level')->default(1);
             $table->unsignedTinyInteger('scenario_index');
             $table->timestamp('completed_at');
             $table->timestamps();
 
             $table->unique(
-                ['user_id', 'certification_level', 'exercise_slug', 'scenario_index'],
+                ['user_id', 'certification_level', 'exercise_slug', 'exercise_level', 'scenario_index'],
                 'exercise_completions_user_unique',
             );
             $table->unique(
-                ['guest_token', 'certification_level', 'exercise_slug', 'scenario_index'],
+                ['guest_token', 'certification_level', 'exercise_slug', 'exercise_level', 'scenario_index'],
                 'exercise_completions_guest_unique',
             );
             $table->index(['certification_level', 'exercise_slug'], 'ex_comp_level_slug_idx');
