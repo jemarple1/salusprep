@@ -5,30 +5,30 @@
 @section('content')
     @include('exercises.partials.header')
 
-    <p class="mb-4 text-sm font-semibold text-slate-400">Tap burned areas on the diagram. Select all regions involved.</p>
+    <p class="mb-4 text-sm font-semibold text-slate-400">Tap burned areas on the diagram. Anterior and posterior views are selected independently.</p>
 
     <div class="grid gap-8 lg:grid-cols-2">
         <div class="rounded-2xl border border-white/10 bg-navy/40 p-6">
             <p class="mb-4 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Anterior</p>
             <svg viewBox="0 0 160 360" class="mx-auto h-auto w-full max-w-[180px]" aria-label="Anterior body diagram">
-                <ellipse data-region="head" cx="80" cy="28" rx="26" ry="24" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
-                <rect data-region="chest" x="48" y="54" width="64" height="56" rx="8" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
-                <rect data-region="abdomen" x="52" y="112" width="56" height="48" rx="6" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
-                <rect data-region="arm_l" x="18" y="58" width="24" height="100" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
-                <rect data-region="arm_r" x="118" y="58" width="24" height="100" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
-                <rect data-region="leg_l" x="52" y="168" width="28" height="120" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
-                <rect data-region="leg_r" x="80" y="168" width="28" height="120" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
+                <ellipse data-region="anterior:head" cx="80" cy="28" rx="26" ry="24" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
+                <rect data-region="anterior:chest" x="48" y="54" width="64" height="56" rx="8" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
+                <rect data-region="anterior:abdomen" x="52" y="112" width="56" height="48" rx="6" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
+                <rect data-region="anterior:arm_l" x="18" y="58" width="24" height="100" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
+                <rect data-region="anterior:arm_r" x="118" y="58" width="24" height="100" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
+                <rect data-region="anterior:leg_l" x="52" y="168" width="28" height="120" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
+                <rect data-region="anterior:leg_r" x="80" y="168" width="28" height="120" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
             </svg>
         </div>
         <div class="rounded-2xl border border-white/10 bg-navy/40 p-6">
             <p class="mb-4 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Posterior</p>
             <svg viewBox="0 0 160 360" class="mx-auto h-auto w-full max-w-[180px]" aria-label="Posterior body diagram">
-                <ellipse data-region="head" cx="80" cy="28" rx="26" ry="24" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
-                <rect data-region="back" x="48" y="54" width="64" height="106" rx="8" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
-                <rect data-region="arm_l" x="18" y="58" width="24" height="100" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
-                <rect data-region="arm_r" x="118" y="58" width="24" height="100" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
-                <rect data-region="leg_l" x="52" y="168" width="28" height="120" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
-                <rect data-region="leg_r" x="80" y="168" width="28" height="120" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
+                <ellipse data-region="posterior:head" cx="80" cy="28" rx="26" ry="24" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
+                <rect data-region="posterior:back" x="48" y="54" width="64" height="106" rx="8" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
+                <rect data-region="posterior:arm_l" x="18" y="58" width="24" height="100" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
+                <rect data-region="posterior:arm_r" x="118" y="58" width="24" height="100" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
+                <rect data-region="posterior:leg_l" x="52" y="168" width="28" height="120" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
+                <rect data-region="posterior:leg_r" x="80" y="168" width="28" height="120" rx="10" class="burn-region fill-slate-600/80 stroke-white/30 stroke-2 cursor-pointer transition hover:fill-safety/40" />
             </svg>
         </div>
     </div>
@@ -54,16 +54,15 @@
         (function () {
             var selected = new Set();
 
-            function syncRegion(region) {
-                document.querySelectorAll('.burn-region[data-region="' + region + '"]').forEach(function (el) {
-                    if (selected.has(region)) {
-                        el.classList.add('fill-safety/70', 'stroke-safety');
-                        el.classList.remove('fill-slate-600/80');
-                    } else {
-                        el.classList.remove('fill-safety/70', 'stroke-safety');
-                        el.classList.add('fill-slate-600/80');
-                    }
-                });
+            function syncElement(el) {
+                var region = el.dataset.region;
+                if (selected.has(region)) {
+                    el.classList.add('fill-safety/70', 'stroke-safety');
+                    el.classList.remove('fill-slate-600/80');
+                } else {
+                    el.classList.remove('fill-safety/70', 'stroke-safety');
+                    el.classList.add('fill-slate-600/80');
+                }
             }
 
             document.querySelectorAll('.burn-region').forEach(function (el) {
@@ -74,13 +73,13 @@
                     } else {
                         selected.add(region);
                     }
-                    syncRegion(region);
+                    syncElement(el);
                 });
             });
 
             document.getElementById('burn-clear').addEventListener('click', function () {
-                Array.from(selected).forEach(syncRegion);
                 selected.clear();
+                document.querySelectorAll('.burn-region').forEach(syncElement);
                 document.querySelectorAll('input[name="burn_percent"]').forEach(function (input) {
                     input.checked = false;
                 });
@@ -109,10 +108,10 @@
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
                         window.SalusExercise.afterCheck(data, function (data) {
-                        var el = document.getElementById('exercise-feedback');
-                        el.classList.remove('hidden', 'border-medic/40', 'bg-medic/10', 'border-rescue/40', 'bg-rescue/10');
-                        el.classList.add(data.correct ? 'border-medic/40' : 'border-rescue/40', data.correct ? 'bg-medic/10' : 'bg-rescue/10');
-                        el.innerHTML = '<p class="font-bold ' + (data.correct ? 'text-medic-light' : 'text-red-200') + '">' + (data.correct ? 'Correct' : 'Not quite') + '</p><p class="mt-2 text-sm text-slate-200">' + data.explanation + '</p>';
+                            var el = document.getElementById('exercise-feedback');
+                            el.classList.remove('hidden', 'border-medic/40', 'bg-medic/10', 'border-rescue/40', 'bg-rescue/10');
+                            el.classList.add(data.correct ? 'border-medic/40' : 'border-rescue/40', data.correct ? 'bg-medic/10' : 'bg-rescue/10');
+                            el.innerHTML = '<p class="font-bold ' + (data.correct ? 'text-medic-light' : 'text-red-200') + '">' + (data.correct ? 'Correct' : 'Not quite') + '</p><p class="mt-2 text-sm text-slate-200">' + data.explanation + '</p>';
                         });
                     });
             });

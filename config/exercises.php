@@ -3,7 +3,7 @@
 return [
 
     'emt_basic' => [
-        ['slug' => 'soap-charting', 'title' => 'SOAP Exercise', 'description' => 'Drag report sentences into Subjective, Objective, Assessment, and Plan.', 'category' => 'Documentation', 'color' => 'ems', 'type' => 'soap', 'ui' => 'soap', 'icon' => 'clipboard'],
+        ['slug' => 'soap-charting', 'title' => 'SOAP Exercise', 'description' => 'Drag report sentences into Subjective, Objective, Assessment, and Plan. Discard useless information.', 'category' => 'Documentation', 'color' => 'ems', 'type' => 'soap', 'ui' => 'soap', 'icon' => 'clipboard', 'levels' => 5],
         ['slug' => 'triage-start', 'title' => 'START Triage', 'description' => 'Assign the correct START tag color for each patient presentation.', 'category' => 'Triage', 'color' => 'rescue', 'type' => 'interactive', 'ui' => 'triage-tags', 'system' => 'start', 'icon' => 'triage'],
         ['slug' => 'triage-jumpstart', 'title' => 'JumpSTART Triage', 'description' => 'Pediatric MCI triage — pick the correct tag color.', 'category' => 'Triage', 'color' => 'rescue', 'type' => 'interactive', 'ui' => 'triage-tags', 'system' => 'jumpstart', 'icon' => 'pediatric'],
         ['slug' => 'triage-salt', 'title' => 'SALT Triage', 'description' => 'Work through Sort, Assess, Lifesaving interventions, and Transport.', 'category' => 'Triage', 'color' => 'rescue', 'type' => 'interactive', 'ui' => 'salt-triage', 'icon' => 'salt'],

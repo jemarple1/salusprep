@@ -1,14 +1,11 @@
 <?php
 
 return [
-    'scenarios' => array_map(function (array $s) {
-        $s['sections'] = ['S' => 'Subjective', 'O' => 'Objective', 'A' => 'Assessment', 'P' => 'Plan'];
-
-        return $s;
-    }, [
+    'scenarios' => [
         [
             'title' => 'Ambulatory MVC patient',
             'scenario' => 'Adult male walking at a bus-vs-car collision, talking in full sentences, scalp laceration with controlled bleeding.',
+            'detail' => 'Bystanders report he was the restrained driver. No airbag deployment. He denies loss of consciousness.',
             'sentences' => [
                 ['id' => 's1', 'text' => 'Patient states he was a restrained driver and self-extricated.', 'section' => 'S'],
                 ['id' => 's2', 'text' => 'Complains of scalp pain rated 4/10.', 'section' => 'S'],
@@ -16,11 +13,14 @@ return [
                 ['id' => 's4', 'text' => 'BP 128/80, pulse 84, RR 16, SpO₂ 99%.', 'section' => 'O'],
                 ['id' => 's5', 'text' => 'Minor trauma without life threat.', 'section' => 'A'],
                 ['id' => 's6', 'text' => 'Bandage, transport for evaluation.', 'section' => 'P'],
+                ['id' => 'x1', 'text' => 'Patient mentioned his favorite sports team lost last night.', 'section' => 'X'],
+                ['id' => 'x2', 'text' => 'Crew discussed where to get lunch after the call.', 'section' => 'X'],
             ],
         ],
         [
             'title' => 'Diabetic confusion',
             'scenario' => '72-year-old female found confused at home, family reports missed lunch and type 2 diabetes history.',
+            'detail' => 'Family states she takes metformin. Last known normal was before breakfast.',
             'sentences' => [
                 ['id' => 's1', 'text' => 'Family reports increasing confusion over one hour.', 'section' => 'S'],
                 ['id' => 's2', 'text' => 'Known diabetic, no insulin given today.', 'section' => 'S'],
@@ -28,11 +28,14 @@ return [
                 ['id' => 's4', 'text' => 'Glucose 48 mg/dL.', 'section' => 'O'],
                 ['id' => 's5', 'text' => 'Hypoglycemia with altered mental status.', 'section' => 'A'],
                 ['id' => 's6', 'text' => 'Oral glucose, recheck, transport.', 'section' => 'P'],
+                ['id' => 'x1', 'text' => 'Living room television was tuned to a news channel.', 'section' => 'X'],
+                ['id' => 'x2', 'text' => 'Neighbor waved from across the street.', 'section' => 'X'],
             ],
         ],
         [
             'title' => 'Asthma exacerbation',
             'scenario' => '19-year-old with wheezing and speaking in short phrases after soccer practice.',
+            'detail' => 'Coach reports patient has a history of asthma and an albuterol inhaler in his bag.',
             'sentences' => [
                 ['id' => 's1', 'text' => 'Patient reports sudden chest tightness and wheezing.', 'section' => 'S'],
                 ['id' => 's2', 'text' => 'Used albuterol inhaler twice without relief.', 'section' => 'S'],
@@ -40,11 +43,14 @@ return [
                 ['id' => 's4', 'text' => 'SpO₂ 91% on room air.', 'section' => 'O'],
                 ['id' => 's5', 'text' => 'Moderate asthma exacerbation with hypoxia.', 'section' => 'A'],
                 ['id' => 's6', 'text' => 'Oxygen, bronchodilator per protocol, transport.', 'section' => 'P'],
+                ['id' => 'x1', 'text' => 'Soccer field grass was recently mowed.', 'section' => 'X'],
+                ['id' => 'x2', 'text' => 'Patient wore red cleats during practice.', 'section' => 'X'],
             ],
         ],
         [
             'title' => 'Syncope at work',
             'scenario' => '45-year-old fainted briefly in office, now alert and oriented with normal vitals.',
+            'detail' => 'Coworkers caught him before he hit the floor. Episode lasted under one minute.',
             'sentences' => [
                 ['id' => 's1', 'text' => 'Patient reports standing quickly before episode.', 'section' => 'S'],
                 ['id' => 's2', 'text' => 'Denies chest pain or palpitations now.', 'section' => 'S'],
@@ -52,11 +58,14 @@ return [
                 ['id' => 's4', 'text' => 'BP 118/72, pulse 76 regular, glucose 102.', 'section' => 'O'],
                 ['id' => 's5', 'text' => 'Likely vasovagal syncope, resolved.', 'section' => 'A'],
                 ['id' => 's6', 'text' => 'Monitor, transport for evaluation if protocol requires.', 'section' => 'P'],
+                ['id' => 'x1', 'text' => 'Office break room had donuts available.', 'section' => 'X'],
+                ['id' => 'x2', 'text' => 'Patient parked in spot 14 this morning.', 'section' => 'X'],
             ],
         ],
         [
             'title' => 'Abdominal pain',
             'scenario' => '34-year-old with RLQ pain, nausea, low-grade fever for 12 hours.',
+            'detail' => 'Pain worsens with movement. No prior abdominal surgeries.',
             'sentences' => [
                 ['id' => 's1', 'text' => 'Pain started periumbilical then moved to RLQ.', 'section' => 'S'],
                 ['id' => 's2', 'text' => 'One episode of vomiting, no diarrhea.', 'section' => 'S'],
@@ -64,7 +73,84 @@ return [
                 ['id' => 's4', 'text' => 'BP 122/78, pulse 96, RR 18.', 'section' => 'O'],
                 ['id' => 's5', 'text' => 'Possible acute appendicitis.', 'section' => 'A'],
                 ['id' => 's6', 'text' => 'NPO, IV access, transport.', 'section' => 'P'],
+                ['id' => 'x1', 'text' => 'Patient ate pizza two days ago without issue.', 'section' => 'X'],
+                ['id' => 'x2', 'text' => 'Hospital parking garage was full.', 'section' => 'X'],
             ],
         ],
-    ]),
+        [
+            'title' => 'Heat exhaustion',
+            'scenario' => 'Construction worker found dizzy at job site on hot day, now alert and oriented.',
+            'detail' => 'Ambient temperature approximately 38°C. Coworkers moved him to shade.',
+            'sentences' => [
+                ['id' => 's1', 'text' => 'Patient reports working outdoors 6 hours without adequate fluids.', 'section' => 'S'],
+                ['id' => 's2', 'text' => 'Complains of dizziness, nausea, and muscle cramps.', 'section' => 'S'],
+                ['id' => 's3', 'text' => 'Skin cool and clammy, pupils equal, lungs clear.', 'section' => 'O'],
+                ['id' => 's4', 'text' => 'BP 102/68, pulse 108, RR 18, temp 38.6°C.', 'section' => 'O'],
+                ['id' => 's5', 'text' => 'Heat exhaustion without altered mental status.', 'section' => 'A'],
+                ['id' => 's6', 'text' => 'Cool patient, oral fluids if tolerated, transport for evaluation.', 'section' => 'P'],
+                ['id' => 'x1', 'text' => 'Job site supervisor signed paperwork at 0800.', 'section' => 'X'],
+                ['id' => 'x2', 'text' => 'Hard hat was yellow with company logo.', 'section' => 'X'],
+            ],
+        ],
+        [
+            'title' => 'Anaphylaxis',
+            'scenario' => 'Teenager stung by bee, developing hives and lip swelling within 10 minutes.',
+            'detail' => 'Parents on scene with epinephrine auto-injector prescription. No prior anaphylaxis documented.',
+            'sentences' => [
+                ['id' => 's1', 'text' => 'Patient reports bee sting to forearm while gardening.', 'section' => 'S'],
+                ['id' => 's2', 'text' => 'Reports throat tightness and generalized itching.', 'section' => 'S'],
+                ['id' => 's3', 'text' => 'Urticaria, lip swelling, wheezes bilaterally.', 'section' => 'O'],
+                ['id' => 's4', 'text' => 'BP 96/62, pulse 118, SpO₂ 93%, RR 24.', 'section' => 'O'],
+                ['id' => 's5', 'text' => 'Anaphylaxis with airway involvement.', 'section' => 'A'],
+                ['id' => 's6', 'text' => 'Epinephrine per protocol, oxygen, rapid transport.', 'section' => 'P'],
+                ['id' => 'x1', 'text' => 'Garden had roses and tulips in bloom.', 'section' => 'X'],
+                ['id' => 'x2', 'text' => 'Patient plans to finish homework tonight.', 'section' => 'X'],
+            ],
+        ],
+        [
+            'title' => 'Chest pain — stable',
+            'scenario' => '50-year-old with intermittent chest discomfort, now pain-free at rest.',
+            'detail' => 'Pain began during yard work. Has nitroglycerin at home but has not taken any.',
+            'sentences' => [
+                ['id' => 's1', 'text' => 'Patient describes pressure-like chest pain lasting 20 minutes, now resolved.', 'section' => 'S'],
+                ['id' => 's2', 'text' => 'Denies radiation, shortness of breath, or diaphoresis currently.', 'section' => 'S'],
+                ['id' => 's3', 'text' => 'Alert, skin warm and dry, no JVD, lungs clear.', 'section' => 'O'],
+                ['id' => 's4', 'text' => 'BP 134/82, pulse 78 regular, SpO₂ 98%.', 'section' => 'O'],
+                ['id' => 's5', 'text' => 'Resolved chest pain, possible ACS — cannot rule out.', 'section' => 'A'],
+                ['id' => 's6', 'text' => '12-lead, aspirin per protocol, IV access, transport.', 'section' => 'P'],
+                ['id' => 'x1', 'text' => 'Lawn mower brand is not clinically relevant.', 'section' => 'X'],
+                ['id' => 'x2', 'text' => 'Neighbor offered coffee after EMS arrived.', 'section' => 'X'],
+            ],
+        ],
+        [
+            'title' => 'Pediatric febrile seizure',
+            'scenario' => '2-year-old postictal after witnessed generalized seizure, fever noted by parents.',
+            'detail' => 'Seizure activity stopped before EMS arrival. No trauma history.',
+            'sentences' => [
+                ['id' => 's1', 'text' => 'Parents report 2-minute generalized tonic-clonic activity.', 'section' => 'S'],
+                ['id' => 's2', 'text' => 'Child had fever to 39.5°C prior to seizure.', 'section' => 'S'],
+                ['id' => 's3', 'text' => 'Postictal, arousable to painful stimulus, no focal deficits.', 'section' => 'O'],
+                ['id' => 's4', 'text' => 'Temp 39.2°C, pulse 132, RR 28, SpO₂ 97%.', 'section' => 'O'],
+                ['id' => 's5', 'text' => 'Simple febrile seizure, postictal state.', 'section' => 'A'],
+                ['id' => 's6', 'text' => 'Protect airway, cooling measures, transport for evaluation.', 'section' => 'P'],
+                ['id' => 'x1', 'text' => 'Child was watching cartoons before the event.', 'section' => 'X'],
+                ['id' => 'x2', 'text' => 'Stuffed animal was on the couch nearby.', 'section' => 'X'],
+            ],
+        ],
+        [
+            'title' => 'Opioid overdose',
+            'scenario' => 'Young adult found unresponsive by roommate with drug paraphernalia nearby.',
+            'detail' => 'Roommate states patient has history of prescription opioid use. Unknown down time.',
+            'sentences' => [
+                ['id' => 's1', 'text' => 'Roommate reports patient was using prescription opioids.', 'section' => 'S'],
+                ['id' => 's2', 'text' => 'Unknown time of last use.', 'section' => 'S'],
+                ['id' => 's3', 'text' => 'Unresponsive, pinpoint pupils, RR 6/min, cyanotic nail beds.', 'section' => 'O'],
+                ['id' => 's4', 'text' => 'SpO₂ 78% on room air, pulse 52.', 'section' => 'O'],
+                ['id' => 's5', 'text' => 'Suspected opioid overdose with respiratory depression.', 'section' => 'A'],
+                ['id' => 's6', 'text' => 'Airway positioning, ventilate, naloxone per protocol, transport.', 'section' => 'P'],
+                ['id' => 'x1', 'text' => 'Apartment number is 4B.', 'section' => 'X'],
+                ['id' => 'x2', 'text' => 'Roommate had been cooking dinner.', 'section' => 'X'],
+            ],
+        ],
+    ],
 ];

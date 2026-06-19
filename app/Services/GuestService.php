@@ -115,6 +115,10 @@ class GuestService
 
         app(FocusCategoryService::class)->persistSessionToUser($request, $user);
 
+        if (is_string($guestToken) && $guestToken !== '') {
+            app(ExerciseProgressService::class)->mergeGuestIntoUser($guestToken, $user);
+        }
+
         GuestSectionProgress::query()
             ->where('device_id', $deviceId)
             ->delete();

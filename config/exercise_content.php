@@ -8,6 +8,7 @@ return [
         'pharma-outcomes' => require __DIR__.'/exercise_content/emt_basic/pharma_outcomes.php',
         'pharma-dosage' => require __DIR__.'/exercise_content/emt_basic/pharma_dosage.php',
         'soap-charting' => require __DIR__.'/exercise_content/emt_basic/soap_charting.php',
+        'soap_charting_levels' => require __DIR__.'/exercise_content/emt_basic/soap_charting_levels.php',
         'triage-start' => require __DIR__.'/exercise_content/emt_basic/triage_start.php',
         'triage-jumpstart' => require __DIR__.'/exercise_content/emt_basic/triage_jumpstart.php',
         'triage-salt' => require __DIR__.'/exercise_content/emt_basic/triage_salt.php',

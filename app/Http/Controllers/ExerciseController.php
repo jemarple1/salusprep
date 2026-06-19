@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ExerciseProgressService;
 use App\Services\PreviewAccessService;
+use App\Support\BurnRegion;
 use App\Support\PlatformExercise;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ExerciseController extends Controller
 {
-    public function __construct(private PreviewAccessService $preview) {}
+    public function __construct(
+        private PreviewAccessService $preview,
+        private ExerciseProgressService $progress,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -21,7 +27,7 @@ class ExerciseController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $section, string $exercise): View
+    public function show(Request $request, string $section, string $exercise): View|RedirectResponse
     {
         $level = $request->attributes->get('certification_level');
         $hasAccess = $this->preview->hasAccess($request, $level);
@@ -29,11 +35,41 @@ class ExerciseController extends Controller
         $meta = PlatformExercise::find($level, $exercise);
         abort_if($meta === null, 404);
 
+        $hasExerciseLevels = PlatformExercise::hasExerciseLevels($level, $exercise);
+        $maxUnlockedLevel = $hasExerciseLevels
+            ? $this->progress->maxUnlockedLevel($request, $level, $exercise)
+            : 1;
+
+        if (! $request->has('scenario')) {
+            $resume = $this->progress->resumeTarget($request, $level, $exercise);
+
+            if ($resume['scenario'] !== 0 || $resume['exercise_level'] !== 1) {
+                return redirect()->route('exercises.show', array_filter([
+                    'section' => $section,
+                    'exercise' => $exercise,
+                    'scenario' => $resume['scenario'],
+                    'level' => $resume['exercise_level'] > 1 ? $resume['exercise_level'] : null,
+                ]));
+            }
+        }
+
+        $exerciseLevel = $hasExerciseLevels
+            ? min(max(1, (int) $request->query('level', 1)), $maxUnlockedLevel)
+            : 1;
+
         $scenarioIndex = max(0, (int) $request->query('scenario', 0));
-        $scenario = PlatformExercise::scenario($level, $exercise, $scenarioIndex);
+        $scenario = PlatformExercise::scenario($level, $exercise, $scenarioIndex, $exerciseLevel);
         abort_if($scenario === null, 404);
 
-        $scenarioLinks = PlatformExercise::scenarioLinks($level, $exercise, $hasAccess);
+        $completedIndexes = $this->progress->completedIndexes($request, $level, $exercise, $exerciseLevel);
+        $scenarioLinks = PlatformExercise::scenarioLinks($level, $exercise, $hasAccess, $completedIndexes, $exerciseLevel);
+        $scenarioCount = count(PlatformExercise::scenarios($level, $exercise, $exerciseLevel));
+        $completedLevels = $hasExerciseLevels
+            ? $this->progress->completedLevels($request, $level, $exercise)
+            : [];
+        $levelLinks = $hasExerciseLevels
+            ? PlatformExercise::levelLinks($level, $exercise, $hasAccess, $completedLevels, $maxUnlockedLevel, $exerciseLevel)
+            : [];
 
         $view = match ($meta['ui'] ?? $meta['type']) {
             'soap' => 'exercises.soap',
@@ -55,6 +91,12 @@ class ExerciseController extends Controller
             'scenario' => $scenario,
             'scenarioIndex' => $scenarioIndex,
             'scenarioLinks' => $scenarioLinks,
+            'scenarioCount' => $scenarioCount,
+            'completedCount' => count($completedIndexes),
+            'exerciseLevel' => $exerciseLevel,
+            'levelLinks' => $levelLinks,
+            'maxUnlockedLevel' => $maxUnlockedLevel,
+            'completedLevels' => $completedLevels,
         ]);
     }
 
@@ -67,9 +109,12 @@ class ExerciseController extends Controller
 
         $validated = $request->validate([
             'scenario' => ['required', 'integer', 'min:0'],
+            'level' => ['sometimes', 'integer', 'min:1'],
         ]);
 
-        $scenario = PlatformExercise::scenario($level, $exercise, $validated['scenario']);
+        $scenarioIndex = (int) $validated['scenario'];
+        $exerciseLevel = (int) ($validated['level'] ?? 1);
+        $scenario = PlatformExercise::scenario($level, $exercise, $scenarioIndex, $exerciseLevel);
         abort_if($scenario === null, 404);
 
         $ui = $meta['ui'] ?? $meta['type'];
@@ -81,15 +126,42 @@ class ExerciseController extends Controller
             default => $this->checkSimple($request, $scenario, $ui),
         };
 
+        $data = $response->getData(true);
+
+        if ($data['correct'] ?? false) {
+            $this->progress->markComplete($request, $level, $exercise, $scenarioIndex, $exerciseLevel);
+
+            $nextIndex = $this->progress->nextIncompleteIndex($request, $level, $exercise, $scenarioIndex, $exerciseLevel);
+
+            if ($nextIndex !== null) {
+                $data['next_scenario_url'] = route('exercises.show', array_filter([
+                    'section' => $section,
+                    'exercise' => $exercise,
+                    'scenario' => $nextIndex,
+                    'level' => $exerciseLevel > 1 ? $exerciseLevel : null,
+                ]));
+            } elseif (
+                PlatformExercise::hasExerciseLevels($level, $exercise)
+                && $this->progress->isLevelComplete($request, $level, $exercise, $exerciseLevel)
+                && $exerciseLevel < PlatformExercise::exerciseLevelCount($level, $exercise)
+            ) {
+                $data['level_complete'] = true;
+                $data['next_scenario_url'] = route('exercises.show', [
+                    'section' => $section,
+                    'exercise' => $exercise,
+                    'level' => $exerciseLevel + 1,
+                    'scenario' => 0,
+                ]);
+            }
+        }
+
         $limitReached = $this->preview->recordAction($request, $level);
 
         if ($limitReached) {
-            $response->setData(array_merge($response->getData(true), [
-                'paywall_url' => route('platform.paywall', $section),
-            ]));
+            $data['paywall_url'] = route('platform.paywall', $section);
         }
 
-        return $response;
+        return response()->json($data);
     }
 
     /** @param  array<string, mixed>  $scenario */
@@ -116,7 +188,7 @@ class ExerciseController extends Controller
     {
         $placements = $request->validate([
             'placements' => ['required', 'array'],
-            'placements.*' => ['required', 'string', 'in:S,O,A,P'],
+            'placements.*' => ['required', 'string', 'in:S,O,A,P,X'],
         ])['placements'];
 
         $correctMap = collect($scenario['sentences'])->mapWithKeys(
@@ -154,8 +226,8 @@ class ExerciseController extends Controller
             'answer' => ['required', 'string'],
         ]);
 
-        $chosenRegions = collect($validated['regions'])->sort()->values()->all();
-        $expectedRegions = collect($scenario['correct_regions'])->sort()->values()->all();
+        $chosenRegions = BurnRegion::normalizeKeys($validated['regions']);
+        $expectedRegions = BurnRegion::normalizeKeys($scenario['correct_regions'] ?? []);
         $regionsCorrect = $chosenRegions === $expectedRegions;
         $percentCorrect = $validated['answer'] === ($scenario['correct_percent'] ?? '');
 

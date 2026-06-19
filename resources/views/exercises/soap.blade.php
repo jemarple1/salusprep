@@ -8,13 +8,28 @@
     <div class="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
         <div>
             <h2 class="mb-3 text-sm font-bold uppercase tracking-wider text-slate-400">Report statements</h2>
-            <p class="mb-4 text-xs text-slate-500">Drag each sentence into the correct SOAP section.</p>
+            <p class="mb-4 text-xs text-slate-500">Drag each sentence into the correct SOAP section, or into the trash if it does not belong in the chart.</p>
             <div id="soap-pool" class="min-h-[12rem] space-y-2 rounded-2xl border border-dashed border-white/15 bg-navy/40 p-4">
                 @foreach (collect($scenario['sentences'])->shuffle() as $sentence)
                     <div class="soap-chip cursor-grab rounded-xl border border-white/10 bg-navy-light px-4 py-3 text-sm text-slate-200 shadow active:cursor-grabbing" draggable="true" data-id="{{ $sentence['id'] }}">
                         {{ $sentence['text'] }}
                     </div>
                 @endforeach
+            </div>
+
+            <div class="mt-4">
+                <div class="mb-2 flex items-center justify-between">
+                    <h3 class="flex items-center gap-2 text-sm font-bold text-slate-400">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m2 0v14a2 2 0 01-2 2H8a2 2 0 01-2-2V6h12z" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Trash — not charted
+                    </h3>
+                    <span class="text-xs text-slate-500 soap-count" data-section="X">0</span>
+                </div>
+                <div class="soap-zone min-h-[5rem] space-y-2 rounded-2xl border border-dashed border-slate-600/50 bg-slate-900/40 p-3 transition" data-section="X">
+                    <p class="soap-placeholder text-center text-xs text-slate-600">Drop useless or irrelevant statements here</p>
+                </div>
             </div>
         </div>
 
@@ -77,6 +92,11 @@
 
             document.getElementById('soap-reset').addEventListener('click', function () {
                 pool.innerHTML = initialPoolHtml;
+                zones().forEach(function (zone) {
+                    while (zone.querySelector('.soap-chip')) {
+                        pool.appendChild(zone.querySelector('.soap-chip'));
+                    }
+                });
                 chips().forEach(bindChip);
                 document.getElementById('soap-result').textContent = '';
                 updatePlaceholders();
@@ -89,10 +109,18 @@
                     if (zone) placements[chip.dataset.id] = zone.dataset.section;
                 });
 
+                var payload = {
+                    scenario: window.SalusExercise.scenarioIndex,
+                    placements: placements,
+                };
+                if (window.SalusExercise.exerciseLevel > 1) {
+                    payload.level = window.SalusExercise.exerciseLevel;
+                }
+
                 fetch(window.SalusExercise.checkUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.SalusExercise.csrf, 'Accept': 'application/json' },
-                    body: JSON.stringify({ scenario: window.SalusExercise.scenarioIndex, placements: placements }),
+                    body: JSON.stringify(payload),
                 }).then(function (r) { return r.json(); }).then(function (data) {
                     window.SalusExercise.afterCheck(data, function (data) {
                     chips().forEach(function (chip) {
