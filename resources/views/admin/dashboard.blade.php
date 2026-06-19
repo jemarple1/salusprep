@@ -147,6 +147,92 @@
     <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80 p-5 sm:p-6">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
             <div>
+                <h2 class="text-lg font-bold text-white">All users</h2>
+                <p class="mt-1 text-sm text-slate-400">Grant full platform access: choose a section in the <span class="font-semibold text-medic-light">Unlock section</span> column and click the green button.</p>
+            </div>
+            <p class="text-sm text-slate-400">{{ number_format($users->total()) }} total</p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-[56rem] w-full text-left text-sm">
+                <thead class="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
+                    <tr>
+                        <th class="px-3 py-3 font-semibold">Name</th>
+                        <th class="px-3 py-3 font-semibold">Email</th>
+                        <th class="px-3 py-3 font-semibold">Signed up</th>
+                        <th class="px-3 py-3 font-semibold">Last login</th>
+                        <th class="px-3 py-3 font-semibold">Quizzes</th>
+                        <th class="px-3 py-3 font-semibold">Purchases</th>
+                        <th class="min-w-[14rem] px-3 py-3 font-semibold text-medic-light">Unlock section</th>
+                        <th class="sticky right-0 bg-navy-light/95 px-3 py-3 font-semibold text-right backdrop-blur">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    @foreach ($users as $user)
+                        <tr class="text-slate-300">
+                            <td class="px-3 py-3 font-medium text-white">{{ $user->name }}</td>
+                            <td class="px-3 py-3">{{ $user->email }}</td>
+                            <td class="px-3 py-3 whitespace-nowrap">{{ $user->created_at->format('M j, Y') }}</td>
+                            <td class="px-3 py-3 whitespace-nowrap">{{ $user->last_login_at?->format('M j, Y g:i A') ?? '—' }}</td>
+                            <td class="px-3 py-3">{{ number_format($user->exam_sessions_count) }}</td>
+                            <td class="px-3 py-3">{{ number_format($user->purchases_count) }}</td>
+                            <td class="min-w-[14rem] px-3 py-3">
+                                @if ($user->sectionAccesses->isNotEmpty())
+                                    <div class="mb-2 flex flex-wrap gap-1">
+                                        @foreach ($user->sectionAccesses as $access)
+                                            <span class="rounded-full bg-medic/20 px-2 py-0.5 text-xs font-medium text-medic-light">
+                                                {{ $certificationLevels[$access->certification_level] ?? $access->certification_level }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
+
+                                <form method="POST" action="{{ route('admin.users.unlock', $user) }}" class="flex flex-wrap items-center gap-2">
+                                    @csrf
+                                    <label class="sr-only" for="unlock-{{ $user->id }}">Platform for {{ $user->name }}</label>
+                                    <select
+                                        name="certification_level"
+                                        id="unlock-{{ $user->id }}"
+                                        class="min-w-[8.5rem] rounded-lg border border-white/10 bg-navy px-2 py-2 text-xs text-white"
+                                        required
+                                    >
+                                        @foreach ($certificationLevels as $level => $label)
+                                            <option value="{{ $level }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button type="submit" class="rounded-lg bg-medic px-4 py-2 text-xs font-bold text-white hover:bg-medic-dark">
+                                        Unlock section
+                                    </button>
+                                </form>
+                            </td>
+                            <td class="sticky right-0 bg-navy-light/95 px-3 py-3 text-right backdrop-blur">
+                                <form
+                                    method="POST"
+                                    action="{{ route('admin.users.destroy', $user) }}"
+                                    class="inline"
+                                    onsubmit="return confirm('Delete {{ $user->email }}? This permanently removes their account, purchases, section unlocks, quiz history, and progress.')"
+                                >
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="rounded-lg border border-rescue/40 px-3 py-1.5 text-xs font-semibold text-red-200 hover:border-rescue hover:bg-rescue/10">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-6">
+            {{ $users->links() }}
+        </div>
+    </div>
+
+    <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80 p-5 sm:p-6">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
+            <div>
                 <h2 class="text-lg font-bold text-white">Marketing email subscribers</h2>
                 <p class="mt-1 text-sm text-slate-400">Users who opted in to resources and emails at signup.</p>
             </div>
@@ -189,90 +275,6 @@
         @else
             <p class="text-sm text-slate-500">No marketing subscribers yet.</p>
         @endif
-    </div>
-
-    <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-5 sm:p-6">
-        <div class="mb-4 flex items-center justify-between gap-4">
-            <h2 class="text-lg font-bold text-white">All users</h2>
-            <p class="text-sm text-slate-400">{{ number_format($users->total()) }} total</p>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="min-w-full text-left text-sm">
-                <thead class="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
-                    <tr>
-                        <th class="px-3 py-3 font-semibold">Name</th>
-                        <th class="px-3 py-3 font-semibold">Email</th>
-                        <th class="px-3 py-3 font-semibold">Signed up</th>
-                        <th class="px-3 py-3 font-semibold">Last login</th>
-                        <th class="px-3 py-3 font-semibold">Quizzes</th>
-                        <th class="px-3 py-3 font-semibold">Purchases</th>
-                        <th class="px-3 py-3 font-semibold">Unlocks</th>
-                        <th class="px-3 py-3 font-semibold text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-white/5">
-                    @foreach ($users as $user)
-                        <tr class="text-slate-300">
-                            <td class="px-3 py-3 font-medium text-white">{{ $user->name }}</td>
-                            <td class="px-3 py-3">{{ $user->email }}</td>
-                            <td class="px-3 py-3 whitespace-nowrap">{{ $user->created_at->format('M j, Y') }}</td>
-                            <td class="px-3 py-3 whitespace-nowrap">{{ $user->last_login_at?->format('M j, Y g:i A') ?? '—' }}</td>
-                            <td class="px-3 py-3">{{ number_format($user->exam_sessions_count) }}</td>
-                            <td class="px-3 py-3">{{ number_format($user->purchases_count) }}</td>
-                            <td class="px-3 py-3">
-                                @if ($user->sectionAccesses->isNotEmpty())
-                                    <div class="flex flex-wrap gap-1">
-                                        @foreach ($user->sectionAccesses as $access)
-                                            <span class="rounded-full bg-medic/20 px-2 py-0.5 text-xs font-medium text-medic-light">
-                                                {{ $certificationLevels[$access->certification_level] ?? $access->certification_level }}
-                                            </span>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <span class="text-slate-500">—</span>
-                                @endif
-                            </td>
-                            <td class="px-3 py-3 text-right">
-                                <div class="flex flex-wrap items-center justify-end gap-2">
-                                    <form method="POST" action="{{ route('admin.users.unlock', $user) }}" class="inline-flex items-center gap-1">
-                                        @csrf
-                                        <select
-                                            name="certification_level"
-                                            class="max-w-[9rem] rounded-lg border border-white/10 bg-navy px-2 py-1.5 text-xs text-white"
-                                            required
-                                        >
-                                            @foreach ($certificationLevels as $level => $label)
-                                                <option value="{{ $level }}">{{ $label }}</option>
-                                            @endforeach
-                                        </select>
-                                        <button type="submit" class="rounded-lg border border-medic/40 px-3 py-1.5 text-xs font-semibold text-medic-light hover:border-medic hover:bg-medic/10">
-                                            Unlock
-                                        </button>
-                                    </form>
-                                    <form
-                                        method="POST"
-                                        action="{{ route('admin.users.destroy', $user) }}"
-                                        class="inline"
-                                        onsubmit="return confirm('Delete {{ $user->email }}? This permanently removes their account, purchases, section unlocks, quiz history, and progress.')"
-                                    >
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="rounded-lg border border-rescue/40 px-3 py-1.5 text-xs font-semibold text-red-200 hover:border-rescue hover:bg-rescue/10">
-                                            Delete
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        <div class="mt-6">
-            {{ $users->links() }}
-        </div>
     </div>
 
     @if ($marketingSubscribers->isNotEmpty())
