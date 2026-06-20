@@ -9,6 +9,7 @@ use App\Services\LogSnagService;
 use App\Services\PreviewAccessService;
 use App\Services\SignupGeoService;
 use App\Support\CertificationLevel;
+use App\Support\SectionPricing;
 use App\Support\UserAvatar;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

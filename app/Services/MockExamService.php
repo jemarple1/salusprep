@@ -32,6 +32,10 @@ class MockExamService
 
     public function canStartToday(User $user, string $certificationLevel): bool
     {
+        if (! $this->schemaReady()) {
+            return false;
+        }
+
         if ($this->activeSession($user, $certificationLevel) !== null) {
             return true;
         }
@@ -41,6 +45,10 @@ class MockExamService
 
     public function completedToday(User $user, string $certificationLevel): bool
     {
+        if (! $this->schemaReady()) {
+            return false;
+        }
+
         return ExamSession::query()
             ->where('user_id', $user->id)
             ->where('certification_level', $certificationLevel)
@@ -52,6 +60,10 @@ class MockExamService
 
     public function todaysOutcome(User $user, string $certificationLevel): ?string
     {
+        if (! $this->schemaReady()) {
+            return null;
+        }
+
         return ExamSession::query()
             ->where('user_id', $user->id)
             ->where('certification_level', $certificationLevel)
@@ -64,6 +76,10 @@ class MockExamService
 
     public function activeSession(User $user, string $certificationLevel): ?ExamSession
     {
+        if (! $this->schemaReady()) {
+            return null;
+        }
+
         return ExamSession::query()
             ->where('user_id', $user->id)
             ->where('certification_level', $certificationLevel)
@@ -75,6 +91,10 @@ class MockExamService
 
     public function start(Request $request, User $user, string $certificationLevel): ExamSession
     {
+        if (! $this->schemaReady()) {
+            throw new RuntimeException('Mock exams are temporarily unavailable. Please try again in a few minutes.');
+        }
+
         if ($this->preview->requiresPaywall($request, $certificationLevel)) {
             throw new RuntimeException('Unlock this section to start the daily mock exam.');
         }
@@ -223,5 +243,10 @@ class MockExamService
         }
 
         $session->ability_estimate = round(max(0, min(1, $ability)), 4);
+    }
+
+    private function schemaReady(): bool
+    {
+        return ExamSession::mockExamSchemaReady();
     }
 }

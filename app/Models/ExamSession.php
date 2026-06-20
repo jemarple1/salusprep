@@ -3,13 +3,17 @@
 namespace App\Models;
 
 use App\Support\CertificationLevel;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Schema;
 
 class ExamSession extends Model
 {
+    private static ?bool $mockExamSchemaReady = null;
+
     public const STATUS_IN_PROGRESS = 'in_progress';
 
     public const STATUS_PAYWALL = 'paywall';
@@ -172,16 +176,35 @@ class ExamSession extends Model
         return $this->questions_answered >= $this->targetQuestionCount();
     }
 
+    public static function mockExamSchemaReady(): bool
+    {
+        if (self::$mockExamSchemaReady === null) {
+            self::$mockExamSchemaReady = Schema::hasColumn((new static)->getTable(), 'exam_type');
+        }
+
+        return self::$mockExamSchemaReady;
+    }
+
+    /** @param  Builder<static>  $query */
+    public function scopeQuizzesOnly(Builder $query): Builder
+    {
+        if (! self::mockExamSchemaReady()) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $inner) {
+            $inner->where('exam_type', self::TYPE_QUIZ)
+                ->orWhereNull('exam_type');
+        });
+    }
+
     /** @return array<int, int> Session ID => quiz number (1-based, per user/guest and certification level). */
     public static function quizNumbersForUser(int $userId, string $certificationLevel): array
     {
         $ids = static::query()
             ->where('user_id', $userId)
             ->where('certification_level', $certificationLevel)
-            ->where(function ($query) {
-                $query->where('exam_type', self::TYPE_QUIZ)
-                    ->orWhereNull('exam_type');
-            })
+            ->quizzesOnly()
             ->orderBy('created_at')
             ->orderBy('id')
             ->pluck('id');

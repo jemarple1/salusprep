@@ -75,10 +75,7 @@ class DashboardController extends Controller
 
         $sessions = $user->examSessions()
             ->where('certification_level', $level)
-            ->where(function ($query) {
-                $query->where('exam_type', ExamSession::TYPE_QUIZ)
-                    ->orWhereNull('exam_type');
-            })
+            ->quizzesOnly()
             ->latest()
             ->limit(10)
             ->get();

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\MockExamController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\AccountSettingsController;
