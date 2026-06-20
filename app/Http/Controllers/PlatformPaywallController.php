@@ -28,8 +28,8 @@ class PlatformPaywallController extends Controller
         $level = $request->attributes->get('certification_level');
         $slug = $request->attributes->get('section_slug');
 
-        if ($this->preview->hasAccess($request, $level)) {
-            return redirect()->route('platform.home', $slug);
+        if ($this->preview->isUnlocked($request, $level)) {
+            return redirect()->route('platform.welcome', $slug);
         }
 
         $user = $request->user();
@@ -71,6 +71,11 @@ class PlatformPaywallController extends Controller
             'requiresAuth' => $user === null,
             'learnerName' => $user?->name,
             'pinnedFocus' => $pinnedFocus,
+            'previewRemainingMinutes' => $this->preview->remainingMinutes($request),
+            'previewRemainingSeconds' => $this->preview->remainingSeconds($request),
+            'previewExpired' => $this->preview->requiresPaywall($request, $level),
+            'previewMinutesLimit' => $this->preview->minutesLimit(),
+            'previewExpiresAt' => $this->preview->previewExpiresAt($request)->toIso8601String(),
         ]);
     }
 }

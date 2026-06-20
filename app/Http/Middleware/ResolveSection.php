@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\SectionAccess;
 use App\Services\ExamCountdownService;
+use App\Services\PreviewAccessService;
 use App\Support\CertificationLevel;
 use Closure;
 use Illuminate\Http\Request;
@@ -11,7 +12,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ResolveSection
 {
-    public function __construct(private ExamCountdownService $countdown) {}
+    public function __construct(
+        private ExamCountdownService $countdown,
+        private PreviewAccessService $preview,
+    ) {}
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -40,6 +44,10 @@ class ResolveSection
             $examCountdown = $this->countdown->forDate($examDate);
         }
 
+        $isUnlocked = $user !== null && $user->hasSectionAccess($level);
+        $totalSeconds = $this->preview->totalSeconds();
+        $remainingSeconds = $isUnlocked ? $totalSeconds : $this->preview->remainingSeconds($request);
+
         view()->share([
             'sectionLevel' => $level,
             'sectionSlug' => $slug,
@@ -55,6 +63,22 @@ class ResolveSection
                 'active' => $l === $level,
             ]),
             'examCountdown' => $examCountdown,
+            'previewTimer' => [
+                'href' => $isUnlocked
+                    ? route('platform.welcome', $slug)
+                    : route('platform.paywall', $slug),
+                'isUnlocked' => $isUnlocked,
+                'remainingSeconds' => $remainingSeconds,
+                'totalSeconds' => $totalSeconds,
+                'remainingMinutes' => $isUnlocked ? null : $this->preview->remainingMinutes($request),
+                'expiresAt' => $isUnlocked
+                    ? null
+                    : $this->preview->previewExpiresAt($request)->toIso8601String(),
+                'symbol' => $isUnlocked ? '✓' : '◷',
+                'ariaLabel' => $isUnlocked
+                    ? 'Full Access — open your welcome page'
+                    : 'Preview time remaining — view unlock options',
+            ],
         ]);
 
         return $next($request);

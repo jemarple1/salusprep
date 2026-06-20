@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -29,16 +29,6 @@
         })();
     </script>
 
-    <script>
-        (function () {
-            try {
-                var theme = localStorage.getItem('salusprep-theme');
-                document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
-            } catch (e) {
-                document.documentElement.dataset.theme = 'dark';
-            }
-        })();
-    </script>
     @if (file_exists(public_path('build/manifest.json')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @else
@@ -59,7 +49,6 @@
                 }
             }
         </script>
-        <style>{!! file_get_contents(resource_path('css/theme.css')) !!}</style>
     @endif
 </head>
 <body class="flex min-h-screen flex-col bg-navy text-slate-100 antialiased">
@@ -96,7 +85,7 @@
                             class="invisible absolute left-0 top-full z-[100] w-64 pt-2 opacity-0 transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
                             role="menu"
                         >
-                            <div class="overflow-hidden rounded-xl border border-slate-600 shadow-2xl">
+                            <div class="overflow-hidden rounded-xl border border-slate-600 bg-[#1e293b] shadow-2xl">
                             <p class="border-b border-slate-600 bg-[#0f172a] px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-400">Switch platform</p>
                             @foreach ($platformSections as $platform)
                                 <a href="{{ route('platform.home', $platform['slug']) }}"
@@ -168,7 +157,9 @@
                         <a href="{{ route('legal.about') }}" class="hover:text-medic-light">About &amp; Contact</a>
                         <a href="{{ route('legal.terms') }}" class="hover:text-medic-light">Terms of Service</a>
                         <a href="{{ route('legal.privacy') }}" class="hover:text-medic-light">Privacy Policy</a>
-                        <x-theme-toggle />
+                        @isset($previewTimer)
+                            <x-preview-timer :timer="$previewTimer" />
+                        @endisset
                     </nav>
                 </div>
                 <div class="mt-3 text-center sm:text-left">
@@ -246,47 +237,13 @@
     @endauth
 
     @unless (file_exists(public_path('build/manifest.json')))
-    <script>
-        (function () {
-            var storageKey = 'salusprep-theme';
-
-            function getTheme() {
-                try {
-                    var stored = localStorage.getItem(storageKey);
-                    return stored === 'light' || stored === 'dark' ? stored : 'dark';
-                } catch (e) {
-                    return 'dark';
-                }
-            }
-
-            function applyTheme(theme) {
-                var resolved = theme === 'light' ? 'light' : 'dark';
-                document.documentElement.dataset.theme = resolved;
-                document.documentElement.style.colorScheme = resolved;
-
-                document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
-                    var nextTheme = resolved === 'dark' ? 'light' : 'dark';
-                    button.setAttribute('aria-label', nextTheme === 'light' ? 'Switch to light mode' : 'Switch to dark mode');
-                });
-            }
-
-            function toggleTheme() {
-                var nextTheme = getTheme() === 'dark' ? 'light' : 'dark';
-
-                try {
-                    localStorage.setItem(storageKey, nextTheme);
-                } catch (e) {}
-
-                applyTheme(nextTheme);
-            }
-
-            applyTheme(getTheme());
-
-            document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
-                button.addEventListener('click', toggleTheme);
-            });
-        })();
-    </script>
+    <style>
+        .cookie-consent {
+            border-color: rgba(255, 255, 255, 0.12);
+            background-color: rgba(30, 41, 59, 0.98);
+            backdrop-filter: blur(8px);
+        }
+    </style>
     <script>
         (function () {
             var consentKey = 'salusprep-cookie-consent';

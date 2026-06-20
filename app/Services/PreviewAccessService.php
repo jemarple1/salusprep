@@ -67,6 +67,31 @@ class PreviewAccessService
             return 0;
         }
 
-        return max(0, (int) now()->diffInMinutes($this->previewExpiresAt($request), false));
+        return max(0, (int) ceil(now()->diffInSeconds($this->previewExpiresAt($request), false) / 60));
+    }
+
+    public function remainingSeconds(Request $request): int
+    {
+        if (now()->gte($this->previewExpiresAt($request))) {
+            return 0;
+        }
+
+        return max(0, (int) now()->diffInSeconds($this->previewExpiresAt($request), false));
+    }
+
+    public function totalSeconds(): int
+    {
+        return $this->minutesLimit() * 60;
+    }
+
+    public function progressPercent(Request $request): float
+    {
+        $total = $this->totalSeconds();
+
+        if ($total <= 0) {
+            return 0;
+        }
+
+        return min(100, max(0, ($this->remainingSeconds($request) / $total) * 100));
     }
 }

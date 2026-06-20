@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -29,7 +29,6 @@
                 }
             }
         </script>
-        <style>{!! file_get_contents(resource_path('css/theme.css')) !!}</style>
     @endif
 
     @stack('styles')

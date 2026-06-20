@@ -36,10 +36,6 @@
                     <a href="{{ route('exam.show', [$sectionSlug, $activeSession]) }}" class="rounded-xl border border-white/10 px-6 py-3 font-semibold text-slate-200 hover:bg-white/5">
                         Resume quiz
                     </a>
-                @elseif (! $hasAccess)
-                    <a href="{{ route('platform.paywall', $sectionSlug) }}" class="rounded-xl border border-safety/40 px-6 py-3 font-semibold text-safety-light hover:bg-safety/10">
-                        Get Full Access
-                    </a>
                 @endif
             </div>
 

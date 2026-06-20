@@ -39,39 +39,37 @@
             </div>
 
             @if ($requiresAuth)
-                <div class="mt-8 rounded-xl border border-medic/30 bg-navy p-6">
+                <div class="mt-8 rounded-xl border border-safety/30 bg-navy p-6">
                     <p class="text-lg font-bold text-white">Your progress is saved</p>
                     <p class="mt-1 text-sm text-slate-400">Create an account to continue where you left off, then unlock unlimited quizzes for <x-section-price size="inline" />.</p>
 
                     <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-                        <a href="{{ route('register') }}" class="flex-1 rounded-xl bg-medic py-3.5 text-center font-bold text-white hover:bg-medic-dark">
+                        <a href="{{ route('register') }}" class="flex-1 rounded-xl bg-safety py-3.5 text-center font-bold text-navy hover:bg-safety-light">
                             Create free account
                         </a>
-                        <a href="{{ route('login') }}" class="flex-1 rounded-xl border border-medic/30 py-3.5 text-center font-semibold text-medic-light hover:bg-medic/10">
+                        <a href="{{ route('login') }}" class="flex-1 rounded-xl border border-white/15 py-3.5 text-center font-semibold text-slate-200 hover:bg-white/5">
                             Log in
                         </a>
                     </div>
                 </div>
             @else
-                <div class="mt-8 rounded-xl border border-medic/30 bg-navy p-6">
-                    <div class="flex items-center justify-between gap-4">
-                        <div>
-                            <p class="text-lg font-bold text-white">{{ $sectionLabel }} — Unlimited</p>
-                            <p class="text-sm text-slate-400">One-time · this platform only</p>
-                        </div>
-                        <x-section-price size="hero" />
-                    </div>
+                <div class="mt-8 rounded-2xl border border-medic/40 bg-navy-light/95 p-6 ring-1 ring-medic/20">
+                    <p class="text-center text-sm font-semibold uppercase tracking-wider text-slate-400">One time</p>
+                    <p class="mt-1 text-center text-4xl font-bold text-medic-light"><x-section-price size="hero" tone="checkout" /></p>
+                    <p class="mt-3 text-center text-sm text-slate-300">{{ $sectionLabel }} — unlimited quizzes · this platform only</p>
 
                     <form method="POST" action="{{ route('exam.pay', [$sectionSlug, $session]) }}" class="mt-6">
                         @csrf
-                        <button type="submit" class="w-full rounded-xl bg-medic py-3.5 font-bold text-white hover:bg-medic-dark">Pay with Stripe &amp; continue</button>
+                        <button type="submit" class="w-full rounded-xl bg-medic py-3.5 font-bold text-white shadow-lg shadow-medic/25 hover:bg-medic-dark">
+                            Pay with Stripe &amp; continue
+                        </button>
                     </form>
 
-                @if (config('services.stripe.secret'))
-                    <p class="mt-3 text-center text-xs text-slate-500">Secure checkout powered by Stripe.</p>
-                @else
-                    <p class="mt-3 text-center text-xs text-slate-500">Stripe not configured — using mock checkout. Add STRIPE_SECRET to .env.</p>
-                @endif
+                    @if (config('services.stripe.secret'))
+                        <p class="mt-3 text-center text-xs text-slate-500">Secure checkout powered by Stripe.</p>
+                    @else
+                        <p class="mt-3 text-center text-xs text-slate-500">Stripe not configured — using mock checkout. Add STRIPE_SECRET to .env.</p>
+                    @endif
                 </div>
             @endif
         </div>

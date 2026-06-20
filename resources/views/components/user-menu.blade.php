@@ -28,7 +28,7 @@
         class="invisible absolute right-0 top-full z-[100] w-60 pt-2 opacity-0 transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
         role="menu"
     >
-        <div class="overflow-hidden rounded-xl border border-slate-600 shadow-2xl">
+        <div class="overflow-hidden rounded-xl border border-slate-600 bg-[#1e293b] shadow-2xl">
             <div class="border-b border-slate-600 bg-[#0f172a] px-4 py-3">
                 <p class="truncate text-sm font-bold text-white">{{ auth()->user()->name }}</p>
                 <p class="truncate text-xs text-slate-400">{{ auth()->user()->email }}</p>

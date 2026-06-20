@@ -13,7 +13,17 @@
         <div class="mb-10 rounded-2xl border border-white/10 bg-navy-light p-8 sm:p-10">
             <div class="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
                 <div>
-                    <p class="text-sm font-semibold text-safety-light">{{ $sectionLabel }} · Preview complete</p>
+                    @if ($previewExpired)
+                        <p class="text-sm font-semibold text-safety-light">{{ $sectionLabel }} · Preview ended</p>
+                    @elseif ($previewRemainingMinutes > 0)
+                        <p class="text-sm font-semibold text-ems-light">
+                            {{ $sectionLabel }} · Preview ends in
+                            <span id="paywall-preview-countdown">{{ $previewRemainingMinutes }}</span>
+                            <span id="paywall-preview-countdown-unit">{{ $previewRemainingMinutes === 1 ? 'minute' : 'minutes' }}</span>
+                        </p>
+                    @else
+                        <p class="text-sm font-semibold text-safety-light">{{ $sectionLabel }} · Preview ending soon</p>
+                    @endif
 
                     <h1 class="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
                         @if ($firstName)
@@ -24,7 +34,9 @@
                     </h1>
 
                     <p class="mt-4 text-base leading-relaxed text-slate-300">
-                        @if ($topWeakCategory)
+                        @if (! $previewExpired && $previewRemainingMinutes > 0)
+                            You still have free preview time left on SalusPrep. When your {{ $previewMinutesLimit }}-minute preview window ends, you'll need Full Access to keep practicing {{ $sectionLabel }}.
+                        @elseif ($topWeakCategory)
                             Your Preview mapped your strengths and gaps — we'll keep building from where you left off, starting with <strong class="text-white">{{ $topWeakCategory->category }}</strong>. Pick a focus exam below, review with flashcards, and practice skills until you're exam-ready.
                         @elseif ($totalMissed > 0)
                             Your missed questions become flashcards, your weak categories become focus exams, and your progress stays with you through every recertification. Unlock Full Access to keep going without limits.
@@ -155,43 +167,37 @@
     @endif
 
     <div class="relative mx-auto max-w-4xl overflow-hidden">
-        {{-- CTA --}}
-        <section id="paywall-checkout" class="sticky bottom-4 z-20 mb-10 rounded-2xl border border-safety/40 bg-navy-light/95 p-6 shadow-2xl shadow-black/40 backdrop-blur-sm sm:static sm:shadow-none">
-            @if ($requiresAuth)
-                <p class="text-center text-sm font-semibold uppercase tracking-wider text-slate-400">One time</p>
-                <p class="mt-1 text-center text-4xl font-bold text-safety-light"><x-section-price size="hero" /></p>
-                <p class="mt-3 text-center text-base leading-relaxed text-slate-300">
-                    <strong class="text-white">Full Access</strong> for {{ $sectionLabel }} — good from today through every recertification. Unlimited quizzes, flashcards, skills, and Test Center, all in one unlock.
-                </p>
-
-                <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-                    <a href="{{ route('register', ['section' => $sectionSlug, 'unlock' => 1]) }}" class="flex-1 rounded-xl bg-safety py-3.5 text-center font-bold text-navy hover:bg-safety-light">
-                        Sign up &amp; unlock
-                    </a>
-                    <a href="{{ route('login') }}" class="flex-1 rounded-xl border border-white/15 py-3.5 text-center font-semibold text-slate-200 hover:bg-white/5">
-                        Log in
-                    </a>
-                </div>
-            @else
-                <p class="text-center text-sm font-semibold uppercase tracking-wider text-slate-400">One time</p>
-                <p class="mt-1 text-center text-4xl font-bold text-safety-light"><x-section-price size="hero" /></p>
-                <p class="mt-3 text-center text-base leading-relaxed text-slate-300">
-                    <strong class="text-white">Full Access</strong> for {{ $sectionLabel }} — good from today through every recertification. One payment covers unlimited quizzes, flashcards, skills, and Test Center for as long as you need to stay current.
-                </p>
-
-                <form method="POST" action="{{ route('platform.unlock', $sectionSlug) }}" class="mt-6">
-                    @csrf
-                    <button type="submit" class="w-full rounded-xl bg-safety py-3.5 font-bold text-navy hover:bg-safety-light">
-                        Get Full Access — <x-section-price tone="safety" />
-                    </button>
-                </form>
-
-                @if (config('services.stripe.secret'))
-                    <p class="mt-3 text-center text-xs text-slate-500">Secure checkout powered by Stripe.</p>
-                @else
-                    <p class="mt-3 text-center text-xs text-slate-500">Stripe not configured — using mock checkout locally.</p>
-                @endif
-            @endif
-        </section>
+        <x-paywall-checkout-card
+            :requires-auth="$requiresAuth"
+            :first-name="$firstName"
+            :top-weak-category="$topWeakCategory"
+            :total-missed="$totalMissed"
+            :overall-stats="$overallStats"
+            :preview-expired="$previewExpired"
+            :preview-remaining-minutes="$previewRemainingMinutes"
+        />
     </div>
+
+    @if (! $previewExpired)
+        <script>
+            (function () {
+                var countdown = document.getElementById('paywall-preview-countdown');
+                var expiresAt = @json($previewExpiresAt);
+                if (!countdown || !expiresAt) return;
+
+                function tick() {
+                    var remainingSeconds = Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 1000));
+                    var minutes = Math.ceil(remainingSeconds / 60);
+                    var unit = document.getElementById('paywall-preview-countdown-unit');
+                    countdown.textContent = String(minutes);
+                    if (unit) {
+                        unit.textContent = minutes === 1 ? 'minute' : 'minutes';
+                    }
+                }
+
+                tick();
+                window.setInterval(tick, 1000);
+            })();
+        </script>
+    @endif
 @endsection

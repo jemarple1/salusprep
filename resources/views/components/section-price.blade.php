@@ -10,11 +10,12 @@
 
     $class = match (true) {
         $size === 'hero' => match ($tone) {
-            'safety' => 'text-3xl font-bold text-navy',
+            'button' => 'text-3xl font-bold text-white',
+            'checkout' => 'text-3xl font-bold text-medic-light',
             default => 'text-3xl font-bold text-safety-light',
         },
-        $tone === 'safety' => 'font-bold text-navy',
-        $tone === 'overlay' => 'font-semibold text-safety',
+        $tone === 'button' => 'font-bold text-white',
+        $tone === 'checkout' => 'font-bold text-medic-light',
         default => 'font-bold text-safety-light',
     };
 @endphp
