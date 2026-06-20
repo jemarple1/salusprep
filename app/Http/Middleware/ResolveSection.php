@@ -26,6 +26,8 @@ class ResolveSection
         $request->attributes->set('certification_level', $level);
         $request->attributes->set('section_slug', $slug);
 
+        $request->session()->put(\App\Http\Controllers\AuthController::REGISTER_SECTION_SESSION_KEY, $slug);
+
         $examCountdown = null;
         $user = $request->user();
 

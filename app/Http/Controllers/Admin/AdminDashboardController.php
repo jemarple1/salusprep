@@ -17,7 +17,7 @@ class AdminDashboardController extends Controller
     {
         return view('admin.dashboard', [
             'summary' => $this->analytics->summary(),
-            'previewActionsLimit' => Setting::getInt(PreviewAccessService::LIMIT_KEY, PreviewAccessService::DEFAULT_LIMIT),
+            'previewMinutesLimit' => Setting::getInt(PreviewAccessService::MINUTES_KEY, PreviewAccessService::DEFAULT_MINUTES),
             'signupChart' => $this->analytics->signupChart(),
             'purchaseChart' => $this->analytics->purchaseChart(),
             'platformQuizSlices' => $this->analytics->platformQuizSlices(),

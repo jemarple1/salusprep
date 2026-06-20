@@ -84,12 +84,12 @@
                         'X-CSRF-TOKEN': window.SalusExercise.csrf,
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({
+                    body: JSON.stringify(Object.assign({
                         scenario: window.SalusExercise.scenarioIndex,
                         eye: selections.eye,
                         verbal: selections.verbal,
                         motor: selections.motor,
-                    }),
+                    }, window.SalusExercise.exerciseLevel > 1 ? { level: window.SalusExercise.exerciseLevel } : {})),
                 })
                     .then(function (r) { return r.json(); })
                     .then(function (data) {

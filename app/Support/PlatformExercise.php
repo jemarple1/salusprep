@@ -55,18 +55,47 @@ class PlatformExercise
         }
 
         $content = self::content($level, $slug);
-        $base = $content['scenarios'] ?? [];
-        $addons = config("exercise_content_addons.{$level}.{$slug}", []);
-        $scenarios = array_values(array_merge($base, $addons));
 
-        if ($slug === 'pharma-assist') {
-            $scenarios = array_map(
-                fn (array $scenario) => self::normalizePharmaAssistScenario($scenario),
+        if (isset($content['levels'])) {
+            $scenarios = array_values($content['levels'][$exerciseLevel] ?? []);
+
+            return array_map(
+                fn (array $scenario) => self::normalizeScenario($level, $slug, $scenario),
                 $scenarios,
             );
         }
 
-        return $scenarios;
+        $base = $content['scenarios'] ?? [];
+        $addons = config("exercise_content_addons.{$level}.{$slug}", []);
+        $scenarios = array_values(array_merge($base, $addons));
+
+        return array_map(
+            fn (array $scenario) => self::normalizeScenario($level, $slug, $scenario),
+            $scenarios,
+        );
+    }
+
+    /** @param  array<string, mixed>  $scenario */
+    private static function normalizeScenario(string $level, string $slug, array $scenario): array
+    {
+        $meta = self::find($level, $slug);
+        $ui = $meta['ui'] ?? $meta['type'] ?? '';
+
+        if ($ui === 'adpie-sort') {
+            $scenario['sections'] = [
+                'A' => 'Assessment',
+                'D' => 'Diagnosis',
+                'P' => 'Planning',
+                'I' => 'Implementation',
+                'E' => 'Evaluation',
+            ];
+        }
+
+        if ($slug === 'pharma-assist') {
+            return self::normalizePharmaAssistScenario($scenario);
+        }
+
+        return $scenario;
     }
 
     /** @return list<array<string, mixed>> */

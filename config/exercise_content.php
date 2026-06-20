@@ -18,4 +18,17 @@ return [
         'stroke-scale' => require __DIR__.'/exercise_content/emt_basic/stroke_scale.php',
         'vital-signs' => require __DIR__.'/exercise_content/emt_basic/vital_signs.php',
     ],
+
+    'nclex_pn' => [
+        'abc-prioritization' => require __DIR__.'/exercise_content/nclex_pn/abc_prioritization.php',
+        'adpie-nursing-process' => require __DIR__.'/exercise_content/nclex_pn/adpie_nursing_process.php',
+        'maslow-prioritization' => require __DIR__.'/exercise_content/nclex_pn/maslow_prioritization.php',
+        'delegation' => require __DIR__.'/exercise_content/nclex_pn/delegation.php',
+        'isolation-precautions' => require __DIR__.'/exercise_content/nclex_pn/isolation_precautions.php',
+        'medication-rights' => require __DIR__.'/exercise_content/nclex_pn/medication_rights.php',
+        'therapeutic-communication' => require __DIR__.'/exercise_content/nclex_pn/therapeutic_communication.php',
+        'gcs-scoring' => require __DIR__.'/exercise_content/nclex_pn/gcs_scoring.php',
+        'braden-scale' => require __DIR__.'/exercise_content/nclex_pn/braden_scale.php',
+        'morse-fall-scale' => require __DIR__.'/exercise_content/nclex_pn/morse_fall_scale.php',
+    ],
 ];

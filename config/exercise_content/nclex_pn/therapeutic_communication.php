@@ -1,0 +1,136 @@
+<?php
+
+require_once __DIR__.'/helpers.php';
+
+return nclex_levels([
+    [
+        'title' => 'New cancer diagnosis',
+        'scenario' => 'A patient says, "I just found out I have cancer. I don\'t know how to tell my children."',
+        'question' => 'Which response is most therapeutic?',
+        'options' => [
+            'open_ended' => '"What concerns you most about telling them?"',
+            'reassurance' => '"Don\'t worry — modern treatment cures most cancers now."',
+            'advice' => '"You should tell them right away before they hear it from someone else."',
+            'change_subject' => '"Let\'s focus on your breakfast choices for today."',
+        ],
+        'correct' => 'open_ended',
+        'explanation' => 'Open-ended questions invite the patient to explore feelings and priorities. False reassurance minimizes valid fear; giving advice and changing the subject block therapeutic communication.',
+    ],
+    [
+        'title' => 'Long ED wait',
+        'scenario' => 'A patient shouts, "I\'ve been waiting four hours! Nobody cares about me in this place!"',
+        'question' => 'What is the best initial response?',
+        'options' => [
+            'reflection' => '"You sound frustrated about how long you\'ve been waiting."',
+            'reassurance' => '"Calm down — everyone is doing the best they can."',
+            'advice' => '"You should have called your doctor instead of coming here."',
+            'change_subject' => '"Can you rate your pain on a scale of zero to ten?"',
+        ],
+        'correct' => 'reflection',
+        'explanation' => 'Reflecting feelings validates the patient\'s experience and can de-escalate anger. Telling someone to calm down, giving unsolicited advice, or redirecting prematurely feels dismissive.',
+    ],
+    [
+        'title' => 'Postpartum tearfulness',
+        'scenario' => 'On postpartum day 2, a new mother says quietly, "I hold my baby and feel nothing. I think I\'m a terrible mother."',
+        'question' => 'Which reply best supports therapeutic communication?',
+        'options' => [
+            'clarifying' => '"Help me understand what you mean when you say you feel nothing."',
+            'reassurance' => '"All new mothers feel that way — it will pass in a few days."',
+            'advice' => '"You should breastfeed more often to bond with the baby."',
+            'change_subject' => '"Your vitals look great this morning."',
+        ],
+        'correct' => 'clarifying',
+        'explanation' => 'Clarifying explores the patient\'s experience without judgment. False reassurance may miss postpartum mood complications; advice and topic changes avoid the emotional content the patient is sharing.',
+    ],
+    [
+        'title' => 'Chronic pain despair',
+        'scenario' => 'A patient with chronic back pain says, "No one believes how bad this hurts. I\'m tired of fighting for help."',
+        'question' => 'Select the most therapeutic response.',
+        'options' => [
+            'reflection' => '"It sounds exhausting to feel unheard about your pain."',
+            'reassurance' => '"Your MRI was normal, so the pain can\'t be that severe."',
+            'advice' => '"You need to try yoga and lose weight — that will fix it."',
+            'change_subject' => '"Did you finish your physical therapy homework?"',
+        ],
+        'correct' => 'reflection',
+        'explanation' => 'Reflection acknowledges the patient\'s emotional experience. Dismissing pain because imaging is normal, prescribing lifestyle fixes without listening, or redirecting invalidates the patient\'s report.',
+    ],
+    [
+        'title' => 'Preoperative anxiety',
+        'scenario' => 'Before abdominal surgery, a patient says, "What if I don\'t wake up? I keep thinking about my will."',
+        'question' => 'Which response is therapeutic?',
+        'options' => [
+            'open_ended' => '"Tell me more about what you\'re thinking right now."',
+            'reassurance' => '"Anesthesia is very safe — you\'ll be fine."',
+            'advice' => '"You shouldn\'t think like that; stay positive for your family."',
+            'change_subject' => '"Sign here for the consent form so we can start on time."',
+        ],
+        'correct' => 'open_ended',
+        'explanation' => 'Open-ended prompts allow expression of fear and identify specific concerns to address. False reassurance, advice to suppress feelings, and rushing to paperwork ignore legitimate preoperative anxiety.',
+    ],
+    [
+        'title' => 'Miscarriage grief',
+        'scenario' => 'A patient who miscarried at 10 weeks whispers, "I never even got to hear a heartbeat on my own."',
+        'question' => 'What is the best therapeutic reply?',
+        'options' => [
+            'silence_presence' => 'Sit quietly, make eye contact, and say, "I\'m here with you."',
+            'reassurance' => '"You can always have another baby later."',
+            'advice' => '"At least it happened early — that makes it easier."',
+            'change_subject' => '"We need to review your discharge instructions now."',
+        ],
+        'correct' => 'silence_presence',
+        'explanation' => 'Presence and a simple acknowledging statement honor grief without minimizing loss. Comparisons, future-baby reassurances, and shifting to tasks are non-therapeutic during acute mourning.',
+    ],
+    [
+        'title' => 'Homeless at discharge',
+        'scenario' => 'A patient hospitalized for cellulitis says, "I can\'t take these antibiotics — I live in my car and have no way to refrigerate them."',
+        'question' => 'Which response demonstrates therapeutic communication?',
+        'options' => [
+            'open_ended' => '"What options feel realistic to you for storing medications?"',
+            'reassurance' => '"I\'m sure you\'ll figure something out — people manage all the time."',
+            'advice' => '"You should go to a shelter; that\'s the only answer."',
+            'change_subject' => '"The doctor will sign your papers soon."',
+        ],
+        'correct' => 'open_ended',
+        'explanation' => 'Collaborative open-ended questions respect the patient\'s knowledge of their situation and support problem-solving. Empty reassurance, prescriptive advice without resources, and deflection avoid the barrier to care.',
+    ],
+    [
+        'title' => 'Teen pregnancy shame',
+        'scenario' => 'A 16-year-old in prenatal clinic says, "My parents can\'t know. They\'ll hate me forever."',
+        'question' => 'Select the best therapeutic response.',
+        'options' => [
+            'clarifying' => '"What makes you think they would respond that way?"',
+            'reassurance' => '"Parents always come around — don\'t stress about it."',
+            'advice' => '"You have to tell them today before we continue care."',
+            'change_subject' => '"Let\'s listen to the fetal heart tones now."',
+        ],
+        'correct' => 'clarifying',
+        'explanation' => 'Clarifying explores the patient\'s beliefs and fears without judgment. Assurances that minimize concern, mandates without support, and abrupt topic changes shut down trust-building communication.',
+    ],
+    [
+        'title' => 'Caregiver burnout',
+        'scenario' => 'The daughter of a patient with dementia says, "Some days I wish it would just end for both of us. I hate myself for thinking that."',
+        'question' => 'Which reply is most therapeutic?',
+        'options' => [
+            'reflection' => '"Caring for someone with dementia can bring overwhelming feelings."',
+            'reassurance' => '"You don\'t really mean that — you\'re a good daughter."',
+            'advice' => '"You should place your mother in a nursing home immediately."',
+            'change_subject' => '"Your mother\'s lunch tray is here — help her eat."',
+        ],
+        'correct' => 'reflection',
+        'explanation' => 'Reflecting normalizes caregiver strain without condemning intrusive thoughts and opens discussion of support resources. Denying feelings, abrupt placement advice, or task-focused redirection are non-therapeutic.',
+    ],
+    [
+        'title' => 'Relapse guilt',
+        'scenario' => 'A patient in alcohol withdrawal says, "I promised my kids I\'d stop. I failed them again."',
+        'question' => 'What is the best therapeutic response?',
+        'options' => [
+            'open_ended' => '"What would be most helpful for you to talk about right now?"',
+            'reassurance' => '"One drink isn\'t a big deal — don\'t be so hard on yourself."',
+            'advice' => '"You need to go to AA meetings every day starting tomorrow."',
+            'change_subject' => '"The CIWA score determines when you get your next dose of lorazepam."',
+        ],
+        'correct' => 'open_ended',
+        'explanation' => 'Open-ended communication invites the patient to guide the conversation and builds rapport for recovery planning. Minimizing relapse, lecturing, or pivoting to scoring tools ignores shame and motivation.',
+    ],
+]);

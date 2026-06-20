@@ -19,4 +19,17 @@ return [
         ['slug' => 'pharma-dosage', 'title' => 'Pharma — Dosages', 'description' => 'Dose and route questions for EMT-Basic protocol medications.', 'category' => 'Pharmacology', 'color' => 'pharma', 'type' => 'interactive', 'ui' => 'pharma-choice', 'icon' => 'pill'],
     ],
 
+    'nclex_pn' => [
+        ['slug' => 'abc-prioritization', 'title' => 'ABC Prioritization', 'description' => 'Choose the first nursing action using airway, breathing, and circulation priorities.', 'category' => 'Prioritization', 'color' => 'rescue', 'type' => 'interactive', 'ui' => 'pharma-choice', 'icon' => 'vitals', 'levels' => 5],
+        ['slug' => 'adpie-nursing-process', 'title' => 'ADPIE Nursing Process', 'description' => 'Sort nursing statements into Assessment, Diagnosis, Planning, Implementation, and Evaluation.', 'category' => 'Clinical Judgment', 'color' => 'ems', 'type' => 'interactive', 'ui' => 'adpie-sort', 'icon' => 'clipboard', 'levels' => 5],
+        ['slug' => 'maslow-prioritization', 'title' => 'Maslow Prioritization', 'description' => 'Rank patient needs from most to least urgent using Maslow\'s hierarchy.', 'category' => 'Prioritization', 'color' => 'safety', 'type' => 'interactive', 'ui' => 'priority-order', 'icon' => 'patients', 'levels' => 5],
+        ['slug' => 'delegation', 'title' => 'Delegation', 'description' => 'Decide what the RN can delegate to UAP, LPN, or must retain.', 'category' => 'Leadership', 'color' => 'medic', 'type' => 'interactive', 'ui' => 'pharma-choice', 'icon' => 'patients', 'levels' => 5],
+        ['slug' => 'isolation-precautions', 'title' => 'Isolation Precautions', 'description' => 'Match diagnoses and situations to the correct transmission-based precautions.', 'category' => 'Infection Control', 'color' => 'pharma', 'type' => 'interactive', 'ui' => 'pharma-choice', 'icon' => 'pill', 'levels' => 5],
+        ['slug' => 'medication-rights', 'title' => 'Medication Rights', 'description' => 'Identify which medication right is at risk and the safest nursing action.', 'category' => 'Pharmacology', 'color' => 'pharma', 'type' => 'interactive', 'ui' => 'pharma-choice', 'icon' => 'pill', 'levels' => 5],
+        ['slug' => 'therapeutic-communication', 'title' => 'Therapeutic Communication', 'description' => 'Select the best therapeutic response to patient statements.', 'category' => 'Communication', 'color' => 'ems', 'type' => 'interactive', 'ui' => 'pharma-choice', 'icon' => 'brain', 'levels' => 5],
+        ['slug' => 'gcs-scoring', 'title' => 'GCS Scoring', 'description' => 'Score eye, verbal, and motor responses for neurologic assessment.', 'category' => 'Assessment', 'color' => 'medic', 'type' => 'interactive', 'ui' => 'gcs-picker', 'icon' => 'brain', 'levels' => 5],
+        ['slug' => 'braden-scale', 'title' => 'Braden Scale', 'description' => 'Rate pressure-injury risk factors using the Braden Scale subscales.', 'category' => 'Assessment', 'color' => 'safety', 'type' => 'interactive', 'ui' => 'scale-rating', 'icon' => 'vitals', 'levels' => 5],
+        ['slug' => 'morse-fall-scale', 'title' => 'Morse Fall Scale', 'description' => 'Score fall-risk factors using the Morse Fall Scale.', 'category' => 'Assessment', 'color' => 'safety', 'type' => 'interactive', 'ui' => 'scale-rating', 'icon' => 'vitals', 'levels' => 5],
+    ],
+
 ];

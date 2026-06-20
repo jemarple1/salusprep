@@ -73,6 +73,9 @@ class ExerciseController extends Controller
 
         $view = match ($meta['ui'] ?? $meta['type']) {
             'soap' => 'exercises.soap',
+            'adpie-sort' => 'exercises.adpie-sort',
+            'priority-order' => 'exercises.priority-order',
+            'scale-rating' => 'exercises.scale-rating',
             'triage-tags' => 'exercises.triage-tags',
             'burn-map' => 'exercises.burn-map',
             'gcs-picker' => 'exercises.gcs-picker',
@@ -120,9 +123,11 @@ class ExerciseController extends Controller
         $ui = $meta['ui'] ?? $meta['type'];
 
         $response = match ($ui) {
-            'soap' => $this->checkSoap($request, $scenario),
+            'soap', 'adpie-sort' => $this->checkSort($request, $scenario),
             'burn-map' => $this->checkBurnMap($request, $scenario),
             'gcs-picker' => $this->checkGcs($request, $scenario),
+            'scale-rating' => $this->checkScaleRating($request, $scenario),
+            'priority-order' => $this->checkPriorityOrder($request, $scenario),
             default => $this->checkSimple($request, $scenario, $ui),
         };
 
@@ -184,11 +189,11 @@ class ExerciseController extends Controller
     }
 
     /** @param  array<string, mixed>  $scenario */
-    private function checkSoap(Request $request, array $scenario): JsonResponse
+    private function checkSort(Request $request, array $scenario): JsonResponse
     {
         $placements = $request->validate([
             'placements' => ['required', 'array'],
-            'placements.*' => ['required', 'string', 'in:S,O,A,P,X'],
+            'placements.*' => ['required', 'string', 'in:S,O,A,P,D,I,E,X'],
         ])['placements'];
 
         $correctMap = collect($scenario['sentences'])->mapWithKeys(
@@ -214,6 +219,57 @@ class ExerciseController extends Controller
             'score' => $correctCount,
             'total' => $total,
             'results' => $results,
+            'explanation' => $scenario['explanation'] ?? null,
+        ]);
+    }
+
+    /** @param  array<string, mixed>  $scenario */
+    private function checkPriorityOrder(Request $request, array $scenario): JsonResponse
+    {
+        $order = $request->validate([
+            'order' => ['required', 'array'],
+            'order.*' => ['required', 'string'],
+        ])['order'];
+
+        $expected = $scenario['correct_order'] ?? [];
+        $correct = $order === $expected;
+
+        return response()->json([
+            'correct' => $correct,
+            'explanation' => $scenario['explanation'],
+            'correct_order' => $expected,
+        ]);
+    }
+
+    /** @param  array<string, mixed>  $scenario */
+    private function checkScaleRating(Request $request, array $scenario): JsonResponse
+    {
+        $subscales = collect($scenario['subscales'] ?? [])->keys()->all();
+
+        $rules = ['scores' => ['required', 'array']];
+        foreach ($subscales as $key) {
+            $rules["scores.{$key}"] = ['required', 'integer'];
+        }
+
+        $scores = $request->validate($rules)['scores'];
+
+        $correct = true;
+        foreach ($subscales as $key) {
+            if ((int) ($scores[$key] ?? 0) !== (int) ($scenario['subscales'][$key]['correct'] ?? 0)) {
+                $correct = false;
+                break;
+            }
+        }
+
+        $explanation = $scenario['explanation'];
+        if (isset($scenario['total'])) {
+            $userTotal = array_sum(array_map('intval', $scores));
+            $explanation .= ' Your total: '.$userTotal.'. Expected: '.$scenario['total'].'.';
+        }
+
+        return response()->json([
+            'correct' => $correct,
+            'explanation' => $explanation,
         ]);
     }
 

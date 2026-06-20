@@ -76,4 +76,37 @@ class PlatformExerciseTest extends TestCase
         $this->assertGreaterThan($levelOneCount, $levelFiveCount);
         $this->assertCount(10, PlatformExercise::scenarios(CertificationLevel::EMT_BASIC, 'soap-charting', 3));
     }
+
+    public function test_nclex_pn_exercises_have_ten_scenarios_per_level(): void
+    {
+        foreach (PlatformExercise::forLevel(CertificationLevel::NCLEX_PN) as $exercise) {
+            $this->assertSame(5, PlatformExercise::exerciseLevelCount(CertificationLevel::NCLEX_PN, $exercise['slug']));
+
+            for ($level = 1; $level <= 5; $level++) {
+                $this->assertCount(
+                    ExerciseProgressService::SCENARIOS_PER_EXERCISE,
+                    PlatformExercise::scenarios(CertificationLevel::NCLEX_PN, $exercise['slug'], $level),
+                    $exercise['slug'].' level '.$level,
+                );
+            }
+        }
+    }
+
+    public function test_nclex_adpie_scenarios_include_sections(): void
+    {
+        $scenario = PlatformExercise::scenario(CertificationLevel::NCLEX_PN, 'adpie-nursing-process', 0, 1);
+
+        $this->assertNotNull($scenario);
+        $this->assertArrayHasKey('sections', $scenario);
+        $this->assertArrayHasKey('sentences', $scenario);
+    }
+
+    public function test_nclex_maslow_difficulty_increases_item_count(): void
+    {
+        $levelOne = PlatformExercise::scenario(CertificationLevel::NCLEX_PN, 'maslow-prioritization', 0, 1);
+        $levelFive = PlatformExercise::scenario(CertificationLevel::NCLEX_PN, 'maslow-prioritization', 0, 5);
+
+        $this->assertCount(4, $levelOne['items']);
+        $this->assertCount(5, $levelFive['items']);
+    }
 }

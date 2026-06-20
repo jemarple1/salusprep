@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Models\GuestSectionProgress;
+use App\Models\PreviewDevice;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\GuestService;
@@ -10,6 +10,7 @@ use App\Services\PreviewAccessService;
 use App\Support\CertificationLevel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -17,9 +18,11 @@ class PreviewAccessServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_actions_are_tracked_by_device(): void
+    public function test_guest_preview_expires_after_minute_limit(): void
     {
-        Setting::set(PreviewAccessService::LIMIT_KEY, '3');
+        Setting::set(PreviewAccessService::MINUTES_KEY, '20');
+
+        Carbon::setTestNow('2026-06-01 12:00:00');
 
         $service = app(PreviewAccessService::class);
         $deviceId = (string) Str::uuid();
@@ -30,17 +33,22 @@ class PreviewAccessServiceTest extends TestCase
 
         $this->assertTrue($service->hasAccess($request, CertificationLevel::EMT_BASIC));
 
-        $service->recordAction($request, CertificationLevel::EMT_BASIC);
-        $service->recordAction($request, CertificationLevel::EMT_BASIC);
-        $service->recordAction($request, CertificationLevel::EMT_BASIC);
+        Carbon::setTestNow('2026-06-01 12:19:59');
+        $this->assertTrue($service->hasAccess($request, CertificationLevel::EMT_BASIC));
 
+        Carbon::setTestNow('2026-06-01 12:20:00');
         $this->assertTrue($service->requiresPaywall($request, CertificationLevel::EMT_BASIC));
-        $this->assertSame(3, GuestSectionProgress::query()->where('device_id', $deviceId)->value('preview_actions_used'));
+
+        $this->assertNotNull(PreviewDevice::query()->where('device_id', $deviceId)->value('preview_started_at'));
+
+        Carbon::setTestNow();
     }
 
     public function test_preview_persists_across_new_sessions_with_same_device(): void
     {
-        Setting::set(PreviewAccessService::LIMIT_KEY, '2');
+        Setting::set(PreviewAccessService::MINUTES_KEY, '20');
+
+        Carbon::setTestNow('2026-06-01 12:00:00');
 
         $service = app(PreviewAccessService::class);
         $deviceId = (string) Str::uuid();
@@ -50,8 +58,9 @@ class PreviewAccessServiceTest extends TestCase
         $requestOne->cookies->set(GuestService::DEVICE_COOKIE_KEY, $deviceId);
         $requestOne->session()->put(GuestService::SESSION_KEY, (string) Str::uuid());
 
-        $service->recordAction($requestOne, CertificationLevel::EMT_BASIC);
-        $service->recordAction($requestOne, CertificationLevel::EMT_BASIC);
+        $service->hasAccess($requestOne, CertificationLevel::EMT_BASIC);
+
+        Carbon::setTestNow('2026-06-01 12:25:00');
 
         $anotherSession = app('session.store');
         $anotherSession->start();
@@ -62,14 +71,18 @@ class PreviewAccessServiceTest extends TestCase
         $requestTwo->session()->put(GuestService::SESSION_KEY, (string) Str::uuid());
 
         $this->assertTrue($service->requiresPaywall($requestTwo, CertificationLevel::EMT_BASIC));
+
+        Carbon::setTestNow();
     }
 
     public function test_unlocked_users_never_require_paywall(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'preview_started_at' => now()->subHours(2),
+        ]);
         $user->sectionAccesses()->create([
             'certification_level' => CertificationLevel::EMT_BASIC,
-            'preview_actions_used' => 99,
+            'preview_actions_used' => 0,
             'unlocked_at' => now(),
         ]);
 

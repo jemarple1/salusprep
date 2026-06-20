@@ -13,6 +13,7 @@ class StudySession extends Model
 
     protected $fillable = [
         'user_id',
+        'guest_token',
         'certification_level',
         'filter_category',
         'deck',

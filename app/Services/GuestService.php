@@ -4,9 +4,13 @@ namespace App\Services;
 
 use App\Models\ExamSession;
 use App\Models\GuestSectionProgress;
+use App\Models\PreviewDevice;
 use App\Models\SectionAccess;
+use App\Models\StudySession;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Str;
 
@@ -37,14 +41,50 @@ class GuestService
         $deviceId = $request->cookie(self::DEVICE_COOKIE_KEY);
 
         if (is_string($deviceId) && Str::isUuid($deviceId)) {
+            $this->ensureDevicePreviewStarted($deviceId);
+
             return $deviceId;
         }
 
         $deviceId = (string) Str::uuid();
 
         Cookie::queue($this->deviceCookie($deviceId));
+        $this->ensureDevicePreviewStarted($deviceId);
 
         return $deviceId;
+    }
+
+    public function previewStartedAt(Request $request): CarbonInterface
+    {
+        $user = $request->user();
+
+        if ($user !== null) {
+            if ($user->preview_started_at === null) {
+                $deviceId = $request->cookie(self::DEVICE_COOKIE_KEY);
+                $deviceStart = is_string($deviceId) && Str::isUuid($deviceId)
+                    ? PreviewDevice::query()->where('device_id', $deviceId)->value('preview_started_at')
+                    : null;
+
+                $user->update([
+                    'preview_started_at' => $deviceStart ?? now(),
+                ]);
+                $user->refresh();
+            }
+
+            return $user->preview_started_at;
+        }
+
+        return $this->ensureDevicePreviewStarted($this->deviceId($request));
+    }
+
+    private function ensureDevicePreviewStarted(string $deviceId): CarbonInterface
+    {
+        $device = PreviewDevice::query()->firstOrCreate(
+            ['device_id' => $deviceId],
+            ['preview_started_at' => now()],
+        );
+
+        return $device->preview_started_at;
     }
 
     public function progressForRequest(Request $request, string $certificationLevel): GuestSectionProgress
@@ -100,11 +140,20 @@ class GuestService
         }
 
         $this->mergeDeviceProgressIntoUser($user, $deviceId);
+        $this->mergeDevicePreviewIntoUser($user, $deviceId);
 
         $guestToken = $request->session()->get(self::SESSION_KEY);
 
         if (is_string($guestToken) && $guestToken !== '') {
             ExamSession::query()
+                ->where('guest_token', $guestToken)
+                ->whereNull('user_id')
+                ->update([
+                    'user_id' => $user->id,
+                    'guest_token' => null,
+                ]);
+
+            StudySession::query()
                 ->where('guest_token', $guestToken)
                 ->whereNull('user_id')
                 ->update([
@@ -127,17 +176,28 @@ class GuestService
     private function mergeDeviceProgressIntoUser(User $user, string $deviceId): void
     {
         foreach (GuestSectionProgress::where('device_id', $deviceId)->get() as $guestProgress) {
-            $access = SectionAccess::firstOrCreate(
+            SectionAccess::firstOrCreate(
                 [
                     'user_id' => $user->id,
                     'certification_level' => $guestProgress->certification_level,
                 ],
                 ['preview_actions_used' => 0],
             );
+        }
+    }
 
-            if ($guestProgress->preview_actions_used > $access->preview_actions_used) {
-                $access->update(['preview_actions_used' => $guestProgress->preview_actions_used]);
-            }
+    private function mergeDevicePreviewIntoUser(User $user, string $deviceId): void
+    {
+        $deviceStart = PreviewDevice::query()
+            ->where('device_id', $deviceId)
+            ->value('preview_started_at');
+
+        if ($deviceStart === null) {
+            return;
+        }
+
+        if ($user->preview_started_at === null || $deviceStart < $user->preview_started_at) {
+            $user->update(['preview_started_at' => $deviceStart]);
         }
     }
 }

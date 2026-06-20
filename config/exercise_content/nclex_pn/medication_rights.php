@@ -1,0 +1,136 @@
+<?php
+
+require_once __DIR__.'/helpers.php';
+
+return nclex_levels([
+    [
+        'title' => 'Similar room numbers',
+        'scenario' => 'You pick up metoprolol 25 mg PO for Maria Gonzales in room 312. At the bedside, the name band reads Maria Gonzalez, room 321.',
+        'question' => 'Which medication right is at risk, and what is the safest action?',
+        'options' => [
+            'right_patient' => 'Right patient — stop and verify two identifiers before giving anything',
+            'right_drug' => 'Right drug — confirm the medication name with pharmacy',
+            'right_time' => 'Right time — give now because the medication is due',
+            'right_route' => 'Right route — proceed because the route matches the order',
+        ],
+        'correct' => 'right_patient',
+        'explanation' => 'Two patients with similar names and room numbers create high risk for wrong-patient error. Use two patient identifiers and match the order to the patient every time.',
+    ],
+    [
+        'title' => 'Look-alike vials',
+        'scenario' => 'An order reads hydralazine 10 mg IV push for hypertension. You reach for a vial labeled hydroxyzine 50 mg from the ADC drawer.',
+        'question' => 'Which right is violated if you administer without further verification?',
+        'options' => [
+            'right_drug' => 'Right drug — hydralazine and hydroxyzine are different medications',
+            'right_dose' => 'Right dose — the concentration is the only concern',
+            'right_reason' => 'Right reason — PRN use does not require verification',
+            'right_documentation' => 'Right documentation — chart after the patient responds',
+        ],
+        'correct' => 'right_drug',
+        'explanation' => 'Look-alike/sound-alike medications require independent double-check. Hydroxyzine is an antihistamine; hydralazine is a vasodilator — administering the wrong drug can cause serious harm.',
+    ],
+    [
+        'title' => 'Pediatric concentration',
+        'scenario' => 'Morphine 0.1 mg/kg IV is ordered for a 10 kg infant. The vial is 10 mg/mL. You draw up 1 mL intending to give "a small dose."',
+        'question' => 'What is the primary medication-right concern?',
+        'options' => [
+            'right_dose' => 'Right dose — 1 mL equals 10 mg, far exceeding the ordered 1 mg',
+            'right_route' => 'Right route — IV is always acceptable for infants',
+            'right_time' => 'Right time — give immediately to control pain',
+            'right_patient' => 'Right patient — verify name only; weight-based math is optional',
+        ],
+        'correct' => 'right_dose',
+        'explanation' => 'Always calculate weight-based doses and confirm units. For this infant, 0.1 mg/kg × 10 kg = 1 mg total — not 10 mg. Right dose includes correct calculation, concentration, and measurement.',
+    ],
+    [
+        'title' => 'IM ordered, IV prepared',
+        'scenario' => 'Promethazine 25 mg IM is ordered for nausea. You reconstitute the vial and attach it to an IV line because the patient already has access.',
+        'question' => 'Which medication right is violated by the planned route?',
+        'options' => [
+            'right_route' => 'Right route — IM and IV are not interchangeable for this medication',
+            'right_drug' => 'Right drug — promethazine may be given by any parenteral route',
+            'right_documentation' => 'Right documentation — route does not matter if you chart it later',
+            'right_reason' => 'Right reason — nausea alone justifies any route',
+        ],
+        'correct' => 'right_route',
+        'explanation' => 'Promethazine IV push carries serious tissue injury risk and is often restricted. The ordered route must be followed unless the prescriber changes the order. Never substitute routes without authorization.',
+    ],
+    [
+        'title' => 'Early morning dose',
+        'scenario' => 'Levothyroxine 100 mcg PO is scheduled daily at 0600 on an empty stomach. At 0400 the patient asks for all morning pills early so they can go back to sleep.',
+        'question' => 'Which right applies to giving the medication two hours early?',
+        'options' => [
+            'right_time' => 'Right time — administer only within the acceptable window per policy',
+            'right_patient' => 'Right patient — early administration improves compliance',
+            'right_dose' => 'Right dose — timing does not affect thyroid replacement',
+            'right_reason' => 'Right reason — patient preference overrides scheduled times',
+        ],
+        'correct' => 'right_time',
+        'explanation' => 'Medications should be given at prescribed times unless a valid clinical reason exists and the prescriber approves a change. Levothyroxine timing affects absorption and lab consistency.',
+    ],
+    [
+        'title' => 'Scan after administration',
+        'scenario' => 'During a busy shift you administer ceftriaxone 1 g IV to your assigned patient, then plan to scan the barcode and document in the eMAR afterward while answering a call light.',
+        'question' => 'Which right is most directly compromised by this sequence?',
+        'options' => [
+            'right_documentation' => 'Right documentation — verify, document, and scan before administration when possible',
+            'right_drug' => 'Right drug — barcode scanning is optional for antibiotics',
+            'right_route' => 'Right route — IV push is fine for all cephalosporins',
+            'right_time' => 'Right time — antibiotics should always be given late rather than early',
+        ],
+        'correct' => 'right_documentation',
+        'explanation' => 'The rights of safe medication administration include accurate documentation and verification before giving the medication. Documenting after administration increases error risk and breaks agency policy at most facilities.',
+    ],
+    [
+        'title' => 'PRN opioid without assessment',
+        'scenario' => 'Oxycodone 5 mg PO PRN every 4 hours for moderate pain is ordered. The patient is watching television and joking with visitors. You offer the pill because it has been 4 hours since the last dose.',
+        'question' => 'Which right is missing from this plan?',
+        'options' => [
+            'right_reason' => 'Right reason — assess pain and indication before every PRN dose',
+            'right_patient' => 'Right patient — scheduled interval alone satisfies PRN requirements',
+            'right_route' => 'Right route — oral opioids require no assessment',
+            'right_dose' => 'Right dose — give the full tablet whenever 4 hours have passed',
+        ],
+        'correct' => 'right_reason',
+        'explanation' => 'PRN medications require an assessment of the indication (pain score, symptoms) before administration. Time elapsed since the last dose alone is not sufficient justification.',
+    ],
+    [
+        'title' => 'Same last name on unit',
+        'scenario' => 'Insulin glargine 20 units subcutaneous is due. Two patients named James Miller are on the unit — one in 204 and one in 208. You have one syringe drawn and are standing between the rooms.',
+        'question' => 'What is the priority action before injection?',
+        'options' => [
+            'right_patient' => 'Right patient — confirm two identifiers and active order for the specific patient',
+            'right_dose' => 'Right dose — 20 units is standard for all diabetic patients',
+            'right_time' => 'Right time — insulin must never be delayed',
+            'right_documentation' => 'Right documentation — chart first, then identify the patient at bedside',
+        ],
+        'correct' => 'right_patient',
+        'explanation' => 'Insulin errors between patients with similar names are high-risk events. Always verify identity with two identifiers and match the order to the patient before preparing or administering insulin.',
+    ],
+    [
+        'title' => 'Half-tablet split unevenly',
+        'scenario' => 'Carvedilol 6.25 mg PO is ordered. You only have 12.5 mg tablets and break one in half by hand. One piece is clearly larger than the other.',
+        'question' => 'Which medication right is most at risk?',
+        'options' => [
+            'right_dose' => 'Right dose — uneven splitting may deliver significantly more or less than 6.25 mg',
+            'right_route' => 'Right route — crushed tablets are equivalent to whole tablets',
+            'right_time' => 'Right time — give immediately before blood pressure rises',
+            'right_reason' => 'Right reason — beta-blockers do not require indication review',
+        ],
+        'correct' => 'right_dose',
+        'explanation' => 'Right dose requires accurate measurement. Uneven tablet splitting can cause sub- or supra-therapeutic dosing. Request the correct strength from pharmacy or use a pill splitter and discard unacceptable pieces per policy.',
+    ],
+    [
+        'title' => 'Borrowed inhaler',
+        'scenario' => 'Your patient is wheezing but the ordered albuterol inhaler is empty. A roommate offers their personal inhaler, which looks identical. You consider using it once until pharmacy delivers a replacement.',
+        'question' => 'Which rights are violated by using the roommate\'s inhaler?',
+        'options' => [
+            'right_patient' => 'Right patient and right drug — medication must match the ordered patient and prescription',
+            'right_time' => 'Right time — any available inhaler may be used in emergencies',
+            'right_documentation' => 'Right documentation — borrowing is fine if you chart the roommate\'s lot number',
+            'right_route' => 'Right route — metered-dose inhalers are interchangeable with nebulizers without an order',
+        ],
+        'correct' => 'right_patient',
+        'explanation' => 'Medications belong to the individual patient and must match the prescriber\'s order. Using another person\'s inhaler violates right patient and right drug. Obtain the correct medication from pharmacy or follow rapid-response protocol.',
+    ],
+]);

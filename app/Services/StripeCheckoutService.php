@@ -9,6 +9,7 @@ use App\Support\CertificationLevel;
 use Illuminate\Support\Facades\Log;
 use Stripe\Checkout\Session as StripeCheckoutSession;
 use Stripe\Exception\ApiErrorException;
+use Stripe\PaymentIntent;
 use Stripe\PromotionCode;
 use Stripe\Stripe;
 use Stripe\Webhook;
@@ -195,6 +196,98 @@ class StripeCheckoutService
 
         $user = $payment->user;
         $level = $payment->certification_level ?? $checkoutSession->metadata['certification_level'] ?? null;
+
+        if ($user !== null && is_string($level) && $level !== '') {
+            $this->examService->unlockSection($user, $level);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array{client_secret: string, payment_intent_id: string}
+     */
+    public function createSectionPaymentIntent(User $user, string $level): array
+    {
+        Stripe::setApiKey(config('services.stripe.secret'));
+
+        $amount = SectionPricing::priceCents();
+
+        $intent = PaymentIntent::create([
+            'amount' => $amount,
+            'currency' => 'usd',
+            'automatic_payment_methods' => ['enabled' => true],
+            'receipt_email' => $user->email,
+            'metadata' => [
+                'user_id' => (string) $user->id,
+                'certification_level' => $level,
+            ],
+        ]);
+
+        Payment::create([
+            'user_id' => $user->id,
+            'certification_level' => $level,
+            'amount_cents' => $amount,
+            'status' => Payment::STATUS_PENDING,
+            'provider' => 'stripe',
+            'stripe_payment_intent_id' => $intent->id,
+        ]);
+
+        return [
+            'client_secret' => $intent->client_secret,
+            'payment_intent_id' => $intent->id,
+        ];
+    }
+
+    public function fulfillPaymentIntent(string $paymentIntentId): bool
+    {
+        if (! $this->isConfigured()) {
+            return false;
+        }
+
+        Stripe::setApiKey(config('services.stripe.secret'));
+
+        try {
+            $intent = PaymentIntent::retrieve($paymentIntentId);
+        } catch (ApiErrorException $exception) {
+            Log::warning('Stripe payment intent retrieval failed.', [
+                'payment_intent_id' => $paymentIntentId,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return false;
+        }
+
+        if ($intent->status !== 'succeeded') {
+            return false;
+        }
+
+        $payment = Payment::query()
+            ->where('stripe_payment_intent_id', $paymentIntentId)
+            ->first();
+
+        if ($payment === null) {
+            Log::warning('Stripe payment record not found for payment intent.', [
+                'payment_intent_id' => $paymentIntentId,
+            ]);
+
+            return false;
+        }
+
+        if ($payment->status === Payment::STATUS_COMPLETED) {
+            return true;
+        }
+
+        $payment->update([
+            'status' => Payment::STATUS_COMPLETED,
+            'amount_cents' => (int) ($intent->amount_received ?? $payment->amount_cents),
+            'paid_at' => now(),
+        ]);
+
+        $user = $payment->user;
+        $level = $payment->certification_level;
 
         if ($user !== null && is_string($level) && $level !== '') {
             $this->examService->unlockSection($user, $level);

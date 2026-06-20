@@ -165,8 +165,8 @@
                 </p>
 
                 <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-                    <a href="{{ route('register') }}" class="flex-1 rounded-xl bg-safety py-3.5 text-center font-bold text-navy hover:bg-safety-light">
-                        Sign up &amp; checkout
+                    <a href="{{ route('register', ['section' => $sectionSlug, 'unlock' => 1]) }}" class="flex-1 rounded-xl bg-safety py-3.5 text-center font-bold text-navy hover:bg-safety-light">
+                        Sign up &amp; unlock
                     </a>
                     <a href="{{ route('login') }}" class="flex-1 rounded-xl border border-white/15 py-3.5 text-center font-semibold text-slate-200 hover:bg-white/5">
                         Log in

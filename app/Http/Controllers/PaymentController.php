@@ -9,6 +9,7 @@ use App\Services\PreviewAccessService;
 use App\Services\StripeCheckoutService;
 use App\Support\CertificationLevel;
 use App\Support\SectionPricing;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -25,6 +26,33 @@ class PaymentController extends Controller
     public function checkoutSection(Request $request): RedirectResponse
     {
         return $this->beginSectionCheckout($request);
+    }
+
+    public function createSectionPaymentIntent(Request $request): JsonResponse
+    {
+        $level = $request->attributes->get('certification_level');
+        $slug = $request->attributes->get('section_slug');
+        $user = $request->user();
+
+        if ($user->hasSectionAccess($level)) {
+            return response()->json([
+                'ok' => true,
+                'already_unlocked' => true,
+                'redirect' => route('platform.welcome', $slug),
+            ]);
+        }
+
+        if (! $this->stripe->isConfigured()) {
+            return $this->mockSectionPaymentIntent($user, $level, $slug);
+        }
+
+        $intent = $this->stripe->createSectionPaymentIntent($user, $level);
+
+        return response()->json([
+            'ok' => true,
+            'client_secret' => $intent['client_secret'],
+            'redirect' => route('platform.welcome', $slug).'?payment_intent='.$intent['payment_intent_id'],
+        ]);
     }
 
     public function startSectionCheckout(Request $request): RedirectResponse
@@ -123,6 +151,12 @@ class PaymentController extends Controller
             $this->stripe->fulfillCheckoutSession($checkoutSession);
         }
 
+        if ($event->type === 'payment_intent.succeeded') {
+            /** @var \Stripe\PaymentIntent $paymentIntent */
+            $paymentIntent = $event->data->object;
+            $this->stripe->fulfillPaymentIntent($paymentIntent->id);
+        }
+
         return response('Webhook handled.', 200);
     }
 
@@ -139,7 +173,32 @@ class PaymentController extends Controller
 
     private function mockSectionCheckout($user, string $level, string $slug): RedirectResponse
     {
-        Payment::create([
+        $this->completeMockSectionPayment($user, $level);
+
+        return redirect()
+            ->route('platform.welcome', $slug)
+            ->with([
+                'success' => 'Full Access unlocked (mock mode — add STRIPE_SECRET to use Stripe).',
+                'track_purchase_conversion' => true,
+            ]);
+    }
+
+    private function mockSectionPaymentIntent($user, string $level, string $slug): JsonResponse
+    {
+        $payment = $this->completeMockSectionPayment($user, $level);
+
+        return response()->json([
+            'ok' => true,
+            'mock' => true,
+            'redirect' => route('platform.welcome', $slug),
+            'track_purchase_conversion' => true,
+            'transaction_id' => $payment->reference,
+        ]);
+    }
+
+    private function completeMockSectionPayment($user, string $level): Payment
+    {
+        $payment = Payment::create([
             'user_id' => $user->id,
             'certification_level' => $level,
             'amount_cents' => SectionPricing::priceCents(),
@@ -151,11 +210,6 @@ class PaymentController extends Controller
 
         $this->examService->unlockSection($user, $level);
 
-        return redirect()
-            ->route('platform.welcome', $slug)
-            ->with([
-                'success' => 'Full Access unlocked (mock mode — add STRIPE_SECRET to use Stripe).',
-                'track_purchase_conversion' => true,
-            ]);
+        return $payment;
     }
 }

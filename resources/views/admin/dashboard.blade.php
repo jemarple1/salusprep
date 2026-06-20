@@ -20,19 +20,19 @@
 
     <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80 p-6">
         <h2 class="text-lg font-bold text-white">Preview access limit</h2>
-        <p class="mt-1 text-sm text-slate-400">How many quiz answers, exercise checks, and flashcard advances a user gets before the paywall. Tracked server-side per account and guest session.</p>
+        <p class="mt-1 text-sm text-slate-400">How many minutes of free preview each visitor gets from their first visit before the paywall.</p>
 
         <form method="POST" action="{{ route('admin.settings.preview-limit') }}" class="mt-5 flex flex-wrap items-end gap-4">
             @csrf
             <div>
-                <label for="preview_actions_limit" class="mb-1 block text-sm font-medium text-slate-300">Preview actions</label>
+                <label for="preview_minutes_limit" class="mb-1 block text-sm font-medium text-slate-300">Preview minutes</label>
                 <input
                     type="number"
-                    name="preview_actions_limit"
-                    id="preview_actions_limit"
+                    name="preview_minutes_limit"
+                    id="preview_minutes_limit"
                     min="1"
-                    max="1000"
-                    value="{{ old('preview_actions_limit', $previewActionsLimit) }}"
+                    max="1440"
+                    value="{{ old('preview_minutes_limit', $previewMinutesLimit) }}"
                     class="w-32 rounded-lg border border-white/10 bg-navy px-3 py-2 text-white"
                     required
                 >

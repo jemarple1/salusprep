@@ -118,17 +118,24 @@ class PlatformWelcomeController extends Controller
     {
         $sessionId = $request->query('session_id');
 
-        if (! is_string($sessionId) || $sessionId === '') {
+        if (is_string($sessionId) && $sessionId !== '') {
+            $this->stripe->fulfillFromCheckoutSessionId($sessionId);
+
             return;
         }
 
-        $this->stripe->fulfillFromCheckoutSessionId($sessionId);
+        $paymentIntentId = $request->query('payment_intent');
+
+        if (is_string($paymentIntentId) && $paymentIntentId !== '') {
+            $this->stripe->fulfillPaymentIntent($paymentIntentId);
+        }
     }
 
     /** @return array{0: bool, 1: string} */
     private function purchaseConversionContext(Request $request, $user, string $level): array
     {
         $sessionId = $request->query('session_id');
+        $paymentIntentId = $request->query('payment_intent');
 
         if (is_string($sessionId) && $sessionId !== '') {
             $sessionKey = 'ga_purchase_conversion.'.$sessionId;
@@ -142,13 +149,31 @@ class PlatformWelcomeController extends Controller
             return [true, $sessionId];
         }
 
+        if (is_string($paymentIntentId) && $paymentIntentId !== '') {
+            $intentKey = 'ga_purchase_conversion.'.$paymentIntentId;
+
+            if ($request->session()->has($intentKey)) {
+                return [false, $paymentIntentId];
+            }
+
+            $request->session()->put($intentKey, true);
+
+            return [true, $paymentIntentId];
+        }
+
         if ($request->session()->pull('track_purchase_conversion')) {
             $transactionId = Payment::query()
                 ->where('user_id', $user->id)
                 ->where('certification_level', $level)
                 ->where('status', Payment::STATUS_COMPLETED)
                 ->latest('paid_at')
-                ->value('stripe_checkout_session_id')
+                ->value('stripe_payment_intent_id')
+                ?? Payment::query()
+                    ->where('user_id', $user->id)
+                    ->where('certification_level', $level)
+                    ->where('status', Payment::STATUS_COMPLETED)
+                    ->latest('paid_at')
+                    ->value('stripe_checkout_session_id')
                 ?? Payment::query()
                     ->where('user_id', $user->id)
                     ->where('certification_level', $level)

@@ -16,66 +16,70 @@
                 Start right away — no account required.
             </p>
 
-            <div class="flex flex-wrap gap-3">
-                @if ($activeSession)
-                    <a href="{{ route('exam.show', [$sectionSlug, $activeSession]) }}" class="rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">
-                        Resume quiz
-                    </a>
-                @elseif ($hasAccess)
-                    @php
-                        $focusStyles = $pinnedFocus ? \App\Support\QuestionCategory::styles($pinnedFocus) : null;
-                    @endphp
-                    <form method="POST" action="{{ route('exam.start', $sectionSlug) }}">
-                        @csrf
-                        @if ($pinnedFocus)
-                            <input type="hidden" name="focus_category" value="{{ $pinnedFocus }}">
-                        @endif
-                        <button type="submit" @class([
-                            'rounded-xl px-6 py-3 font-bold text-white',
-                            $focusStyles ? $focusStyles['button'].' '.$focusStyles['buttonHover'] : 'bg-medic hover:bg-medic-dark',
-                        ])>
-                            @if ($pinnedFocus)
-                                Start {{ $pinnedFocus }} focus quiz
-                            @else
-                                Start 25-question quiz
-                            @endif
-                        </button>
-                    </form>
-                @else
-                    <a href="{{ route('platform.paywall', $sectionSlug) }}" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">
-                        Get Full Access
-                    </a>
-                @endif
-
-                @auth
-                    <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-xl border border-white/10 px-6 py-3 font-semibold text-slate-200 hover:bg-white/5">
-                        Test Center
-                    </a>
-                @endauth
-            </div>
-        </div>
-
-        <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 ring-1 ring-medic/20">
-            <h2 class="text-lg font-bold text-white">Your {{ $sectionLabel }} access</h2>
-
-            @if ($unlocked)
-                <p class="mt-3 text-2xl font-bold text-medic-light">Full Access</p>
-                <p class="mt-1 text-sm text-slate-400">Unlimited use of this platform.</p>
-            @else
-                <p class="mt-3 text-2xl font-bold text-medic-light">Preview</p>
-                <p class="mt-1 text-sm text-slate-400">Quizzes, skills, flashcards, and Test Center — explore everything.</p>
-            @endif
-
-            <ul class="mt-6 space-y-3 text-sm text-slate-300">
+            <ul class="max-w-xl space-y-2.5 text-sm text-slate-300">
                 <li class="flex gap-2"><span class="text-medic-light">✓</span> Start immediately — no account</li>
                 <li class="flex gap-2"><span class="text-medic-light">✓</span> 25-question focus &amp; adaptive quizzes</li>
                 <li class="flex gap-2"><span class="text-medic-light">✓</span> Skill exercises &amp; flashcards</li>
                 <li class="flex gap-2"><span class="text-medic-light">✓</span> Instant feedback &amp; rationales</li>
             </ul>
 
-            <p class="mt-6 text-xs text-slate-500">
-                {{ $platformSwitcherHint }}
-            </p>
+            @if ($errors->has('exam'))
+                <p class="text-sm font-medium text-red-200">{{ $errors->first('exam') }}</p>
+            @endif
+
+            <div class="flex flex-wrap items-center gap-3">
+                <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">
+                    Choose a focus exam
+                </a>
+
+                @if ($activeSession)
+                    <a href="{{ route('exam.show', [$sectionSlug, $activeSession]) }}" class="rounded-xl border border-white/10 px-6 py-3 font-semibold text-slate-200 hover:bg-white/5">
+                        Resume quiz
+                    </a>
+                @elseif (! $hasAccess)
+                    <a href="{{ route('platform.paywall', $sectionSlug) }}" class="rounded-xl border border-safety/40 px-6 py-3 font-semibold text-safety-light hover:bg-safety/10">
+                        Get Full Access
+                    </a>
+                @endif
+            </div>
+
+            <p class="text-xs text-slate-500">{{ $platformSwitcherHint }}</p>
+        </div>
+
+        <div>
+            @if ($activeSession)
+                <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 ring-1 ring-medic/20">
+                    <p class="text-sm font-bold uppercase tracking-wider text-medic-light">Quiz in progress</p>
+                    <p class="mt-3 text-2xl font-bold text-white">Question {{ min($activeSession->questions_answered + 1, $previewQuestionTotal) }} of {{ $previewQuestionTotal }}</p>
+                    <p class="mt-2 text-sm text-slate-400">
+                        You have an active quiz. Pick up where you left off — your answer on question 1 is already saved.
+                    </p>
+                    <a href="{{ route('exam.show', [$sectionSlug, $activeSession]) }}" class="mt-6 inline-flex rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">
+                        Continue quiz →
+                    </a>
+                </div>
+            @elseif ($previewQuestion)
+                <x-platform-preview-question
+                    :question="$previewQuestion"
+                    :section-slug="$sectionSlug"
+                    :question-number="$previewQuestionNumber"
+                    :total-questions="$previewQuestionTotal"
+                    :pinned-focus="$pinnedFocus"
+                />
+            @elseif (! $hasAccess)
+                <div class="rounded-2xl border border-safety/30 bg-safety/5 p-6 ring-1 ring-safety/20">
+                    <p class="text-sm font-bold uppercase tracking-wider text-safety-light">Preview ended</p>
+                    <p class="mt-3 text-lg font-bold text-white">Unlock to keep practicing</p>
+                    <p class="mt-2 text-sm text-slate-400">Your free preview time has ended. Get Full Access to keep practicing.</p>
+                    <a href="{{ route('platform.paywall', $sectionSlug) }}" class="mt-6 inline-flex rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">
+                        Get Full Access
+                    </a>
+                </div>
+            @else
+                <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 text-sm text-slate-400">
+                    Questions are loading for this platform. Check back shortly.
+                </div>
+            @endif
         </div>
     </section>
 
@@ -85,7 +89,11 @@
                 <div>
                     <h2 class="text-2xl font-bold text-white">Skill exercises</h2>
                     <p class="mt-2 max-w-2xl text-slate-400">
-                        SOAP charting, triage, GCS, burns, stroke scales, vitals, pharmacology, and more.
+                        @if ($sectionSlug === 'nclex-pn')
+                            Prioritization, ADPIE, delegation, isolation precautions, clinical scales, and more.
+                        @else
+                            SOAP charting, triage, GCS, burns, stroke scales, vitals, pharmacology, and more.
+                        @endif
                     </p>
                 </div>
                 <a href="{{ route('skills.index', $sectionSlug) }}" class="rounded-xl border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-200 hover:bg-white/5">

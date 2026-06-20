@@ -28,15 +28,6 @@
                 <p class="mt-2 text-sm text-slate-400">Your Preview has ended. Get Full Access to keep reviewing missed questions.</p>
                 <a href="{{ route('platform.paywall', $sectionSlug) }}" class="mt-5 inline-block rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">View unlock options</a>
             </div>
-        @elseif ($requiresAuth)
-            <div class="rounded-xl border border-medic/20 bg-navy/60 p-6">
-                <p class="font-bold text-white">Sign in to use flashcards</p>
-                <p class="mt-2 text-sm text-slate-400">Missed questions are saved to your personal deck. Create a free account to start reviewing.</p>
-                <div class="mt-5 flex flex-col gap-3 sm:flex-row">
-                    <a href="{{ route('register') }}" class="flex-1 rounded-xl bg-medic py-3 text-center font-bold text-white hover:bg-medic-dark">Create free account</a>
-                    <a href="{{ route('login') }}" class="flex-1 rounded-xl border border-medic/30 py-3 text-center font-semibold text-medic-light hover:bg-medic/10">Log in</a>
-                </div>
-            </div>
         @elseif ($activeStudySession)
             <div class="mb-6 rounded-xl border border-medic/30 bg-medic/10 px-5 py-4">
                 <p class="font-bold text-medic-light">Session in progress</p>
@@ -45,7 +36,7 @@
             </div>
         @endif
 
-        @if ($flashcardsAvailable && ! $requiresAuth)
+        @if ($flashcardsAvailable)
             @if ($totalMissed === 0)
                 <div class="rounded-xl border border-white/10 bg-navy/50 px-6 py-10 text-center">
                     <p class="text-xl font-bold text-white">Nothing to review yet</p>

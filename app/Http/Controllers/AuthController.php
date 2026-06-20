@@ -6,8 +6,10 @@ use App\Mail\WelcomeMail;
 use App\Models\User;
 use App\Services\GuestService;
 use App\Services\LogSnagService;
+use App\Services\PreviewAccessService;
 use App\Services\SignupGeoService;
 use App\Support\CertificationLevel;
+use App\Support\SectionPricing;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,15 +22,46 @@ class AuthController extends Controller
 {
     public const PAYWALL_CHECKOUT_SESSION_KEY = 'paywall.auto_checkout_section';
 
+    public const REGISTER_SECTION_SESSION_KEY = 'register.source_section';
+
     public function __construct(
         private GuestService $guests,
         private SignupGeoService $signupGeo,
         private LogSnagService $logSnag,
+        private PreviewAccessService $preview,
     ) {}
 
-    public function showRegister(): View
+    public function showRegister(Request $request): View
     {
-        return view('auth.register');
+        $sectionSlug = $request->query('section');
+
+        if (! is_string($sectionSlug) || $sectionSlug === '') {
+            $sectionSlug = $request->session()->get(self::PAYWALL_CHECKOUT_SESSION_KEY);
+        }
+
+        if (! is_string($sectionSlug) || $sectionSlug === '') {
+            $sectionSlug = $request->session()->get(self::REGISTER_SECTION_SESSION_KEY);
+        }
+
+        if (! is_string($sectionSlug) || ! CertificationLevel::isValidSlug($sectionSlug)) {
+            $sectionSlug = CertificationLevel::slug(CertificationLevel::EMT_BASIC);
+        }
+
+        $sectionOptions = collect(CertificationLevel::slugs())
+            ->map(fn (string $slug, string $level) => [
+                'slug' => $slug,
+                'label' => CertificationLevel::label($level),
+                'price' => SectionPricing::formatted(),
+            ])
+            ->values();
+
+        return view('auth.register', [
+            'sectionOptions' => $sectionOptions,
+            'defaultSectionSlug' => $sectionSlug,
+            'unlockPrice' => SectionPricing::formatted(),
+            'previewMinutes' => $this->preview->minutesLimit(),
+            'preselectUnlock' => $request->boolean('unlock'),
+        ]);
     }
 
     public function register(Request $request): RedirectResponse
@@ -39,6 +72,8 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', Password::defaults()],
             'terms' => ['required', 'accepted'],
             'marketing_emails_opt_in' => ['sometimes', 'boolean'],
+            'signup_plan' => ['required', 'in:free,unlock'],
+            'unlock_section' => ['required_if:signup_plan,unlock', 'string'],
         ]);
 
         $user = User::create([
@@ -98,14 +133,34 @@ class AuthController extends Controller
     {
         $this->guests->mergeIntoUser($request, $user);
 
+        if ($request->input('signup_plan') === 'unlock') {
+            $sectionSlug = $request->input('unlock_section');
+
+            if (is_string($sectionSlug) && $sectionSlug !== '') {
+                $level = CertificationLevel::fromSlug($sectionSlug);
+
+                if ($level !== null && ! $user->hasSectionAccess($level)) {
+                    return redirect()->route('platform.checkout', $sectionSlug);
+                }
+
+                if ($level !== null && $user->hasSectionAccess($level)) {
+                    return redirect()
+                        ->route('platform.welcome', $sectionSlug)
+                        ->with('success', CertificationLevel::label($level).' is already unlocked.');
+                }
+            }
+        }
+
         $autoCheckoutSlug = $request->session()->pull(self::PAYWALL_CHECKOUT_SESSION_KEY);
 
         if (is_string($autoCheckoutSlug) && $autoCheckoutSlug !== '') {
-            $level = CertificationLevel::fromSlug($autoCheckoutSlug);
+            return redirect()->route('platform.home', $autoCheckoutSlug);
+        }
 
-            if ($level !== null && ! $user->hasSectionAccess($level)) {
-                return redirect()->route('platform.checkout', $autoCheckoutSlug);
-            }
+        $sourceSection = $request->session()->get(self::REGISTER_SECTION_SESSION_KEY);
+
+        if (is_string($sourceSection) && $sourceSection !== '' && CertificationLevel::isValidSlug($sourceSection)) {
+            return redirect()->route('platform.home', $sourceSection);
         }
 
         return redirect()->intended(route('platform.home', 'emt-basic'));

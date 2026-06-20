@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ExamSession;
+use App\Services\AdaptiveExamService;
 use App\Services\FocusCategoryService;
 use App\Services\GuestService;
 use App\Services\PreviewAccessService;
 use App\Services\StripeCheckoutService;
+use App\Support\CertificationLevel;
 use App\Support\PlatformExercise;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +21,7 @@ class PlatformController extends Controller
         private StripeCheckoutService $stripe,
         private PreviewAccessService $preview,
         private FocusCategoryService $focusCategory,
+        private AdaptiveExamService $examService,
     ) {}
 
     public function __invoke(Request $request): View|RedirectResponse
@@ -38,28 +42,53 @@ class PlatformController extends Controller
 
         $unlocked = $user !== null && $user->hasSectionAccess($level);
         $hasAccess = $this->preview->hasAccess($request, $level);
+        $pinnedFocus = $this->focusCategory->get($request, $level);
 
         if ($user !== null) {
             $activeSession = $user->activeExamSession($level);
 
-            return view('platform.home', [
-                'unlocked' => $unlocked,
-                'hasAccess' => $hasAccess,
-                'activeSession' => $activeSession,
-                'exercises' => PlatformExercise::cardsForLevel($level),
-                'pinnedFocus' => $this->focusCategory->get($request, $level),
-            ]);
+            return view('platform.home', $this->homeViewData(
+                $level,
+                $unlocked,
+                $hasAccess,
+                $activeSession,
+                $pinnedFocus,
+            ));
         }
 
         $guestToken = $this->guests->token($request);
         $activeSession = $this->guests->activeExamSession($guestToken, $level);
 
-        return view('platform.home', [
-            'unlocked' => false,
+        return view('platform.home', $this->homeViewData(
+            $level,
+            false,
+            $hasAccess,
+            $activeSession,
+            $pinnedFocus,
+        ));
+    }
+
+    /** @return array<string, mixed> */
+    private function homeViewData(
+        string $level,
+        bool $unlocked,
+        bool $hasAccess,
+        ?ExamSession $activeSession,
+        ?string $pinnedFocus,
+    ): array {
+        $showPreviewQuestion = $activeSession === null && $hasAccess;
+
+        return [
+            'unlocked' => $unlocked,
             'hasAccess' => $hasAccess,
             'activeSession' => $activeSession,
             'exercises' => PlatformExercise::cardsForLevel($level),
-            'pinnedFocus' => $this->focusCategory->get($request, $level),
-        ]);
+            'pinnedFocus' => $pinnedFocus,
+            'previewQuestion' => $showPreviewQuestion
+                ? $this->examService->landingPreviewQuestion($level, $pinnedFocus)
+                : null,
+            'previewQuestionNumber' => 1,
+            'previewQuestionTotal' => CertificationLevel::QUIZ_QUESTIONS,
+        ];
     }
 }

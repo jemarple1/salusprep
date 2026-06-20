@@ -1,0 +1,86 @@
+<?php
+
+require_once __DIR__.'/helpers.php';
+
+return nclex_levels([
+    [
+        'title' => 'Ground-level fall',
+        'scenario' => 'An 82-year-old found on the floor opens eyes when you call her name, answers questions with confused conversation, and localizes to sternal rub.',
+        'eye' => 3,
+        'verbal' => 4,
+        'motor' => 5,
+        'explanation' => 'Eyes to voice (3) + confused (4) + localizes pain (5) = GCS 12. Document neuro checks and monitor for intracranial injury after head trauma.',
+    ],
+    [
+        'title' => 'Acute ischemic stroke',
+        'scenario' => 'A patient with left-sided weakness opens eyes only to painful nail-bed pressure, speaks inappropriate words without coherent sentences, and withdraws the right arm from pain but the left arm does not move purposefully.',
+        'eye' => 2,
+        'verbal' => 3,
+        'motor' => 4,
+        'explanation' => 'Eyes to pain (2) + inappropriate words (3) + withdraws from pain (4) = GCS 9. Time of onset and neurologic deficits guide stroke protocol activation.',
+    ],
+    [
+        'title' => 'Recovered hypoglycemia',
+        'scenario' => 'After D50W administration, a diabetic patient is awake with eyes open spontaneously, oriented to person, place, and time, and follows commands to squeeze both hands.',
+        'eye' => 4,
+        'verbal' => 5,
+        'motor' => 6,
+        'explanation' => 'Spontaneous eye opening (4) + oriented (5) + obeys commands (6) = GCS 15. Reassess glucose and contributing factors; altered mental status may recur.',
+    ],
+    [
+        'title' => 'Sedated on ventilator',
+        'scenario' => 'An intubated patient receiving propofol has no eye opening to voice or pain, makes no verbal sounds because of the endotracheal tube, and withdraws both legs from supraorbital pressure.',
+        'eye' => 1,
+        'verbal' => 1,
+        'motor' => 4,
+        'explanation' => 'No eye opening (1) + no verbal response due to intubation (1) + withdraws from pain (4) = GCS 6. Use "T" suffix when intubated (GCS 6T) and trend alongside sedation goals.',
+    ],
+    [
+        'title' => 'Subarachnoid hemorrhage',
+        'scenario' => 'A patient with sudden severe headache opens eyes to spoken command, is disoriented to date, and flexes both arms abnormally toward the body when nail beds are pressed.',
+        'eye' => 3,
+        'verbal' => 4,
+        'motor' => 3,
+        'explanation' => 'Eyes to voice (3) + confused (4) + abnormal flexion/decorticate posturing (3) = GCS 10. Decorticate posturing signals serious neurologic injury — notify provider immediately.',
+    ],
+    [
+        'title' => 'Epidural hematoma decline',
+        'scenario' => 'A patient with a temporal skull fracture becomes progressively obtunded. Eyes open only to trapezius squeeze, verbal output is moaning without words, and both arms extend rigidly with internal rotation to painful stimuli.',
+        'eye' => 2,
+        'verbal' => 2,
+        'motor' => 2,
+        'explanation' => 'Eyes to pain (2) + incomprehensible sounds (2) + extension/decerebrate posturing (2) = GCS 6. Rapid deterioration suggests expanding hematoma — this is a neuro emergency.',
+    ],
+    [
+        'title' => 'Postictal after tonic-clonic seizure',
+        'scenario' => 'Ten minutes after a generalized seizure, the patient\'s eyes open spontaneously, speech is confused and slow, and he follows the command to show his tongue.',
+        'eye' => 4,
+        'verbal' => 4,
+        'motor' => 6,
+        'explanation' => 'Spontaneous (4) + confused (4) + obeys commands (6) = GCS 14. Postictal confusion is common; continue airway monitoring and investigate cause of seizure.',
+    ],
+    [
+        'title' => 'Bacterial meningitis',
+        'scenario' => 'A febrile young adult with neck stiffness opens eyes to loud voice, cries out random words without answering questions, and localizes to painful stimuli in all extremities.',
+        'eye' => 3,
+        'verbal' => 3,
+        'motor' => 5,
+        'explanation' => 'Eyes to voice (3) + inappropriate words (3) + localizes pain (5) = GCS 11. Meningeal signs with altered LOC require urgent intervention and droplet precautions until organism is known.',
+    ],
+    [
+        'title' => 'Chronic subdural hematoma',
+        'scenario' => 'An older adult with weeks of unsteady gait is lethargic but arousable to voice, responds with inappropriate words, and withdraws from nail-bed pressure.',
+        'eye' => 3,
+        'verbal' => 3,
+        'motor' => 4,
+        'explanation' => 'Eyes to voice (3) + inappropriate words (3) + withdraws (4) = GCS 10. Subacute subdural collections may present with subtle personality change before obvious focal deficits.',
+    ],
+    [
+        'title' => 'Severe TBI pre-intubation',
+        'scenario' => 'After a motorcycle crash, the patient opens eyes to pain only, makes incomprehensible groaning sounds, and demonstrates decorticate posturing in both upper extremities to sternal rub.',
+        'eye' => 2,
+        'verbal' => 2,
+        'motor' => 3,
+        'explanation' => 'Eyes to pain (2) + incomprehensible sounds (2) + decorticate flexion (3) = GCS 7. GCS ≤8 with inability to protect airway typically warrants intubation and neurosurgical consultation.',
+    ],
+]);

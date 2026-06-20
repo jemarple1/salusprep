@@ -17,10 +17,10 @@
                         'X-CSRF-TOKEN': window.SalusExercise.csrf,
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({
+                    body: JSON.stringify(Object.assign({
                         scenario: window.SalusExercise.scenarioIndex,
                         answer: btn.dataset.answer,
-                    }),
+                    }, window.SalusExercise.exerciseLevel > 1 ? { level: window.SalusExercise.exerciseLevel } : {})),
                 })
                     .then(function (r) { return r.json(); })
                     .then(function (data) {

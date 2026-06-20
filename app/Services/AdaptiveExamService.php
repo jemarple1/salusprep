@@ -176,6 +176,36 @@ class AdaptiveExamService
             ->first();
     }
 
+    public function landingPreviewQuestion(string $certificationLevel, ?string $focusCategory = null): ?Question
+    {
+        if (Question::query()->where('certification_level', $certificationLevel)->doesntExist()) {
+            return null;
+        }
+
+        $query = Question::query()
+            ->where('certification_level', $certificationLevel)
+            ->where('difficulty', 2);
+
+        if ($focusCategory !== null) {
+            $query->where('category', $focusCategory);
+        }
+
+        $question = $query->inRandomOrder()->first();
+
+        if ($question !== null) {
+            return $question;
+        }
+
+        $fallback = Question::query()
+            ->where('certification_level', $certificationLevel);
+
+        if ($focusCategory !== null) {
+            $fallback->where('category', $focusCategory);
+        }
+
+        return $fallback->inRandomOrder()->first();
+    }
+
     private function shouldPickFocusCategory(ExamSession $session): bool
     {
         $target = $session->targetQuestionCount();

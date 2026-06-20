@@ -13,16 +13,16 @@ class AdminSettingsController extends Controller
     public function updatePreviewLimit(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'preview_actions_limit' => ['required', 'integer', 'min:1', 'max:1000'],
+            'preview_minutes_limit' => ['required', 'integer', 'min:1', 'max:1440'],
         ]);
 
         Setting::set(
-            PreviewAccessService::LIMIT_KEY,
-            (string) $validated['preview_actions_limit'],
+            PreviewAccessService::MINUTES_KEY,
+            (string) $validated['preview_minutes_limit'],
         );
 
         return redirect()
             ->route('admin.dashboard')
-            ->with('success', 'Preview action limit updated.');
+            ->with('success', 'Preview minute limit updated.');
     }
 }

@@ -23,6 +23,54 @@ class ExamController extends Controller
         private FocusCategoryService $focusCategory,
     ) {}
 
+    public function answerPreview(Request $request): RedirectResponse
+    {
+        $slug = $request->attributes->get('section_slug');
+        $level = $request->attributes->get('certification_level');
+
+        $validated = $request->validate([
+            'question_id' => ['required', 'integer', 'exists:questions,id'],
+            'selected_option' => ['required', 'in:A,B,C,D'],
+            'focus_category' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $question = Question::query()->findOrFail($validated['question_id']);
+        abort_unless($question->certification_level === $level, 403);
+
+        $focusCategory = $validated['focus_category'] ?? null;
+
+        if ($focusCategory !== null && $this->focusCategory->isValidCategory($level, $focusCategory)) {
+            $this->focusCategory->pin($request, $level, $focusCategory);
+        }
+
+        try {
+            $session = $this->examService->startSession($request, $level, $focusCategory);
+        } catch (\RuntimeException $exception) {
+            return redirect()
+                ->route('platform.home', $slug)
+                ->withErrors(['exam' => $exception->getMessage()]);
+        }
+
+        $this->examService->submitAnswer(
+            $request,
+            $session,
+            $question,
+            $validated['selected_option'],
+        );
+
+        if ($this->preview->requiresPaywall($request, $level)) {
+            return redirect()->route('platform.paywall', $slug);
+        }
+
+        $session->refresh();
+
+        if ($session->isComplete()) {
+            return redirect()->route('exam.results', [$slug, $session]);
+        }
+
+        return redirect()->route('exam.show', [$slug, $session]);
+    }
+
     public function start(Request $request): RedirectResponse
     {
         $slug = $request->attributes->get('section_slug');

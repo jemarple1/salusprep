@@ -181,6 +181,17 @@ class StudyService
             ->first();
     }
 
+    public function activeSessionForGuest(string $guestToken, string $certificationLevel): ?StudySession
+    {
+        return StudySession::query()
+            ->where('guest_token', $guestToken)
+            ->whereNull('user_id')
+            ->where('certification_level', $certificationLevel)
+            ->where('status', StudySession::STATUS_IN_PROGRESS)
+            ->latest()
+            ->first();
+    }
+
     public function startSession(User $user, string $certificationLevel, ?string $category = null): StudySession
     {
         $deck = $this->wrongQuestionIds($user, $certificationLevel, $category);
@@ -210,6 +221,36 @@ class StudyService
         ]);
     }
 
+    public function startSessionForGuest(string $guestToken, string $certificationLevel, ?string $category = null): StudySession
+    {
+        $deck = $this->wrongQuestionIdsForGuest($guestToken, $certificationLevel, $category);
+
+        if ($deck === []) {
+            throw new RuntimeException('No missed questions to review yet. Complete a quiz first.');
+        }
+
+        shuffle($deck);
+
+        StudySession::query()
+            ->where('guest_token', $guestToken)
+            ->whereNull('user_id')
+            ->where('certification_level', $certificationLevel)
+            ->where('status', StudySession::STATUS_IN_PROGRESS)
+            ->update([
+                'status' => StudySession::STATUS_COMPLETED,
+                'completed_at' => now(),
+            ]);
+
+        return StudySession::create([
+            'guest_token' => $guestToken,
+            'certification_level' => $certificationLevel,
+            'filter_category' => $category,
+            'deck' => $deck,
+            'initial_deck_size' => count($deck),
+            'status' => StudySession::STATUS_IN_PROGRESS,
+        ]);
+    }
+
     public function advance(StudySession $session, string $action, User $user): void
     {
         $deck = $session->deck ?? [];
@@ -222,6 +263,33 @@ class StudyService
         $response = $this->normalizeAdvanceAction($action);
 
         $this->recordReview($user, $session->certification_level, $current, $response);
+
+        if ($response === FlashcardReview::RESPONSE_WEAK) {
+            $position = min(self::WEAK_REQUEUE_POSITION, count($deck));
+            array_splice($deck, $position, 0, [$current]);
+        }
+
+        $session->cards_studied++;
+        $session->deck = array_values($deck);
+
+        if ($session->deck === []) {
+            $session->status = StudySession::STATUS_COMPLETED;
+            $session->completed_at = now();
+        }
+
+        $session->save();
+    }
+
+    public function advanceGuest(StudySession $session, string $action): void
+    {
+        $deck = $session->deck ?? [];
+
+        if ($deck === []) {
+            return;
+        }
+
+        $current = array_shift($deck);
+        $response = $this->normalizeAdvanceAction($action);
 
         if ($response === FlashcardReview::RESPONSE_WEAK) {
             $position = min(self::WEAK_REQUEUE_POSITION, count($deck));
@@ -313,6 +381,20 @@ class StudyService
         return ExamAnswer::query()
             ->whereHas('session', function ($query) use ($user, $certificationLevel) {
                 $query->where('user_id', $user->id)
+                    ->where('certification_level', $certificationLevel);
+            })
+            ->where('question_id', $question->id)
+            ->where('is_correct', false)
+            ->latest('answered_at')
+            ->first();
+    }
+
+    public function lastWrongAnswerForGuest(string $guestToken, string $certificationLevel, Question $question): ?ExamAnswer
+    {
+        return ExamAnswer::query()
+            ->whereHas('session', function ($query) use ($guestToken, $certificationLevel) {
+                $query->where('guest_token', $guestToken)
+                    ->whereNull('user_id')
                     ->where('certification_level', $certificationLevel);
             })
             ->where('question_id', $question->id)
