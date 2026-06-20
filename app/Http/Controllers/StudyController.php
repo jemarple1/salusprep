@@ -56,6 +56,46 @@ class StudyController extends Controller
         return view('study.index', $data);
     }
 
+    public function deck(Request $request): View|RedirectResponse
+    {
+        $level = $request->attributes->get('certification_level');
+        $slug = $request->attributes->get('section_slug');
+        $user = $request->user();
+        $guestToken = $user === null ? $this->guests->token($request) : null;
+
+        $this->requirePlatformAccess($request, $level);
+
+        $activeSession = $user !== null
+            ? $this->study->activeAllDeckSession($user, $level)
+            : ($guestToken !== null ? $this->study->activeAllDeckSessionForGuest($guestToken, $level) : null);
+
+        if ($activeSession !== null) {
+            return redirect()->route('study.show', [$slug, $activeSession]);
+        }
+
+        $totalMissed = $user !== null
+            ? count($this->study->wrongQuestionIds($user, $level))
+            : ($guestToken !== null ? count($this->study->wrongQuestionIdsForGuest($guestToken, $level)) : 0);
+
+        if ($totalMissed === 0) {
+            return redirect()
+                ->route('study.index', $slug)
+                ->withErrors(['study' => 'No missed questions to review yet. Complete a quiz first.']);
+        }
+
+        try {
+            $session = $user !== null
+                ? $this->study->startSession($user, $level)
+                : $this->study->startSessionForGuest($guestToken, $level);
+        } catch (RuntimeException $exception) {
+            return redirect()
+                ->route('study.index', $slug)
+                ->withErrors(['study' => $exception->getMessage()]);
+        }
+
+        return redirect()->route('study.show', [$slug, $session]);
+    }
+
     public function start(Request $request): RedirectResponse
     {
         $level = $request->attributes->get('certification_level');

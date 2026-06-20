@@ -38,6 +38,39 @@
         </div>
     </div>
 
+    <div class="mb-8 space-y-8">
+        <x-exam-results-flashcard-deck
+            :answers="$session->answers"
+            :platform-correct-percents="$platformCorrectPercents"
+        />
+
+        @if ($suggestedExercises !== [])
+            <section class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 sm:p-8">
+                <h2 class="text-lg font-bold text-white">Practice before your next quiz</h2>
+                <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
+                    You missed questions in
+                    @foreach ($weakCategories->keys()->take(3) as $category)
+                        <strong class="text-white">{{ $category }}</strong>@if (! $loop->last), @endif
+                    @endforeach
+                    @if ($weakCategories->count() > 3)
+                        and {{ $weakCategories->count() - 3 }} more {{ $weakCategories->count() - 3 === 1 ? 'topic' : 'topics' }}
+                    @endif
+                    . Try a hands-on exercise in those areas before starting another exam.
+                </p>
+
+                <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($suggestedExercises as $suggestion)
+                        <x-exercise-card :exercise="$suggestion['exercise']" variant="grid" />
+                    @endforeach
+                </div>
+
+                <p class="mt-5 text-sm text-slate-500">
+                    <a href="{{ route('skills.index', $sectionSlug) }}" class="font-semibold text-medic-light hover:text-medic hover:underline">Browse all skill exercises →</a>
+                </p>
+            </section>
+        @endif
+    </div>
+
     <div class="rounded-2xl border border-white/10 bg-navy-light/80">
         <div class="border-b border-white/10 px-6 py-4">
             <h2 class="text-lg font-bold text-white">Answer review</h2>

@@ -1,11 +1,3 @@
-@php
-    $initials = collect(explode(' ', auth()->user()->name))
-        ->filter()
-        ->map(fn (string $part) => strtoupper(substr($part, 0, 1)))
-        ->take(2)
-        ->join('');
-@endphp
-
 <div class="group relative" id="user-menu">
     <button
         type="button"
@@ -14,9 +6,7 @@
         aria-expanded="false"
         class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-white/5 sm:px-3 sm:py-2"
     >
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-medic/20 text-xs font-bold text-medic-light ring-1 ring-medic/30">
-            {{ $initials }}
-        </span>
+        <x-user-avatar />
         <span class="hidden max-w-[9rem] truncate font-medium text-slate-300 sm:inline">{{ auth()->user()->name }}</span>
         <svg class="hidden h-4 w-4 text-slate-400 sm:block" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
@@ -30,8 +20,13 @@
     >
         <div class="overflow-hidden rounded-xl border border-slate-600 bg-[#1e293b] shadow-2xl">
             <div class="border-b border-slate-600 bg-[#0f172a] px-4 py-3">
-                <p class="truncate text-sm font-bold text-white">{{ auth()->user()->name }}</p>
-                <p class="truncate text-xs text-slate-400">{{ auth()->user()->email }}</p>
+                <div class="flex items-center gap-3">
+                    <x-user-avatar size="md" />
+                    <div class="min-w-0">
+                        <p class="truncate text-sm font-bold text-white">{{ auth()->user()->name }}</p>
+                        <p class="truncate text-xs text-slate-400">{{ auth()->user()->email }}</p>
+                    </div>
+                </div>
             </div>
 
             <a href="{{ route('settings.edit') }}"

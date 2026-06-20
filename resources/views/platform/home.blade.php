@@ -20,26 +20,51 @@
                 <li class="flex gap-2"><span class="text-medic-light">✓</span> Start immediately — no account</li>
                 <li class="flex gap-2"><span class="text-medic-light">✓</span> 25-question focus &amp; adaptive quizzes</li>
                 <li class="flex gap-2"><span class="text-medic-light">✓</span> Skill exercises &amp; flashcards</li>
-                <li class="flex gap-2"><span class="text-medic-light">✓</span> Instant feedback &amp; rationales</li>
+                <li class="flex gap-2"><span class="text-medic-light">✓</span> Review — basic concepts from government health sources</li>
             </ul>
 
-            @if ($errors->has('exam'))
-                <p class="text-sm font-medium text-red-200">{{ $errors->first('exam') }}</p>
+            @if ($errors->has('mock_exam'))
+                <p class="text-sm font-medium text-red-200">{{ $errors->first('mock_exam') }}</p>
             @endif
 
-            <div class="flex flex-wrap items-center gap-3">
-                <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">
-                    Choose a focus exam
-                </a>
+            @php
+                $mockActive = $mockExamState['activeSession'] ?? null;
+                $mockCanStart = $mockExamState['canStart'] ?? false;
+                $mockCompletedToday = $mockExamState['completedToday'] ?? false;
+            @endphp
 
-                @if ($activeSession)
-                    <a href="{{ route('exam.show', [$sectionSlug, $activeSession]) }}" class="rounded-xl border border-white/10 px-6 py-3 font-semibold text-slate-200 hover:bg-white/5">
-                        Resume quiz
+            <div class="flex flex-wrap items-center gap-3">
+                @if ($mockActive)
+                    <a href="{{ route('mock-exam.show', [$sectionSlug, $mockActive]) }}" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">
+                        Continue mock exam
+                    </a>
+                @elseif (auth()->check() && $hasAccess && $mockCanStart)
+                    <form method="POST" action="{{ route('mock-exam.start', $sectionSlug) }}">
+                        @csrf
+                        <button type="submit" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">
+                            Try the real mock exam
+                        </button>
+                    </form>
+                @elseif (auth()->check() && $mockCompletedToday)
+                    <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-xl bg-safety/40 px-6 py-3 font-bold text-slate-300">
+                        Mock exam complete today
+                    </a>
+                @elseif (! auth()->check())
+                    <a href="{{ route('register', ['section' => $sectionSlug]) }}" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">
+                        Try the real mock exam
+                    </a>
+                @elseif (! $hasAccess)
+                    <a href="{{ route('platform.paywall', $sectionSlug) }}" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">
+                        Try the real mock exam
+                    </a>
+                @else
+                    <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">
+                        Try the real mock exam
                     </a>
                 @endif
             </div>
 
-            <p class="text-xs text-slate-500">{{ $platformSwitcherHint }}</p>
+            <p class="text-xs text-slate-500">{{ \App\Support\CertificationLevel::mockExamLandingHint($sectionLevel) }}</p>
         </div>
 
         <div>

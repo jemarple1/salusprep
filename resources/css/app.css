@@ -2,6 +2,7 @@
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
 
 .cookie-consent {
     border-color: rgba(255, 255, 255, 0.12);
@@ -28,4 +29,65 @@
     --color-rescue-dark: #991b1b;
     --color-navy: #0f172a;
     --color-navy-light: #1e293b;
+}
+
+.review-texture-ems::before,
+.review-texture-medic::before,
+.review-texture-rescue::before,
+.review-texture-pharma::before,
+.review-texture-safety::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.review-texture-ems::before {
+    background-image: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 12px,
+        rgba(255, 255, 255, 0.03) 12px,
+        rgba(255, 255, 255, 0.03) 13px
+    );
+}
+
+.review-texture-medic::before {
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 16px 16px;
+}
+
+.review-texture-rescue::before {
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 14px,
+            rgba(255, 255, 255, 0.025) 14px,
+            rgba(255, 255, 255, 0.025) 15px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 14px,
+            rgba(255, 255, 255, 0.025) 14px,
+            rgba(255, 255, 255, 0.025) 15px
+        );
+}
+
+.review-texture-pharma::before {
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.review-texture-safety::before {
+    background-image: repeating-linear-gradient(
+        115deg,
+        transparent,
+        transparent 10px,
+        rgba(255, 255, 255, 0.025) 10px,
+        rgba(255, 255, 255, 0.025) 11px
+    );
 }

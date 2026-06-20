@@ -16,22 +16,36 @@ class ExamSession extends Model
 
     public const STATUS_COMPLETED = 'completed';
 
+    public const TYPE_QUIZ = 'quiz';
+
+    public const TYPE_MOCK = 'mock';
+
+    public const MOCK_PASS = 'pass';
+
+    public const MOCK_FAIL = 'fail';
+
     protected $fillable = [
         'user_id',
         'guest_token',
         'certification_level',
+        'exam_type',
         'focus_category',
         'current_difficulty',
         'questions_answered',
         'correct_count',
         'status',
         'completed_at',
+        'expires_at',
+        'mock_outcome',
+        'ability_estimate',
     ];
 
     protected function casts(): array
     {
         return [
             'completed_at' => 'datetime',
+            'expires_at' => 'datetime',
+            'ability_estimate' => 'float',
         ];
     }
 
@@ -118,8 +132,27 @@ class ExamSession extends Model
         return $this->focus_category;
     }
 
+    public function isMockExam(): bool
+    {
+        return ($this->exam_type ?? self::TYPE_QUIZ) === self::TYPE_MOCK;
+    }
+
+    public function isTimedOut(): bool
+    {
+        return $this->expires_at !== null && now()->greaterThan($this->expires_at);
+    }
+
+    public function mockPassed(): bool
+    {
+        return $this->mock_outcome === self::MOCK_PASS;
+    }
+
     public function targetQuestionCount(): int
     {
+        if ($this->isMockExam()) {
+            return \App\Services\MockExamService::MAX_QUESTIONS;
+        }
+
         return CertificationLevel::QUIZ_QUESTIONS;
     }
 
@@ -145,6 +178,10 @@ class ExamSession extends Model
         $ids = static::query()
             ->where('user_id', $userId)
             ->where('certification_level', $certificationLevel)
+            ->where(function ($query) {
+                $query->where('exam_type', self::TYPE_QUIZ)
+                    ->orWhereNull('exam_type');
+            })
             ->orderBy('created_at')
             ->orderBy('id')
             ->pluck('id');

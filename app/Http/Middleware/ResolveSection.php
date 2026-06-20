@@ -55,7 +55,6 @@ class ResolveSection
             'sectionDescription' => CertificationLevel::descriptions()[$level],
             'sectionHeaderTag' => CertificationLevel::headerTag($level),
             'sectionPracticeHeadline' => CertificationLevel::practiceHeadline($level),
-            'platformSwitcherHint' => CertificationLevel::platformSwitcherHint($level),
             'platformSections' => collect(CertificationLevel::all())->map(fn (string $l) => [
                 'level' => $l,
                 'slug' => CertificationLevel::slug($l),

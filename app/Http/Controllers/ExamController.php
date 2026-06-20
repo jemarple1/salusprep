@@ -9,6 +9,7 @@ use App\Services\FocusCategoryService;
 use App\Services\GuestService;
 use App\Services\PreviewAccessService;
 use App\Services\StudyService;
+use App\Support\ExamReviewRecommendations;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -106,6 +107,10 @@ class ExamController extends Controller
     {
         $this->authorizeSession($request, $session);
 
+        if ($session->isMockExam()) {
+            return redirect()->route('mock-exam.show', [$section, $session]);
+        }
+
         if ($session->isComplete()) {
             return redirect()->route('exam.results', [$section, $session]);
         }
@@ -201,9 +206,13 @@ class ExamController extends Controller
         return redirect()->route('platform.paywall', $section);
     }
 
-    public function results(Request $request, string $section, ExamSession $session): View
+    public function results(Request $request, string $section, ExamSession $session): View|RedirectResponse
     {
         $this->authorizeSession($request, $session);
+
+        if ($session->isMockExam()) {
+            return redirect()->route('mock-exam.outcome', [$section, $session]);
+        }
 
         $session->load(['answers.question']);
 
@@ -211,11 +220,19 @@ class ExamController extends Controller
             $session->answers->pluck('question_id')->unique()->all(),
         );
 
+        $weakCategories = ExamReviewRecommendations::weakCategories($session);
+        $suggestedExercises = ExamReviewRecommendations::suggestedExercises(
+            $session->certification_level,
+            $weakCategories,
+        );
+
         return view('exam.results', [
             'session' => $session,
             'platformCorrectPercents' => $platformCorrectPercents,
             'activeExamSession' => $this->activeExamSessionFor($request),
             'hasAccess' => $this->preview->hasAccess($request, $session->certification_level),
+            'weakCategories' => $weakCategories,
+            'suggestedExercises' => $suggestedExercises,
         ]);
     }
 

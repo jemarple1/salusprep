@@ -26,9 +26,10 @@
                         <x-exam-countdown :compact="true" />
                     </div>
                 @endif
-                <a href="{{ route('skills.index', $sectionSlug) }}" role="menuitem" class="block px-4 py-3 text-sm font-medium text-slate-200 hover:bg-slate-700">Skills</a>
                 <a href="{{ route('platform.dashboard', $sectionSlug) }}" role="menuitem" class="block px-4 py-3 text-sm font-medium text-slate-200 hover:bg-slate-700">Test Center</a>
+                <a href="{{ route('skills.index', $sectionSlug) }}" role="menuitem" class="block px-4 py-3 text-sm font-medium text-slate-200 hover:bg-slate-700">Skills</a>
                 <a href="{{ route('study.index', $sectionSlug) }}" role="menuitem" class="block px-4 py-3 text-sm font-medium text-slate-200 hover:bg-slate-700">Flashcards</a>
+                <a href="{{ route('review.index', $sectionSlug) }}" role="menuitem" class="block px-4 py-3 text-sm font-medium text-slate-200 hover:bg-slate-700">Review</a>
             @endisset
 
             @auth

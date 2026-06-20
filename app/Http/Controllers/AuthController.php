@@ -9,7 +9,7 @@ use App\Services\LogSnagService;
 use App\Services\PreviewAccessService;
 use App\Services\SignupGeoService;
 use App\Support\CertificationLevel;
-use App\Support\SectionPricing;
+use App\Support\UserAvatar;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -78,6 +78,7 @@ class AuthController extends Controller
 
         $user = User::create([
             'name' => $validated['name'],
+            'avatar_color' => UserAvatar::randomColor(),
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'terms_accepted_at' => now(),

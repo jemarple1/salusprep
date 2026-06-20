@@ -118,6 +118,29 @@ class StudyService
             ->all();
     }
 
+    public function activeAllDeckSession(User $user, string $certificationLevel): ?StudySession
+    {
+        return StudySession::query()
+            ->where('user_id', $user->id)
+            ->where('certification_level', $certificationLevel)
+            ->whereNull('filter_category')
+            ->where('status', StudySession::STATUS_IN_PROGRESS)
+            ->latest()
+            ->first();
+    }
+
+    public function activeAllDeckSessionForGuest(string $guestToken, string $certificationLevel): ?StudySession
+    {
+        return StudySession::query()
+            ->where('guest_token', $guestToken)
+            ->whereNull('user_id')
+            ->where('certification_level', $certificationLevel)
+            ->whereNull('filter_category')
+            ->where('status', StudySession::STATUS_IN_PROGRESS)
+            ->latest()
+            ->first();
+    }
+
     /** @return list<int> Question IDs the user most recently answered incorrectly. */
     public function wrongQuestionIds(User $user, string $certificationLevel, ?string $category = null): array
     {

@@ -38,15 +38,19 @@ class PlatformHomeTest extends TestCase
         return $questions;
     }
 
-    public function test_home_shows_features_and_choose_focus_exam_button(): void
+    public function test_home_shows_features_and_mock_exam_button(): void
     {
         $this->seedQuestions();
 
         $this->get('/emt-basic')
             ->assertOk()
-            ->assertSee('Choose a focus exam')
+            ->assertSee('Try the real mock exam')
+            ->assertSee('once per day')
+            ->assertDontSee('Use the ⛨ menu')
             ->assertSee('25-question focus')
             ->assertSee('Skill exercises')
+            ->assertDontSee('Choose a focus exam')
+            ->assertDontSee('Resume quiz')
             ->assertDontSee('Your EMT-Basic access');
     }
 
@@ -56,6 +60,7 @@ class PlatformHomeTest extends TestCase
 
         $this->get('/emt-basic')
             ->assertOk()
+            ->assertSee('Start a practice quiz')
             ->assertSee('Question 1 of 25')
             ->assertSee('Tap an answer to start your quiz')
             ->assertDontSee('Submit answer');

@@ -7,10 +7,13 @@
 ])
 
 <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 ring-1 ring-medic/20">
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p class="text-sm font-bold uppercase tracking-wider text-medic-light">
-            Question {{ $questionNumber }} of {{ $totalQuestions }}
-        </p>
+    <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+            <h2 class="text-sm font-bold uppercase tracking-wider text-medic-light">Start a practice quiz</h2>
+            <p class="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Question {{ $questionNumber }} of {{ $totalQuestions }}
+            </p>
+        </div>
         <span @class([
             'rounded-full px-3 py-1 text-xs font-bold uppercase',
             \App\Support\QuestionCategory::styles($question->category)['badge'],

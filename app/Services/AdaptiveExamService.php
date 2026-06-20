@@ -270,7 +270,7 @@ class AdaptiveExamService
                 $this->preview->recordAction($request, $session->certification_level);
             }
 
-            if ($session->hasReachedQuestionLimit()) {
+            if ($session->hasReachedQuestionLimit() && ! $session->isMockExam()) {
                 $session->status = ExamSession::STATUS_COMPLETED;
                 $session->completed_at = now();
             }

@@ -11,53 +11,87 @@
         </div>
 
         <div class="flex flex-wrap gap-2">
-            @if ($hasAccess && $activeStudySession)
-                <a href="{{ route('study.show', [$sectionSlug, $activeStudySession]) }}" class="rounded-xl border border-medic/40 bg-medic/10 px-5 py-3 font-bold text-medic-light hover:bg-medic/20">Resume flashcards</a>
-            @elseif ($hasAccess && $totalMissed > 0)
-                <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-xl border border-ems/40 bg-ems/10 px-5 py-3 font-bold text-ems-light hover:bg-ems/20">Review missed ({{ $totalMissed }})</a>
-            @endif
-
-            @if ($activeSession)
+            @if ($mockExamState['activeSession'] ?? null)
+                <a href="{{ route('mock-exam.show', [$sectionSlug, $mockExamState['activeSession']]) }}" class="rounded-xl bg-safety px-5 py-3 font-bold text-navy hover:bg-safety-light">Resume mock exam</a>
+            @elseif ($activeSession)
                 <a href="{{ route('exam.show', [$sectionSlug, $activeSession]) }}" class="rounded-xl bg-medic px-5 py-3 font-bold text-white hover:bg-medic-dark">Resume quiz</a>
             @elseif ($requiresAuth ?? false)
                 <a href="{{ route('register') }}" class="rounded-xl bg-medic px-5 py-3 font-bold text-white hover:bg-medic-dark">Create free account</a>
-            @else
+            @elseif (! $hasAccess)
                 <a href="{{ route('platform.paywall', $sectionSlug) }}" class="rounded-xl bg-safety px-5 py-3 font-bold text-navy hover:bg-safety-light">Unlock full access</a>
             @endif
         </div>
     </div>
 
+    @if ($errors->has('mock_exam'))
+        <div class="mb-6 rounded-xl border border-rescue/40 bg-rescue/10 px-4 py-3 text-sm text-red-200">
+            {{ $errors->first('mock_exam') }}
+        </div>
+    @endif
+
+    @php
+        $accuracyTier = \App\Support\AccuracyDisplay::tier(
+            $overallStats['accuracy_percent'] ?? null,
+            $hasAccess && ($overallStats['total'] ?? 0) > 0,
+        );
+        $mockActive = $mockExamState['activeSession'] ?? null;
+        $mockCompletedToday = $mockExamState['completedToday'] ?? false;
+        $mockCanStart = $mockExamState['canStart'] ?? false;
+        $mockOutcome = $mockExamState['todaysOutcome'] ?? null;
+        $regularQuizActive = $activeSession && ! $activeSession->isMockExam();
+    @endphp
+
     <div class="mb-8 grid gap-4 sm:grid-cols-2">
-        <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-6">
-            @if ($unlocked)
-                <p class="text-sm font-bold uppercase text-medic-light">Access</p>
-                <p class="mt-1 text-2xl font-bold text-white">Full Access · {{ $sectionLabel }}</p>
-                <p class="mt-2 text-sm text-slate-400">Includes accuracy trends, category breakdowns, and flashcard review.</p>
+        <div class="rounded-2xl border {{ $accuracyTier['border'] }} {{ $accuracyTier['bg'] }} p-6 backdrop-blur-sm">
+            <p class="text-sm font-bold uppercase {{ $accuracyTier['label'] }}">Overall accuracy</p>
+            @if ($hasAccess && ($overallStats['total'] ?? 0) > 0)
+                <p class="mt-1 text-4xl font-bold {{ $accuracyTier['text'] }}">{{ $overallStats['accuracy_percent'] }}%</p>
+                <p class="mt-2 text-sm text-slate-300">
+                    {{ $overallStats['correct'] }} correct · {{ $overallStats['incorrect'] }} missed · {{ $overallStats['total'] }} total
+                </p>
             @elseif ($hasAccess)
-                <p class="text-sm font-bold uppercase text-medic-light">Preview</p>
-                <p class="mt-1 text-2xl font-bold text-white">Full platform access</p>
-                <p class="mt-2 text-sm text-slate-400">Quizzes, skills, flashcards, and analytics while you explore.</p>
+                <p class="mt-2 text-lg font-semibold text-slate-200">Complete a quiz to see your score</p>
+                <p class="mt-1 text-sm text-slate-400">Your accuracy colors this card as you practice.</p>
             @else
-                <p class="text-sm font-bold uppercase text-safety-light">Preview ended</p>
-                <p class="mt-1 text-2xl font-bold text-white">Get Full Access</p>
+                <p class="mt-2 text-lg font-semibold text-slate-200">Unlock to track accuracy</p>
                 <a href="{{ route('platform.paywall', $sectionSlug) }}" class="mt-3 inline-block text-sm font-semibold text-safety-light hover:underline">View unlock options →</a>
             @endif
         </div>
 
-        @if ($hasAccess && $overallStats['total'] > 0)
-            <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-6">
-                <p class="text-sm font-bold uppercase text-ems-light">Overall accuracy</p>
-                <p class="mt-1 text-2xl font-bold text-white">{{ $overallStats['accuracy_percent'] }}%</p>
-                <p class="mt-2 text-sm text-slate-400">
-                    {{ $overallStats['correct'] }} correct · {{ $overallStats['incorrect'] }} missed · {{ $overallStats['total'] }} total
-                </p>
+        <div class="rounded-2xl border border-safety/50 bg-safety/35 p-6 backdrop-blur-sm">
+            <p class="text-sm font-bold uppercase text-safety-light">Daily mock exam</p>
+            <p class="mt-1 text-xl font-bold text-white">Timed adaptive simulation</p>
+            <p class="mt-2 text-sm text-slate-200">
+                70–140 questions · 2-hour limit · once per day. No scores or answer review — pass or fail only.
+            </p>
+
+            <div class="mt-5">
+                @if ($requiresAuth ?? false)
+                    <a href="{{ route('register') }}" class="inline-block rounded-xl bg-safety px-5 py-2.5 text-sm font-bold text-navy hover:bg-safety-light">Sign up to take mock exam</a>
+                @elseif ($mockActive)
+                    <a href="{{ route('mock-exam.show', [$sectionSlug, $mockActive]) }}" class="inline-block rounded-xl bg-safety px-5 py-2.5 text-sm font-bold text-navy hover:bg-safety-light">Continue mock exam</a>
+                @elseif ($mockCompletedToday)
+                    <p class="text-sm font-semibold text-slate-200">
+                        Completed today —
+                        @if ($mockOutcome === 'pass')
+                            <span class="text-medic-light">Pass</span>
+                        @else
+                            <span class="text-red-200">Did not pass</span>
+                        @endif
+                    </p>
+                    <p class="mt-1 text-xs text-slate-400">Next mock exam available tomorrow.</p>
+                @elseif ($regularQuizActive)
+                    <p class="text-sm text-slate-300">Finish your current quiz before starting a mock exam.</p>
+                @elseif ($hasAccess && $mockCanStart)
+                    <form method="POST" action="{{ route('mock-exam.start', $sectionSlug) }}">
+                        @csrf
+                        <button type="submit" class="rounded-xl bg-safety px-5 py-2.5 text-sm font-bold text-navy hover:bg-safety-light">Start mock exam</button>
+                    </form>
+                @elseif (! $hasAccess)
+                    <a href="{{ route('platform.paywall', $sectionSlug) }}" class="inline-block rounded-xl bg-safety px-5 py-2.5 text-sm font-bold text-navy hover:bg-safety-light">Unlock to start</a>
+                @endif
             </div>
-        @elseif ($hasAccess)
-            <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-6">
-                <p class="text-sm font-bold uppercase text-ems-light">Overall accuracy</p>
-                <p class="mt-1 text-lg font-semibold text-slate-300">Complete a quiz to see your stats</p>
-            </div>
-        @endif
+        </div>
     </div>
 
     @if ($hasAccess && ($focusExamOptions ?? collect())->isNotEmpty())
@@ -67,8 +101,8 @@
                 <p class="text-sm text-slate-400">
                     Click a card to start a 25-question quiz. Weakest topics appear first after General knowledge.
                 </p>
-                @if ($activeSession)
-                    <p class="mt-2 text-sm text-safety-light">Finish or resume your current quiz before starting another.</p>
+                @if ($activeSession || ($mockExamState['activeSession'] ?? null))
+                    <p class="mt-2 text-sm text-safety-light">Finish or resume your current exam before starting another.</p>
                 @endif
             </div>
             <div class="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -79,7 +113,7 @@
                         :accuracy="$option->accuracy_percent"
                         :is-general="$option->is_general"
                         start-on-click
-                        :disabled="(bool) $activeSession"
+                        :disabled="(bool) ($activeSession || ($mockExamState['activeSession'] ?? null))"
                     />
                 @endforeach
             </div>

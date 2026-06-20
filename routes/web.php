@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\LegalController;
+use App\Http\Controllers\MockExamController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExamController;
@@ -77,12 +78,23 @@ Route::prefix('{section}')
             Route::post('/exam/{session}/finish', [ExamController::class, 'finish'])->name('exam.finish');
 
             Route::get('/study', [StudyController::class, 'index'])->name('study.index');
+            Route::get('/study/deck', [StudyController::class, 'deck'])->name('study.deck');
             Route::post('/study/start', [StudyController::class, 'start'])->name('study.start');
             Route::get('/study/{studySession}', [StudyController::class, 'show'])->name('study.show');
             Route::post('/study/{studySession}/advance', [StudyController::class, 'advance'])->name('study.advance');
 
+            Route::get('/review', [ReviewController::class, 'index'])->name('review.index');
+            Route::get('/review/{concept}', [ReviewController::class, 'show'])->name('review.show');
+
             Route::get('/skills', [ExerciseController::class, 'index'])->name('skills.index');
             Route::get('/dashboard', DashboardController::class)->name('platform.dashboard');
+
+            Route::middleware('auth')->group(function () {
+                Route::post('/mock-exam/start', [MockExamController::class, 'start'])->name('mock-exam.start');
+                Route::get('/mock-exam/{session}/outcome', [MockExamController::class, 'outcome'])->name('mock-exam.outcome');
+                Route::get('/mock-exam/{session}', [MockExamController::class, 'show'])->name('mock-exam.show');
+                Route::post('/mock-exam/{session}/questions/{question}/answer', [MockExamController::class, 'answer'])->name('mock-exam.answer');
+            });
 
             Route::get('/exercises/{exercise}', [ExerciseController::class, 'show'])->name('exercises.show');
             Route::post('/exercises/{exercise}/check', [ExerciseController::class, 'check'])->name('exercises.check');

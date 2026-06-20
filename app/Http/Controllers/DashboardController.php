@@ -11,6 +11,7 @@ use App\Services\GuestService;
 use App\Services\PreviewAccessService;
 use App\Services\StudyService;
 use App\Models\StudySession;
+use App\Services\MockExamService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -29,6 +30,7 @@ class DashboardController extends Controller
         AccuracyTrendService $accuracyTrend,
         FocusCategoryService $focusCategory,
         FocusExamService $focusExams,
+        MockExamService $mockExam,
     ): View {
         $level = $request->attributes->get('certification_level');
         $user = $request->user();
@@ -60,6 +62,12 @@ class DashboardController extends Controller
                 weakCategories: $weakCategories,
                 pinnedFocus: $focusCategory->resolvePinned($request, $level, $weakCategories),
                 focusExamOptions: $focusExamOptions,
+                mockExamState: [
+                    'canStart' => false,
+                    'activeSession' => null,
+                    'completedToday' => false,
+                    'todaysOutcome' => null,
+                ],
             ));
         }
 
@@ -67,6 +75,10 @@ class DashboardController extends Controller
 
         $sessions = $user->examSessions()
             ->where('certification_level', $level)
+            ->where(function ($query) {
+                $query->where('exam_type', ExamSession::TYPE_QUIZ)
+                    ->orWhereNull('exam_type');
+            })
             ->latest()
             ->limit(10)
             ->get();
@@ -97,6 +109,22 @@ class DashboardController extends Controller
             ($overallStats['total'] ?? 0) > 0 ? $overallStats['accuracy_percent'] : null,
         );
 
+        $mockExamState = [
+            'canStart' => false,
+            'activeSession' => null,
+            'completedToday' => false,
+            'todaysOutcome' => null,
+        ];
+
+        if ($hasAccess) {
+            $mockExamState = [
+                'canStart' => $mockExam->canStartToday($user, $level),
+                'activeSession' => $mockExam->activeSession($user, $level),
+                'completedToday' => $mockExam->completedToday($user, $level),
+                'todaysOutcome' => $mockExam->todaysOutcome($user, $level),
+            ];
+        }
+
         return view('dashboard', $this->baseViewData(
             sessions: $sessions,
             quizNumbers: $quizNumbers,
@@ -113,6 +141,7 @@ class DashboardController extends Controller
             weakCategories: $weakCategories,
             pinnedFocus: $pinnedFocus,
             focusExamOptions: $focusExamOptions,
+            mockExamState: $mockExamState,
         ));
     }
 
@@ -133,6 +162,12 @@ class DashboardController extends Controller
         $weakCategories = new Collection,
         ?string $pinnedFocus = null,
         Collection $focusExamOptions = new Collection,
+        array $mockExamState = [
+            'canStart' => false,
+            'activeSession' => null,
+            'completedToday' => false,
+            'todaysOutcome' => null,
+        ],
     ): array {
         return [
             'sessions' => $sessions,
@@ -150,6 +185,7 @@ class DashboardController extends Controller
             'weakCategories' => $weakCategories,
             'pinnedFocus' => $pinnedFocus,
             'focusExamOptions' => $focusExamOptions,
+            'mockExamState' => $mockExamState,
         ];
     }
 }

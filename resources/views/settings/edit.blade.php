@@ -10,8 +10,13 @@
         </div>
 
         <section class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 sm:p-8">
-            <h2 class="text-lg font-bold text-white">Profile</h2>
-            <p class="mt-1 text-sm text-slate-400">Update your name and email address.</p>
+            <div class="flex items-center gap-4">
+                <x-user-avatar :user="$user" size="lg" />
+                <div>
+                    <h2 class="text-lg font-bold text-white">Profile</h2>
+                    <p class="mt-1 text-sm text-slate-400">Update your name and email address.</p>
+                </div>
+            </div>
 
             <form method="POST" action="{{ route('settings.profile.update') }}" class="mt-6 space-y-4">
                 @csrf

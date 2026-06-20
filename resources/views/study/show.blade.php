@@ -10,6 +10,8 @@
                 Card {{ $cardNumber }} · {{ $studySession->remainingCount() }} remaining
                 @if ($studySession->filter_category)
                     · {{ $studySession->filter_category }}
+                @else
+                    · Complete deck
                 @endif
             </p>
         </div>

@@ -49,14 +49,15 @@ class GuestStudyTest extends TestCase
             'answered_at' => now(),
         ]);
 
-        $this->withSession([GuestService::SESSION_KEY => $guestToken])
+        $response = $this->withSession([GuestService::SESSION_KEY => $guestToken])
             ->get('/emt-basic/study')
             ->assertOk()
-            ->assertSee('1 cards ready')
+            ->assertSee('All missed questions')
+            ->assertSee('Open deck')
             ->assertDontSee('Sign in to use flashcards');
 
         $response = $this->withSession([GuestService::SESSION_KEY => $guestToken])
-            ->post('/emt-basic/study/start');
+            ->get('/emt-basic/study/deck');
 
         $studySession = StudySession::query()->first();
         $this->assertNotNull($studySession);

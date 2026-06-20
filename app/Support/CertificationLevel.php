@@ -100,6 +100,13 @@ class CertificationLevel
         return $level === self::NCLEX_PN;
     }
 
+    public static function mockExamLandingHint(string $level): string
+    {
+        $exam = self::isNclex($level) ? self::NCLEX_PN_MARK : self::NREMT_MARK;
+
+        return "The daily mock exam works like the real {$exam} — adaptive, timed, and pass-or-fail only. You can take it once per day.";
+    }
+
     public static function platformSwitcherHint(string $activeLevel): string
     {
         $others = collect(self::all())
