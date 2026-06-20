@@ -6,9 +6,11 @@ use App\Mail\ResetPasswordMail;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\View\View;
+use Throwable;
 
 class PasswordResetController extends Controller
 {
@@ -23,7 +25,19 @@ class PasswordResetController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        $status = Password::sendResetLink($request->only('email'));
+        try {
+            $status = Password::sendResetLink($request->only('email'));
+        } catch (Throwable $exception) {
+            report($exception);
+            Log::error('Password reset email failed to send.', [
+                'email' => $request->input('email'),
+                'mailer' => config('mail.default'),
+            ]);
+
+            return back()
+                ->withErrors(['email' => 'We could not send the reset email right now. Please try again in a few minutes.'])
+                ->onlyInput('email');
+        }
 
         if ($status === Password::RESET_THROTTLED) {
             return back()

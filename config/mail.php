@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => env('MAIL_MAILER', env('MAILGUN_DOMAIN') && env('MAILGUN_SECRET') ? 'mailgun' : 'log'),
 
     /*
     |--------------------------------------------------------------------------

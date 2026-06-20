@@ -272,3 +272,4 @@ This almost always means **the database is not connected or migrations have not 
 | Stripe redirect error | `APP_URL` must be exactly `https://salusprep.com` |
 | Session lost after login | Set `SESSION_DOMAIN=.salusprep.com` and redeploy |
 | Old Herd URL in emails/links | Redeploy after setting `APP_URL` |
+| Password reset emails not arriving | Set `MAIL_MAILER=mailgun`, `MAILGUN_DOMAIN`, `MAILGUN_SECRET`, `MAIL_FROM_ADDRESS`; run `php artisan config:clear` after changing mail env vars |
