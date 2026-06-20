@@ -15,7 +15,11 @@
     href="{{ route('review.show', [$sectionSlug, $concept['slug']]) }}"
     class="group flex flex-col overflow-hidden rounded-xl border border-white/10 bg-navy-light/60 shadow-lg transition sm:rounded-2xl {{ $accentBorder }} hover:bg-navy-light/90"
 >
-    <x-review-graphic :symbols="$concept['symbols']" :accent="$concept['accent']" variant="card" class="rounded-b-none rounded-t-xl sm:rounded-t-2xl" />
+    <x-review-backdrop
+        :accent="$accent"
+        class="h-5 shrink-0 rounded-b-none rounded-t-xl sm:rounded-t-2xl"
+        aria-hidden="true"
+    />
 
     <div class="flex flex-1 flex-col p-3 sm:p-5">
         <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 sm:text-xs">{{ $concept['category'] }}</p>

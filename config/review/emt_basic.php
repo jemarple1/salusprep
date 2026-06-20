@@ -7,7 +7,7 @@ return [
         'excerpt' => 'How federal EMS guidance frames scene safety, rapid assessment, and life-threat identification for every patient encounter.',
         'category' => 'Assessment',
         'accent' => 'ems',
-        'symbols' => '📋 ✚ 🔍 ⚕',
+        'symbols' => '🩺',
         'keywords' => ['abcde', 'primary', 'assessment', 'scene safety', 'life threats'],
         'sources' => [
             ['id' => 1, 'label' => 'NHTSA — Emergency Medical Services', 'url' => 'https://www.nhtsa.gov/emergency-medical-services'],
@@ -43,7 +43,7 @@ return [
         'excerpt' => 'Foundational airway positioning, breathing evaluation, and oxygen principles aligned with NIH and CDC respiratory guidance.',
         'category' => 'Airway',
         'accent' => 'medic',
-        'symbols' => '💨 🫁 🩺',
+        'symbols' => '🫁',
         'keywords' => ['airway', 'breathing', 'oxygen', 'respiratory', 'jaw thrust'],
         'sources' => [
             ['id' => 1, 'label' => 'NIH MedlinePlus — Breathing difficulty', 'url' => 'https://medlineplus.gov/breathingproblems.html'],
@@ -79,7 +79,7 @@ return [
         'excerpt' => 'What federal health agencies emphasize about cardiac arrest recognition, immediate CPR, and early defibrillation.',
         'category' => 'Cardiac',
         'accent' => 'rescue',
-        'symbols' => '❤️ ⚡ 🫀',
+        'symbols' => '🫀',
         'keywords' => ['cpr', 'cardiac arrest', 'aed', 'defibrillation', 'compressions'],
         'sources' => [
             ['id' => 1, 'label' => 'CDC — About Cardiac Arrest', 'url' => 'https://www.cdc.gov/heart-disease/about/cardiac-arrest.htm'],
@@ -115,7 +115,7 @@ return [
         'excerpt' => 'Hemorrhage management and perfusion assessment grounded in CDC trauma triage and NIH clinical references.',
         'category' => 'Trauma',
         'accent' => 'rescue',
-        'symbols' => '🩹 🩸 ➕',
+        'symbols' => '🩹',
         'keywords' => ['bleeding', 'shock', 'hemorrhage', 'tourniquet', 'perfusion'],
         'sources' => [
             ['id' => 1, 'label' => 'CDC — Guidelines for Field Triage of Injured Patients', 'url' => 'https://www.cdc.gov/fieldtriage/'],
@@ -151,7 +151,7 @@ return [
         'excerpt' => 'How NHTSA frames EMS systems and how HHS HIPAA rules protect patient information in the field.',
         'category' => 'Professional',
         'accent' => 'pharma',
-        'symbols' => '🛡️ 🔒 ⚖️',
+        'symbols' => '🔒',
         'keywords' => ['scope', 'ethics', 'hipaa', 'privacy', 'consent'],
         'sources' => [
             ['id' => 1, 'label' => 'NHTSA — Emergency Medical Services', 'url' => 'https://www.nhtsa.gov/emergency-medical-services'],

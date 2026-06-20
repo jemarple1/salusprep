@@ -7,7 +7,7 @@ return [
         'excerpt' => 'Airway escalation at the AEMT level, with context from NIH respiratory resources and NHTSA EMS education priorities.',
         'category' => 'Airway',
         'accent' => 'ems',
-        'symbols' => '🫁 💨 🩺',
+        'symbols' => '🫁',
         'keywords' => ['airway', 'supraglottic', 'adjunct', 'intubation', 'aemt'],
         'sources' => [
             ['id' => 1, 'label' => 'NIH MedlinePlus — Breathing difficulty', 'url' => 'https://medlineplus.gov/breathingproblems.html'],
@@ -43,7 +43,7 @@ return [
         'excerpt' => 'Vascular access fundamentals and CDC-aligned infection control for Advanced EMT practice.',
         'category' => 'Procedures',
         'accent' => 'medic',
-        'symbols' => '💉 💧 ✚',
+        'symbols' => '💉',
         'keywords' => ['iv', 'infection', 'aseptic', 'catheter', 'fluids'],
         'sources' => [
             ['id' => 1, 'label' => 'CDC — Injection Safety', 'url' => 'https://www.cdc.gov/injection-safety/'],
@@ -79,7 +79,7 @@ return [
         'excerpt' => 'AEMT medication responsibilities framed by FDA labeling principles and safe administration practices.',
         'category' => 'Pharmacology',
         'accent' => 'pharma',
-        'symbols' => '💊 💉 ✓',
+        'symbols' => '💊',
         'keywords' => ['medication', 'fda', 'dosage', 'routes', 'allergy'],
         'sources' => [
             ['id' => 1, 'label' => 'FDA — Drug Safety and Availability', 'url' => 'https://www.fda.gov/drugs/drug-safety-and-availability'],
@@ -115,7 +115,7 @@ return [
         'excerpt' => 'Introduction to 3-lead monitoring and dysrhythmia awareness using NIH cardiovascular education resources.',
         'category' => 'Cardiac',
         'accent' => 'rescue',
-        'symbols' => '📈 ❤️ ⚡',
+        'symbols' => '🫀',
         'keywords' => ['ecg', 'monitor', 'rhythm', 'cardiac', 'palpitations'],
         'sources' => [
             ['id' => 1, 'label' => 'NIH NHLBI — How the Heart Works', 'url' => 'https://www.nhlbi.nih.gov/health/heart'],
@@ -151,7 +151,7 @@ return [
         'excerpt' => 'Mass-casualty sorting principles from CDC field triage guidance and standardized START methodology.',
         'category' => 'Trauma',
         'accent' => 'safety',
-        'symbols' => '🏷️ 🔴 🟡 🟢',
+        'symbols' => '🏷️',
         'keywords' => ['triage', 'start', 'mci', 'trauma', 'sorting'],
         'sources' => [
             ['id' => 1, 'label' => 'CDC — Guidelines for Field Triage of Injured Patients', 'url' => 'https://www.cdc.gov/fieldtriage/'],

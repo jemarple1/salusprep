@@ -7,7 +7,7 @@ return [
         'excerpt' => 'How systematic ADPIE thinking supports safe practical nursing care, aligned with HHS quality initiatives.',
         'category' => 'Fundamentals',
         'accent' => 'medic',
-        'symbols' => '📋 ✚ 🩺',
+        'symbols' => '🩺',
         'keywords' => ['adpie', 'nursing process', 'assessment', 'planning', 'evaluation'],
         'sources' => [
             ['id' => 1, 'label' => 'AHRQ — Patient Safety Network', 'url' => 'https://psnet.ahrq.gov/'],
@@ -43,7 +43,7 @@ return [
         'excerpt' => 'Standard precautions, isolation categories, and hand hygiene from authoritative CDC guidance.',
         'category' => 'Safety',
         'accent' => 'ems',
-        'symbols' => '🧤 🧼 🛡️',
+        'symbols' => '🧤',
         'keywords' => ['infection', 'precautions', 'hand hygiene', 'ppe', 'isolation'],
         'sources' => [
             ['id' => 1, 'label' => 'CDC — Infection Control in Healthcare Settings', 'url' => 'https://www.cdc.gov/healthcare-associated-infections/'],
@@ -79,7 +79,7 @@ return [
         'excerpt' => 'FDA-regulated drug safety principles and the rights framework LPNs use before every administration.',
         'category' => 'Pharmacology',
         'accent' => 'pharma',
-        'symbols' => '💊 ✓ 📋',
+        'symbols' => '💊',
         'keywords' => ['medication', 'rights', 'fda', 'dosage', 'mar'],
         'sources' => [
             ['id' => 1, 'label' => 'FDA — Medication Errors Related to CDER-Regulated Products', 'url' => 'https://www.fda.gov/drugs/medication-errors-related-cder-regulated-drug-products'],
@@ -115,7 +115,7 @@ return [
         'excerpt' => 'Measuring and interpreting temperature, pulse, respiration, and blood pressure using NIH clinical references.',
         'category' => 'Assessment',
         'accent' => 'rescue',
-        'symbols' => '❤️ 🌡️ 💓',
+        'symbols' => '🩺',
         'keywords' => ['vitals', 'blood pressure', 'pulse', 'temperature', 'respirations'],
         'sources' => [
             ['id' => 1, 'label' => 'NIH MedlinePlus — Vital signs', 'url' => 'https://medlineplus.gov/ency/article/002341.htm'],
@@ -151,7 +151,7 @@ return [
         'excerpt' => 'AHRQ safety science and HHS guidance on respectful, effective nurse-patient communication.',
         'category' => 'Communication',
         'accent' => 'safety',
-        'symbols' => '🛡️ ✓ 💬',
+        'symbols' => '💬',
         'keywords' => ['safety', 'communication', 'falls', 'advocacy', 'therapeutic'],
         'sources' => [
             ['id' => 1, 'label' => 'AHRQ — Patient Safety Network', 'url' => 'https://psnet.ahrq.gov/'],

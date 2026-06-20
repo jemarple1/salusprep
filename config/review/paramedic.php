@@ -7,7 +7,7 @@ return [
         'excerpt' => 'How drugs work, how the FDA regulates them, and what that means for paramedic-level decision making.',
         'category' => 'Pharmacology',
         'accent' => 'pharma',
-        'symbols' => '💊 📋 ✓',
+        'symbols' => '💊',
         'keywords' => ['pharmacology', 'fda', 'mechanism', 'contraindications', 'drugs'],
         'sources' => [
             ['id' => 1, 'label' => 'FDA — Drug Safety and Availability', 'url' => 'https://www.fda.gov/drugs/drug-safety-and-availability'],
@@ -43,7 +43,7 @@ return [
         'excerpt' => 'Electrocardiographic fundamentals from NHLBI heart education and prehospital STEMI activation principles.',
         'category' => 'Cardiac',
         'accent' => 'rescue',
-        'symbols' => '📈 ❤️ ⚡',
+        'symbols' => '🫀',
         'keywords' => ['12-lead', 'ecg', 'stemi', 'acs', 'chest pain'],
         'sources' => [
             ['id' => 1, 'label' => 'NIH NHLBI — Heart Attack', 'url' => 'https://www.nhlbi.nih.gov/health/heart-attack'],
@@ -79,7 +79,7 @@ return [
         'excerpt' => 'Cardiac arrest physiology and resuscitation priorities informed by NIH and CDC cardiovascular guidance.',
         'category' => 'Cardiac',
         'accent' => 'ems',
-        'symbols' => '⚡ ❤️ 🫀',
+        'symbols' => '⚡',
         'keywords' => ['acls', 'arrest', 'vasopressors', 'airway', 'rosc'],
         'sources' => [
             ['id' => 1, 'label' => 'CDC — About Cardiac Arrest', 'url' => 'https://www.cdc.gov/heart-disease/about/cardiac-arrest.htm'],
@@ -115,7 +115,7 @@ return [
         'excerpt' => 'Age-specific assessment approaches drawing on CDC child health data and NIH pediatric references.',
         'category' => 'Pediatrics',
         'accent' => 'medic',
-        'symbols' => '👶 📏 🩺',
+        'symbols' => '👶',
         'keywords' => ['pediatric', 'children', 'broselow', 'assessment', 'family'],
         'sources' => [
             ['id' => 1, 'label' => 'CDC — Child Development', 'url' => 'https://www.cdc.gov/ncbddd/childdevelopment/index.html'],
@@ -151,7 +151,7 @@ return [
         'excerpt' => 'Interfacility transport, specialty teams, and national EMS system coordination through NHTSA and HHS.',
         'category' => 'Systems',
         'accent' => 'safety',
-        'symbols' => '🚑 🏥 ⚕',
+        'symbols' => '🚑',
         'keywords' => ['transport', 'critical care', 'interfacility', 'helicopter', 'handoff'],
         'sources' => [
             ['id' => 1, 'label' => 'NHTSA — Emergency Medical Services', 'url' => 'https://www.nhtsa.gov/emergency-medical-services'],

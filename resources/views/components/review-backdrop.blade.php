@@ -4,11 +4,11 @@
 
 @php
     $gradientStyle = match ($accent) {
-        'ems' => 'background: linear-gradient(145deg, #0a3254 0%, #145a82 100%);',
-        'rescue' => 'background: linear-gradient(145deg, #5c1818 0%, #8b2525 100%);',
-        'pharma' => 'background: linear-gradient(145deg, #3b1d6e 0%, #5b3a9e 100%);',
-        'safety' => 'background: linear-gradient(145deg, #6b4420 0%, #92682a 100%);',
-        default => 'background: linear-gradient(145deg, #134526 0%, #1f6b38 100%);',
+        'ems' => 'background: linear-gradient(145deg, #0f172a 0%, #004d84 100%);',
+        'rescue' => 'background: linear-gradient(145deg, #0f172a 0%, #991b1b 100%);',
+        'pharma' => 'background: linear-gradient(145deg, #0f172a 0%, #7c3aed 100%);',
+        'safety' => 'background: linear-gradient(145deg, #0f172a 0%, #d97706 100%);',
+        default => 'background: linear-gradient(145deg, #0f172a 0%, #15803d 100%);',
     };
     $textureClass = match ($accent) {
         'ems' => 'review-texture-ems',
