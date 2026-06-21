@@ -1,0 +1,136 @@
+<?php
+
+require_once __DIR__.'/helpers.php';
+
+return paramedic_levels([
+    [
+        'title' => 'Symptomatic Bradycardia — ACLS Sequence',
+        'scenario' => 'HR 38/min, BP 88/50, altered, dizzy. ECG: third-degree AV block. IV access established.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Identify symptomatic bradycardia and ensure airway/oxygenation'],
+            ['id' => 'b', 'text' => 'Atropine 1 mg IV; may repeat to 3 mg total'],
+            ['id' => 'c', 'text' => 'Prepare transcutaneous pacing if atropine ineffective'],
+            ['id' => 'd', 'text' => 'Consider epinephrine or dopamine infusion per protocol'],
+            ['id' => 'e', 'text' => 'Transport to facility capable of transvenous pacing'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'AHA ACLS bradycardia algorithm: atropine first-line, then TCP and pressors for refractory symptomatic bradycardia. CDC cardiac arrest data emphasize minimizing delay to effective perfusion.',
+    ],
+    [
+        'title' => 'Unstable SVT — Cardioversion Pathway',
+        'scenario' => 'Narrow-complex tachycardia 220/min, BP 76/40, chest pain, diaphoresis. Patient awake but acutely distressed.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Recognize unstable tachycardia with hypotension and ischemic symptoms'],
+            ['id' => 'b', 'text' => 'Provide sedation/analgesia if possible without delaying care'],
+            ['id' => 'c', 'text' => 'Synchronized cardioversion at manufacturer-recommended energy'],
+            ['id' => 'd', 'text' => 'Resume monitoring; repeat cardioversion or antiarrhythmic if recurrent'],
+            ['id' => 'e', 'text' => 'Transport with continuous monitoring and 12-lead documentation'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'AHA ACLS unstable tachycardia pathway requires immediate synchronized cardioversion. Adenosine is for stable narrow-complex SVT — not when hypotension and ischemia are present per CDC emergency cardiovascular care guidance.',
+    ],
+    [
+        'title' => 'VF Arrest — Shockable Rhythm',
+        'scenario' => 'Witnessed collapse. CPR in progress. Monitor shows coarse ventricular fibrillation. First shock not yet delivered.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Confirm VF/pulseless VT and charge defibrillator'],
+            ['id' => 'b', 'text' => 'Deliver unsynchronized shock at recommended energy'],
+            ['id' => 'c', 'text' => 'Immediately resume high-quality CPR for 2 minutes'],
+            ['id' => 'd', 'text' => 'Establish IV/IO access during CPR'],
+            ['id' => 'e', 'text' => 'Administer epinephrine after second shock per ACLS timing'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'AHA ACLS and CDC chain of survival prioritize immediate defibrillation for shockable rhythms. Resume CPR after shock; epinephrine follows second shock in standard algorithm.',
+    ],
+    [
+        'title' => 'Post-ROSC Care Bundle',
+        'scenario' => 'ROSC achieved after 12 minutes CPR. BP 96/58, GCS 6, EtCO₂ 38, SpO₂ 96% on BVM. STEMI on 12-lead.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Confirm ROSC with pulse and blood pressure'],
+            ['id' => 'b', 'text' => 'Titrate oxygen to avoid hyperoxia; target SpO₂ 94–98%'],
+            ['id' => 'c', 'text' => 'Avoid hyperventilation — maintain EtCO₂ 35–45 mmHg'],
+            ['id' => 'd', 'text' => 'Treat hypotension with fluids and vasopressors per protocol'],
+            ['id' => 'e', 'text' => 'Activate STEMI alert; transport to PCI-capable center'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'AHA post-cardiac arrest care and CDC resuscitation guidance recommend avoiding hyperventilation and hyperoxia, supporting blood pressure, and identifying STEMI for coronary angiography.',
+    ],
+    [
+        'title' => 'Stable Monomorphic VT',
+        'scenario' => 'Monomorphic VT 160/min, BP 110/70, alert, mild chest discomfort. Pulses strong.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Confirm wide-complex tachycardia with pulse and stability'],
+            ['id' => 'b', 'text' => '12-lead if feasible; IV access and continuous monitoring'],
+            ['id' => 'c', 'text' => 'Antiarrhythmic per protocol (e.g., amiodarone) with medical direction'],
+            ['id' => 'd', 'text' => 'Prepare synchronized cardioversion if stability lost'],
+            ['id' => 'e', 'text' => 'Transport to facility with cardiology capability'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'AHA ACLS distinguishes stable vs unstable VT. Stable monomorphic VT may receive antiarrhythmics; unstable requires cardioversion. Adenosine is inappropriate for wide-complex tachycardia of unknown origin.',
+    ],
+    [
+        'title' => 'Refractory Bradycardia After Atropine',
+        'scenario' => 'Complete heart block, symptomatic. Atropine 3 mg total ineffective. BP 80/48, altered.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Recognize atropine-refractory symptomatic bradycardia'],
+            ['id' => 'b', 'text' => 'Initiate transcutaneous pacing immediately'],
+            ['id' => 'c', 'text' => 'Start epinephrine or dopamine infusion per protocol'],
+            ['id' => 'd', 'text' => 'Confirm capture and improved perfusion with TCP'],
+            ['id' => 'e', 'text' => 'Rapid transport; notify receiving facility of pacing need'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'AHA ACLS bradycardia algorithm: when atropine fails, TCP and catecholamine infusion are indicated. CDC emphasizes minimizing delay to effective perfusion in bradyarrhythmias.',
+    ],
+    [
+        'title' => 'Refractory VF — Drug and Shock Cycle',
+        'scenario' => 'VF arrest. Three shocks and 3 rounds CPR given. Still in VF. IV access available.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Continue high-quality CPR and shock every 2 minutes'],
+            ['id' => 'b', 'text' => 'Administer epinephrine 1 mg IV every 3–5 minutes'],
+            ['id' => 'c', 'text' => 'Consider amiodarone 300 mg IV after epinephrine and continued shocks'],
+            ['id' => 'd', 'text' => 'Search reversible causes (H\'s and T\'s) during CPR'],
+            ['id' => 'e', 'text' => 'Transport if ROSC; otherwise continue ACLS per termination criteria'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'AHA ACLS cardiac arrest algorithm: epinephrine every 3–5 minutes; amiodarone for refractory VF/pVT. Treat reversible causes throughout resuscitation per CDC cardiac arrest statistics.',
+    ],
+    [
+        'title' => 'Unstable AFib with Pulmonary Edema',
+        'scenario' => 'New AFib rate 170, BP 82/50, acute pulmonary edema, SpO₂ 88%.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Recognize unstable tachycardia with acute heart failure'],
+            ['id' => 'b', 'text' => 'Supplemental oxygen; prepare CPAP if alert and protocol allows'],
+            ['id' => 'c', 'text' => 'Synchronized cardioversion for unstable AFib with rapid ventricular response'],
+            ['id' => 'd', 'text' => 'Avoid diltiazem or beta-blockers in hypotensive pulmonary edema'],
+            ['id' => 'e', 'text' => 'Transport with continuous monitoring post-cardioversion'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'AHA ACLS unstable tachycardia pathway applies to AFib causing hypotension or acute heart failure — synchronized cardioversion indicated. Rate-control agents are for stable patients per NHLBI AF guidance.',
+    ],
+    [
+        'title' => 'ROSC with Post-Arrest Hypotension',
+        'scenario' => 'ROSC 2 minutes ago. HR 52, BP 74/40, cool clammy skin. 12-lead sinus bradycardia, no STEMI.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Confirm sustained ROSC and treat immediate post-arrest hypotension'],
+            ['id' => 'b', 'text' => 'Cautious IV crystalloid bolus per protocol'],
+            ['id' => 'c', 'text' => 'Start vasopressor infusion (e.g., norepinephrine) if fluid insufficient'],
+            ['id' => 'd', 'text' => 'Avoid hyperventilation; maintain EtCO₂ target'],
+            ['id' => 'e', 'text' => 'Transport to post-arrest care center'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'AHA post-ROSC care emphasizes treating hypotension for cerebral and coronary perfusion. CDC/AHA guidance supports fluids and vasopressors while avoiding hyperventilation.',
+    ],
+    [
+        'title' => 'PEA — Tamponade Recognition',
+        'scenario' => 'PEA arrest during transport. CPR ongoing. EtCO₂ 12, distended neck veins, muffled heart sounds.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Continue high-quality CPR and epinephrine per ACLS'],
+            ['id' => 'b', 'text' => 'Identify Beck triad suggesting cardiac tamponade'],
+            ['id' => 'c', 'text' => 'Treat other reversible H\'s and T\'s concurrently'],
+            ['id' => 'd', 'text' => 'Rapid transport; pericardiocentesis if protocol and skills allow'],
+            ['id' => 'e', 'text' => 'Notify receiving facility of suspected tamponade'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'AHA ACLS PEA management requires searching H\'s and T\'s. Tamponade presents with hypotension, JVD, muffled sounds — primarily hospital intervention but recognition directs transport per CDC trauma/cardiac integration.',
+    ],
+]);

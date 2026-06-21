@@ -109,4 +109,27 @@ class PlatformExerciseTest extends TestCase
         $this->assertCount(4, $levelOne['items']);
         $this->assertCount(5, $levelFive['items']);
     }
+
+    public function test_paramedic_exercises_have_ten_scenarios_per_level(): void
+    {
+        foreach (PlatformExercise::forLevel(CertificationLevel::PARAMEDIC) as $exercise) {
+            $levelCount = PlatformExercise::exerciseLevelCount(CertificationLevel::PARAMEDIC, $exercise['slug']);
+
+            for ($level = 1; $level <= max(1, $levelCount); $level++) {
+                $this->assertCount(
+                    ExerciseProgressService::SCENARIOS_PER_EXERCISE,
+                    PlatformExercise::scenarios(CertificationLevel::PARAMEDIC, $exercise['slug'], $level),
+                    $exercise['slug'].' level '.$level,
+                );
+            }
+        }
+    }
+
+    public function test_paramedic_stroke_scenarios_include_fast_findings(): void
+    {
+        $scenario = PlatformExercise::scenario(CertificationLevel::PARAMEDIC, 'stroke-neurology', 0, 1);
+
+        $this->assertNotNull($scenario);
+        $this->assertArrayHasKey('fast', $scenario);
+    }
 }

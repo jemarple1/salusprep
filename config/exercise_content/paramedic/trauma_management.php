@@ -1,0 +1,136 @@
+<?php
+
+require_once __DIR__.'/helpers.php';
+
+return paramedic_levels([
+    [
+        'title' => 'Penetrating Chest Trauma — Priority',
+        'scenario' => 'GSW chest: absent breath sounds left, JVD, BP 72/40, tracheal deviation, conscious but agitated.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Needle decompression of tension pneumothorax'],
+            ['id' => 'b', 'text' => 'High-flow oxygen and cardiac monitoring'],
+            ['id' => 'c', 'text' => 'Two large-bore IV access; blood products if protocol allows'],
+            ['id' => 'd', 'text' => 'Occlusive dressing if open pneumothorax present'],
+            ['id' => 'e', 'text' => 'Rapid transport to trauma center; notify surgical team'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'NIH and CDC trauma guidance: tension pneumothorax causing obstructive shock requires immediate needle decompression before other interventions. NHTSA trauma protocols prioritize life-threatening thoracic injuries.',
+    ],
+    [
+        'title' => 'Massive Hemorrhage — Junctional GSW',
+        'scenario' => 'Axillary GSW with pulsatile hemorrhage. BP 94/60, HR 128, patient pale.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Direct pressure and hemostatic dressing to junctional wound'],
+            ['id' => 'b', 'text' => 'Apply tourniquet if extremity amenable; junctional device if available'],
+            ['id' => 'c', 'text' => 'Two large-bore IV/IO; tranexamic acid per protocol'],
+            ['id' => 'd', 'text' => 'Hypotensive resuscitation targeting permissive hypotension if penetrating torso'],
+            ['id' => 'e', 'text' => 'Level I trauma alert; minimize on-scene time'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'CDC Stop the Bleed and NIH hemorrhage control prioritize immediate bleeding control before fluid resuscitation. Junctional wounds may need specialized devices per NHTSA tactical EMS guidance.',
+    ],
+    [
+        'title' => 'TBI — Prevent Secondary Injury',
+        'scenario' => 'MVC unrestrained driver: GCS 10, right pupil 5 mm sluggish, BP 158/92, HR 54, SpO₂ 96%.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Maintain SpO₂ >94% and prevent hypoxia'],
+            ['id' => 'b', 'text' => 'Prevent hypotension — target SBP >90 mmHg (or >100 if age >10 per pediatric)'],
+            ['id' => 'c', 'text' => 'Head elevation 30° if spine cleared and not hypotensive'],
+            ['id' => 'd', 'text' => 'C-spine precautions and prevent hyperventilation (EtCO₂ 35–40)'],
+            ['id' => 'e', 'text' => 'Trauma center transport with neurosurgical capability notification'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'NIH Brain Trauma Foundation guidelines emphasize preventing hypoxia, hypotension, and hyperventilation in TBI. CDC field triage routes abnormal pupils and GCS <10 to highest-level trauma centers.',
+    ],
+    [
+        'title' => 'Pelvic Fracture — Mechanical Stability',
+        'scenario' => 'MVC: open book pelvic deformity, hypotensive, no other obvious hemorrhage source.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Apply pelvic binder at level of greater trochanters'],
+            ['id' => 'b', 'text' => 'Control external bleeding; tourniquets for extremity sources'],
+            ['id' => 'c', 'text' => 'IV/IO access; blood products per massive transfusion protocol if available'],
+            ['id' => 'd', 'text' => 'Avoid unnecessary movement; log roll for spine assessment'],
+            ['id' => 'e', 'text' => 'Trauma center transport; angioembolization-capable facility'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'NIH trauma literature supports early pelvic binder application to reduce venous hemorrhage. CDC field triage prioritizes hemodynamic instability with pelvic mechanism to Level I/II centers.',
+    ],
+    [
+        'title' => 'Burn Trauma — Airway First',
+        'scenario' => 'Structure fire: 25% TBSA burns, hoarseness, singed facial hair, SpO₂ 89%, in structure 10 minutes.',
+        'items' => [
+            ['id' => 'a', 'text' => '100% oxygen; assess for inhalation injury and early airway threat'],
+            ['id' => 'b', 'text' => 'Early RSI if stridor, hoarseness, or significant facial burns'],
+            ['id' => 'c', 'text' => 'Stop burning process; remove jewelry; cover with dry sterile dressings'],
+            ['id' => 'd', 'text' => 'IV access and fluid resuscitation per burn formula if protocol'],
+            ['id' => 'e', 'text' => 'Burn center transport; warm environment to prevent hypothermia'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'CDC burn and inhalation injury guidance prioritizes airway management before fluid resuscitation. NIH burn care emphasizes early intubation when progressive edema anticipated.',
+    ],
+    [
+        'title' => 'Open Fracture — Infection and Bleeding',
+        'scenario' => 'MVC: open tibia fracture with active bleeding, neurovascular intact distally, contaminated wound.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Direct pressure and hemorrhage control'],
+            ['id' => 'b', 'text' => 'Cover wound with sterile saline-moistened dressing; do not push bone back'],
+            ['id' => 'c', 'text' => 'Splint in position found; neurovascular checks before and after'],
+            ['id' => 'd', 'text' => 'IV access, analgesia, antibiotics per protocol if allowed'],
+            ['id' => 'e', 'text' => 'Orthopedic trauma center transport'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'NIH orthopaedic trauma guidance: control bleeding, prevent contamination, splint, and early antibiotics for open fractures. NHTSA trauma protocols document neurovascular status.',
+    ],
+    [
+        'title' => 'Spinal Injury — Extrication Priority',
+        'scenario' => 'Rollover MVC: patient trapped 15 minutes, GCS 14, midline cervical tenderness, stable vitals.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Manual inline stabilization throughout extrication'],
+            ['id' => 'b', 'text' => 'Primary survey and treat life threats during extrication planning'],
+            ['id' => 'c', 'text' => 'Coordinated extrication minimizing spinal motion'],
+            ['id' => 'd', 'text' => 'Apply cervical collar and spinal motion restriction on flat surface'],
+            ['id' => 'e', 'text' => 'Transport to trauma center; reassess neuro exam frequently'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'NIH spinal cord injury prevention and NHTSA spinal motion restriction guidance prioritize inline stabilization during extrication. Treat life threats that supersede spine (e.g., tension pneumothorax) per CDC field triage.',
+    ],
+    [
+        'title' => 'Amputation — Preservation and Transport',
+        'scenario' => 'Industrial accident: partial hand amputation, tourniquet applied by coworker, BP 118/76, pain 10/10.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Confirm tourniquet effective; do not remove if bleeding controlled'],
+            ['id' => 'b', 'text' => 'IV access, analgesia, tetanus status documentation'],
+            ['id' => 'c', 'text' => 'Wrap amputated part in sterile saline gauze, bag on ice (part not on ice)'],
+            ['id' => 'd', 'text' => 'Stump dressing and splint remaining extremity'],
+            ['id' => 'e', 'text' => 'Hand surgery/trauma center transport with part accompanying patient'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'NIH replantation guidance: preserve amputated tissue without direct ice contact. CDC Stop the Bleed emphasizes tourniquet safety — do not release once effective in amputation.',
+    ],
+    [
+        'title' => 'Blast Injury — Multi-System',
+        'scenario' => 'IED blast: primary blast lung injury suspected, RR 32, SpO₂ 88%, tympanic membrane rupture, abdominal pain.',
+        'items' => [
+            ['id' => 'a', 'text' => 'High-flow oxygen; avoid hyperventilation; prepare for RSI if failing'],
+            ['id' => 'b', 'text' => 'Assess for tension pneumothorax and decompress if indicated'],
+            ['id' => 'c', 'text' => 'IV access; monitor for delayed hemorrhage and compartment syndrome'],
+            ['id' => 'd', 'text' => 'Full body exam for occult penetrating fragments'],
+            ['id' => 'e', 'text' => 'Trauma center; consider delayed presentation of bowel injury'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'CDC blast injury fact sheets describe primary blast lung and delayed hollow viscus injury. NIH trauma guidance prioritizes respiratory support and thorough secondary survey.',
+    ],
+    [
+        'title' => 'Pediatric Trauma — Weight-Based Resuscitation',
+        'scenario' => '7-year-old struck by car: GCS 12, HR 140, BP 78/50, active external bleeding from femur.',
+        'items' => [
+            ['id' => 'a', 'text' => 'Control hemorrhage with direct pressure and splint femur'],
+            ['id' => 'b', 'text' => 'Airway and breathing assessment; BVM if inadequate'],
+            ['id' => 'c', 'text' => 'IO/IV access; isotonic crystalloid 20 mL/kg bolus per protocol'],
+            ['id' => 'd', 'text' => 'Prevent hypothermia with warm blankets and warmed fluids'],
+            ['id' => 'e', 'text' => 'Pediatric trauma center transport; Broselow tape dosing'],
+        ],
+        'correct_order' => ['a', 'b', 'c', 'd', 'e'],
+        'explanation' => 'CDC pediatric trauma and NIH PALS guidance use weight-based fluid resuscitation (20 mL/kg). NHTSA EMS pediatric readiness emphasizes hemorrhage control and hypothermia prevention.',
+    ],
+]);

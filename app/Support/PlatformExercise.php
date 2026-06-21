@@ -91,6 +91,17 @@ class PlatformExercise
             ];
         }
 
+        if ($ui === 'categorization-sort') {
+            $scenario['sections'] = $scenario['categories'] ?? [];
+            $scenario['sentences'] = collect($scenario['items'] ?? [])
+                ->map(fn (array $item) => [
+                    'id' => $item['id'],
+                    'text' => $item['text'],
+                    'section' => $item['category'],
+                ])
+                ->all();
+        }
+
         if ($slug === 'pharma-assist') {
             return self::normalizePharmaAssistScenario($scenario);
         }

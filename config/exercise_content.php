@@ -31,4 +31,22 @@ return [
         'braden-scale' => require __DIR__.'/exercise_content/nclex_pn/braden_scale.php',
         'morse-fall-scale' => require __DIR__.'/exercise_content/nclex_pn/morse_fall_scale.php',
     ],
+
+    'paramedic' => [
+        'patient-assessment' => require __DIR__.'/exercise_content/paramedic/patient_assessment.php',
+        'rhythm-12lead' => require __DIR__.'/exercise_content/paramedic/rhythm_12lead.php',
+        'cardiology-treatment' => require __DIR__.'/exercise_content/paramedic/cardiology_treatment.php',
+        'airway-respiratory' => require __DIR__.'/exercise_content/paramedic/airway_respiratory.php',
+        'pharmacology-mastery' => require __DIR__.'/exercise_content/paramedic/pharmacology_mastery.php',
+        'shock-hemodynamics' => require __DIR__.'/exercise_content/paramedic/shock_hemodynamics.php',
+        'trauma-management' => require __DIR__.'/exercise_content/paramedic/trauma_management.php',
+        'stroke-neurology' => require __DIR__.'/exercise_content/paramedic/stroke_neurology.php',
+        'medical-emergencies' => require __DIR__.'/exercise_content/paramedic/medical_emergencies.php',
+        'pediatrics-emergency' => require __DIR__.'/exercise_content/paramedic/pediatrics_emergency.php',
+        'obstetrics-neonatal' => require __DIR__.'/exercise_content/paramedic/obstetrics_neonatal.php',
+        'ems-operations-mci' => require __DIR__.'/exercise_content/paramedic/ems_operations_mci.php',
+        'soap-charting' => require __DIR__.'/exercise_content/paramedic/soap_charting.php',
+        'full-als-scenario' => require __DIR__.'/exercise_content/paramedic/full_als_scenario.php',
+        'adaptive-nrp-readiness' => require __DIR__.'/exercise_content/paramedic/adaptive_nrp_readiness.php',
+    ],
 ];

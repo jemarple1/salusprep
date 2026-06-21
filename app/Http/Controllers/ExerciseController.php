@@ -74,6 +74,7 @@ class ExerciseController extends Controller
         $view = match ($meta['ui'] ?? $meta['type']) {
             'soap' => 'exercises.soap',
             'adpie-sort' => 'exercises.adpie-sort',
+            'categorization-sort' => 'exercises.categorization-sort',
             'priority-order' => 'exercises.priority-order',
             'scale-rating' => 'exercises.scale-rating',
             'triage-tags' => 'exercises.triage-tags',
@@ -85,6 +86,10 @@ class ExerciseController extends Controller
             'salt-triage' => 'exercises.salt-triage',
             'pharma-yesno' => 'exercises.pharma-yesno',
             'pharma-choice' => 'exercises.pharma-choice',
+            'branching-scenario' => 'exercises.branching-scenario',
+            'matching' => 'exercises.matching',
+            'multi-select' => 'exercises.multi-select',
+            'numerical' => 'exercises.numerical',
             'scenario' => 'exercises.scenario',
             default => abort(404),
         };
@@ -123,11 +128,15 @@ class ExerciseController extends Controller
         $ui = $meta['ui'] ?? $meta['type'];
 
         $response = match ($ui) {
-            'soap', 'adpie-sort' => $this->checkSort($request, $scenario),
+            'soap', 'adpie-sort', 'categorization-sort' => $this->checkSort($request, $scenario),
             'burn-map' => $this->checkBurnMap($request, $scenario),
             'gcs-picker' => $this->checkGcs($request, $scenario),
             'scale-rating' => $this->checkScaleRating($request, $scenario),
             'priority-order' => $this->checkPriorityOrder($request, $scenario),
+            'branching-scenario' => $this->checkBranching($request, $scenario),
+            'matching' => $this->checkMatching($request, $scenario),
+            'multi-select' => $this->checkMultiSelect($request, $scenario),
+            'numerical' => $this->checkNumerical($request, $scenario),
             default => $this->checkSimple($request, $scenario, $ui),
         };
 
@@ -191,9 +200,14 @@ class ExerciseController extends Controller
     /** @param  array<string, mixed>  $scenario */
     private function checkSort(Request $request, array $scenario): JsonResponse
     {
+        $allowedSections = array_keys($scenario['sections'] ?? []);
+        if (! in_array('X', $allowedSections, true)) {
+            $allowedSections[] = 'X';
+        }
+
         $placements = $request->validate([
             'placements' => ['required', 'array'],
-            'placements.*' => ['required', 'string', 'in:S,O,A,P,D,I,E,X'],
+            'placements.*' => ['required', 'string', 'in:'.implode(',', $allowedSections)],
         ])['placements'];
 
         $correctMap = collect($scenario['sentences'])->mapWithKeys(
@@ -325,6 +339,88 @@ class ExerciseController extends Controller
             'correct' => $correct,
             'explanation' => $scenario['explanation'].' Your total: GCS '.$total.'. Expected: GCS '.$expectedTotal.'.',
             'total' => $total,
+        ]);
+    }
+
+    /** @param  array<string, mixed>  $scenario */
+    private function checkBranching(Request $request, array $scenario): JsonResponse
+    {
+        $path = $request->validate([
+            'path' => ['required', 'array'],
+            'path.*' => ['required', 'string'],
+        ])['path'];
+
+        $steps = $scenario['steps'] ?? [];
+        $correct = count($path) === count($steps);
+
+        if ($correct) {
+            foreach ($steps as $index => $step) {
+                if (($path[$index] ?? '') !== ($step['correct'] ?? '')) {
+                    $correct = false;
+                    break;
+                }
+            }
+        }
+
+        return response()->json([
+            'correct' => $correct,
+            'explanation' => $scenario['explanation'] ?? '',
+        ]);
+    }
+
+    /** @param  array<string, mixed>  $scenario */
+    private function checkMatching(Request $request, array $scenario): JsonResponse
+    {
+        $matches = $request->validate([
+            'matches' => ['required', 'array'],
+        ])['matches'];
+
+        $expected = $scenario['correct'] ?? [];
+        ksort($matches);
+        ksort($expected);
+        $correct = $matches === $expected;
+
+        return response()->json([
+            'correct' => $correct,
+            'explanation' => $scenario['explanation'] ?? '',
+        ]);
+    }
+
+    /** @param  array<string, mixed>  $scenario */
+    private function checkMultiSelect(Request $request, array $scenario): JsonResponse
+    {
+        $answers = $request->validate([
+            'answers' => ['required', 'array'],
+            'answers.*' => ['required', 'string'],
+        ])['answers'];
+
+        $expected = $scenario['correct'] ?? [];
+        sort($answers);
+        sort($expected);
+        $correct = $answers === $expected;
+
+        return response()->json([
+            'correct' => $correct,
+            'explanation' => $scenario['explanation'] ?? '',
+        ]);
+    }
+
+    /** @param  array<string, mixed>  $scenario */
+    private function checkNumerical(Request $request, array $scenario): JsonResponse
+    {
+        $value = (float) $request->validate([
+            'answer' => ['required', 'numeric'],
+        ])['answer'];
+
+        $expected = (float) ($scenario['correct'] ?? 0);
+        $tolerance = (float) ($scenario['tolerance'] ?? 0.01);
+        $correct = abs($value - $expected) <= $tolerance;
+
+        return response()->json([
+            'correct' => $correct,
+            'explanation' => $scenario['explanation'] ?? '',
+            'expected' => $expected,
+            'unit' => $scenario['unit'] ?? null,
         ]);
     }
 }
