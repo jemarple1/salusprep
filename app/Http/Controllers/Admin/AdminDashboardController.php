@@ -7,13 +7,14 @@ use App\Models\Setting;
 use App\Services\AdminAnalyticsService;
 use App\Services\PreviewAccessService;
 use App\Support\CertificationLevel;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class AdminDashboardController extends Controller
 {
     public function __construct(private AdminAnalyticsService $analytics) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
         return view('admin.dashboard', [
             'summary' => $this->analytics->summary(),
@@ -30,7 +31,10 @@ class AdminDashboardController extends Controller
             'guestSummary' => $this->analytics->guestSummary(),
             'guestVisitChart' => $this->analytics->guestVisitChart(),
             'guestGeoPoints' => $this->analytics->guestGeoPoints(),
-            'guests' => $this->analytics->guestsPaginated(),
+            'guests' => $this->analytics->guestsPaginated(
+                $request->query('guest_sort'),
+                (string) $request->query('guest_dir', 'desc'),
+            ),
             'marketingSubscribers' => $this->analytics->marketingEmailSubscribers(),
             'marketingEmailsExport' => $this->analytics->marketingEmailsExport(),
             'certificationLevels' => CertificationLevel::labels(),

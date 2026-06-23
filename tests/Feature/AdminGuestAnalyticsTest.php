@@ -90,6 +90,39 @@ class AdminGuestAnalyticsTest extends TestCase
         $this->assertSame('google.com', $device->referrer_host);
     }
 
+    public function test_guest_visitors_table_paginates_and_sorts(): void
+    {
+        Admin::query()->create([
+            'username' => 'admin',
+            'password' => Hash::make('secret'),
+        ]);
+
+        for ($index = 0; $index < 21; $index++) {
+            GuestDevice::query()->create([
+                'device_id' => (string) Str::uuid(),
+                'country_name' => $index === 0 ? 'Zimbabwe' : 'United States',
+                'first_seen_at' => now()->subDays($index),
+                'last_seen_at' => now()->subDays($index),
+            ]);
+        }
+
+        $this->actingAs(Admin::query()->first(), 'admin')
+            ->get('/admin')
+            ->assertOk()
+            ->assertSee('page 1 of 2', false)
+            ->assertSee('guest_sort=location', false);
+
+        $this->actingAs(Admin::query()->first(), 'admin')
+            ->get('/admin?guest_page=2')
+            ->assertOk()
+            ->assertSee('page 2 of 2', false);
+
+        $this->actingAs(Admin::query()->first(), 'admin')
+            ->get('/admin?guest_sort=location&guest_dir=desc')
+            ->assertOk()
+            ->assertSee('Zimbabwe');
+    }
+
     public function test_guest_device_marked_converted_on_signup(): void
     {
         $deviceId = (string) Str::uuid();

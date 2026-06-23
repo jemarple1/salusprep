@@ -76,24 +76,68 @@ class AdminAnalyticsService
     }
 
     /** @return \Illuminate\Contracts\Pagination\LengthAwarePaginator<int, GuestDevice> */
-    public function guestsPaginated(int $perPage = 25)
+    public function guestsPaginated(?string $sort = null, string $direction = 'desc', int $perPage = 20)
     {
-        return GuestDevice::query()
+        $direction = strtolower($direction) === 'asc' ? 'asc' : 'desc';
+        $sortKey = in_array($sort, self::GUEST_SORT_COLUMNS, true) ? $sort : 'last_seen';
+
+        $query = GuestDevice::query()
             ->with([
                 'convertedUser:id,name,email',
                 'sectionProgress:device_id,certification_level,preview_started_at',
             ])
             ->withCount([
+                'sectionProgress as platforms_count',
                 'examSessions as quizzes_count',
                 'examSessions as completed_quizzes_count' => fn ($query) => $query
                     ->where('status', ExamSession::STATUS_COMPLETED),
                 'studySessions',
                 'exerciseCompletions',
             ])
-            ->withSum('examSessions as questions_answered', 'questions_answered')
-            ->orderByDesc('last_seen_at')
-            ->paginate($perPage, ['*'], 'guest_page');
+            ->withSum('examSessions as questions_answered', 'questions_answered');
+
+        match ($sortKey) {
+            'device' => $query->orderBy('device_id', $direction),
+            'location' => $query->orderBy('country_name', $direction)->orderBy('country_code', $direction),
+            'referral' => $query
+                ->orderBy('utm_source', $direction)
+                ->orderBy('referrer_host', $direction),
+            'platforms' => $query->orderBy('platforms_count', $direction),
+            'questions' => $query->orderBy('questions_answered', $direction),
+            'quizzes' => $query
+                ->orderBy('completed_quizzes_count', $direction)
+                ->orderBy('quizzes_count', $direction),
+            'study' => $query->orderBy('study_sessions_count', $direction),
+            'skills' => $query->orderBy('exercise_completions_count', $direction),
+            'time' => $query->orderBy('total_active_seconds', $direction),
+            'first_seen' => $query->orderBy('first_seen_at', $direction),
+            'status' => $query->orderBy('converted_user_id', $direction)->orderBy('converted_at', $direction),
+            default => $query->orderBy('last_seen_at', $direction),
+        };
+
+        if ($sortKey !== 'last_seen') {
+            $query->orderByDesc('last_seen_at');
+        }
+
+        return $query
+            ->paginate($perPage, ['*'], 'guest_page')
+            ->withQueryString();
     }
+
+    private const GUEST_SORT_COLUMNS = [
+        'device',
+        'location',
+        'referral',
+        'platforms',
+        'questions',
+        'quizzes',
+        'study',
+        'skills',
+        'time',
+        'first_seen',
+        'last_seen',
+        'status',
+    ];
 
     /** @return list<array{id: string, lat: float, lon: float, label: string, country: ?string}> */
     public function guestGeoPoints(int $limit = 500): array

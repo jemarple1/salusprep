@@ -172,25 +172,27 @@
                 <h2 class="text-lg font-bold text-white">All guest visitors</h2>
                 <p class="mt-1 text-sm text-slate-400">Tracked by device cookie — includes location, referral, quiz activity, and time on site.</p>
             </div>
-            <p class="text-sm text-slate-400">{{ number_format($guests->total()) }} total</p>
+            <p class="text-sm text-slate-400">
+                {{ number_format($guests->total()) }} total · page {{ $guests->currentPage() }} of {{ $guests->lastPage() }}
+            </p>
         </div>
 
         <div class="overflow-x-auto">
             <table class="min-w-[72rem] w-full text-left text-sm">
                 <thead class="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
                     <tr>
-                        <th class="px-3 py-3 font-semibold">Device</th>
-                        <th class="px-3 py-3 font-semibold">Location</th>
-                        <th class="px-3 py-3 font-semibold">Referred from</th>
-                        <th class="px-3 py-3 font-semibold">Platforms</th>
-                        <th class="px-3 py-3 font-semibold">Questions</th>
-                        <th class="px-3 py-3 font-semibold">Quizzes</th>
-                        <th class="px-3 py-3 font-semibold">Study</th>
-                        <th class="px-3 py-3 font-semibold">Skills</th>
-                        <th class="px-3 py-3 font-semibold">Time spent</th>
-                        <th class="px-3 py-3 font-semibold">First seen</th>
-                        <th class="px-3 py-3 font-semibold">Last seen</th>
-                        <th class="px-3 py-3 font-semibold">Status</th>
+                        <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="device" label="Device" /></th>
+                        <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="location" label="Location" /></th>
+                        <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="referral" label="Referred from" /></th>
+                        <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="platforms" label="Platforms" /></th>
+                        <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="questions" label="Questions" /></th>
+                        <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="quizzes" label="Quizzes" /></th>
+                        <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="study" label="Study" /></th>
+                        <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="skills" label="Skills" /></th>
+                        <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="time" label="Time spent" /></th>
+                        <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="first_seen" label="First seen" /></th>
+                        <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="last_seen" label="Last seen" /></th>
+                        <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="status" label="Status" /></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-white/5">
