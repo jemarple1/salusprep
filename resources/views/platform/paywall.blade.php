@@ -7,6 +7,7 @@
     @php
         $firstName = $learnerName ? explode(' ', trim($learnerName))[0] : null;
         $flashcardPreview = $flashcardPreviews->first();
+        $focusArea = $pinnedFocus ?? $topWeakCategory?->category ?? null;
     @endphp
 
     <div class="relative mx-auto max-w-4xl overflow-hidden">
@@ -27,22 +28,14 @@
                     @endif
 
                     <h1 class="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                        @if ($previewExpired)
-                            @if ($topWeakCategory && $firstName)
-                                {{ $firstName }}, start with {{ $topWeakCategory->category }}
-                            @elseif ($topWeakCategory)
-                                Start with {{ $topWeakCategory->category }}
-                            @elseif ($firstName)
-                                {{ $firstName }}, don&rsquo;t lose your momentum
-                            @else
-                                You&rsquo;re not starting from scratch
-                            @endif
-                        @elseif ($firstName)
-                            {{ $firstName }}, keep building while Preview is open
-                        @else
-                            Keep building while Preview is open
-                        @endif
+                        Keep the momentum going
                     </h1>
+
+                    @if ($focusArea)
+                        <p class="mt-2 text-lg font-semibold text-slate-300 sm:text-xl">
+                            Start with {{ $focusArea }}
+                        </p>
+                    @endif
 
                     <p class="mt-4 text-base leading-relaxed text-slate-300">
                         @if (! $previewExpired && $previewRemainingMinutes > 0)

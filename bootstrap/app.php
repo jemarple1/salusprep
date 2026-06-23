@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'preview' => \App\Http\Middleware\EnsurePreviewAccess::class,
+            'study-club' => \App\Http\Middleware\EnsureStudyClubMembership::class,
         ]);
 
         $middleware->redirectGuestsTo(function (Request $request): string {

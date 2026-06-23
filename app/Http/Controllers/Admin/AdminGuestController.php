@@ -17,6 +17,7 @@ class AdminGuestController extends Controller
         $guest->load([
             'convertedUser:id,name,email',
             'sectionProgress:device_id,certification_level,preview_started_at',
+            'activeStudyClubMembers',
         ]);
 
         $guest->loadCount([

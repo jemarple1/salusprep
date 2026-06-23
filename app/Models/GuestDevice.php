@@ -78,6 +78,29 @@ class GuestDevice extends Model
         return $this->hasMany(GuestPageVisit::class, 'device_id', 'device_id');
     }
 
+    public function studyClubMembers(): HasMany
+    {
+        return $this->hasMany(StudyClubMember::class, 'device_id', 'device_id');
+    }
+
+    public function activeStudyClubMembers(): HasMany
+    {
+        return $this->studyClubMembers()
+            ->whereNull('unsubscribed_at')
+            ->orderBy('email');
+    }
+
+    public function studyClubEmailsLabel(): string
+    {
+        $emails = $this->relationLoaded('activeStudyClubMembers')
+            ? $this->activeStudyClubMembers->pluck('email')
+            : $this->activeStudyClubMembers()->pluck('email');
+
+        $label = $emails->unique()->filter()->implode(', ');
+
+        return $label !== '' ? $label : '—';
+    }
+
     public function displayName(): string
     {
         return $this->display_name ?? GuestNickname::fromDeviceId($this->device_id);

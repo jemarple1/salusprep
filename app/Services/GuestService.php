@@ -194,6 +194,48 @@ class GuestService
         return $this->ensureGuestSectionPreviewStarted($request, $certificationLevel);
     }
 
+    public function previewActionsUsed(Request $request, string $certificationLevel): int
+    {
+        $user = $request->user();
+
+        if ($user !== null && ! $user->hasSectionAccess($certificationLevel)) {
+            $access = SectionAccess::firstOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'certification_level' => $certificationLevel,
+                ],
+                ['preview_actions_used' => 0],
+            );
+
+            return (int) $access->preview_actions_used;
+        }
+
+        return (int) $this->progressForRequest($request, $certificationLevel)->preview_actions_used;
+    }
+
+    public function incrementPreviewActions(Request $request, string $certificationLevel): int
+    {
+        $user = $request->user();
+
+        if ($user !== null && ! $user->hasSectionAccess($certificationLevel)) {
+            $access = SectionAccess::firstOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'certification_level' => $certificationLevel,
+                ],
+                ['preview_actions_used' => 0],
+            );
+            $access->increment('preview_actions_used');
+
+            return (int) $access->fresh()->preview_actions_used;
+        }
+
+        $progress = $this->progressForRequest($request, $certificationLevel);
+        $progress->increment('preview_actions_used');
+
+        return (int) $progress->fresh()->preview_actions_used;
+    }
+
     private function ensureGuestSectionPreviewStarted(Request $request, string $certificationLevel): CarbonInterface
     {
         $deviceId = $this->deviceId($request);

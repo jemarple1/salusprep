@@ -104,6 +104,7 @@ class ResolveSection
             'welcomeNavLink' => $welcomeNavLink,
             'showWelcomeReturn' => $showWelcomeReturn,
             'previewExpired' => $previewExpired,
+            'requiresStudyClubJoin' => ! $isUnlocked && $this->preview->requiresStudyClub($request, $level),
             'previewTimer' => [
                 'href' => $isUnlocked
                     ? route('platform.welcome', $slug)

@@ -16,6 +16,7 @@ use App\Http\Controllers\PlatformPaywallController;
 use App\Http\Controllers\PaywallFocusController;
 use App\Http\Controllers\PlatformWelcomeController;
 use App\Http\Controllers\SocialAuthController;
+use App\Http\Controllers\StudyClubController;
 use App\Http\Controllers\StudyController;
 use App\Http\Middleware\ResolveSection;
 use Illuminate\Support\Facades\Route;
@@ -52,6 +53,9 @@ Route::get('/email/daily-study/unsubscribe/{user}', [DailyStudyEmailController::
     ->name('email.daily-study.unsubscribe')
     ->middleware('signed');
 
+Route::get('/study-club/unsubscribe/{token}', [StudyClubController::class, 'unsubscribe'])
+    ->name('study-club.unsubscribe');
+
 Route::middleware('auth')->group(function () {
     Route::get('/settings', [AccountSettingsController::class, 'edit'])->name('settings.edit');
     Route::put('/settings/profile', [AccountSettingsController::class, 'updateProfile'])->name('settings.profile.update');
@@ -69,6 +73,7 @@ Route::prefix('{section}')
         Route::get('/', PlatformController::class)->name('platform.home');
         Route::get('/unlock', PlatformPaywallController::class)->name('platform.paywall');
         Route::post('/unlock/focus', PaywallFocusController::class)->name('platform.paywall.focus');
+        Route::post('/study-club/join', [StudyClubController::class, 'join'])->name('study-club.join');
 
         Route::middleware('auth')->group(function () {
             Route::post('/unlock', [PaymentController::class, 'checkoutSection'])->name('platform.unlock');
@@ -82,7 +87,7 @@ Route::prefix('{section}')
 
         Route::get('/exam/{session}/paywall', [ExamController::class, 'paywall'])->name('exam.paywall');
 
-        Route::middleware('preview')->group(function () {
+        Route::middleware(['preview', 'study-club'])->group(function () {
             Route::post('/exam/preview-answer', [ExamController::class, 'answerPreview'])->name('exam.preview-answer');
             Route::post('/exam/start', [ExamController::class, 'start'])->name('exam.start');
             Route::get('/exam/{session}', [ExamController::class, 'show'])->name('exam.show');

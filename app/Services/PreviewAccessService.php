@@ -13,6 +13,8 @@ class PreviewAccessService
 
     public const DEFAULT_MINUTES = 20;
 
+    public const STUDY_PASS_ACTIONS_REQUIRED = 3;
+
     public function __construct(private GuestService $guests) {}
 
     public function minutesLimit(): int
@@ -54,11 +56,43 @@ class PreviewAccessService
     }
 
     /**
-     * Returns true when the preview window has ended.
+     * Records a preview action and returns true when the preview window has ended.
      */
     public function recordAction(Request $request, string $certificationLevel): bool
     {
+        if ($this->isUnlocked($request, $certificationLevel)) {
+            return false;
+        }
+
+        $this->guests->incrementPreviewActions($request, $certificationLevel);
+
         return $this->requiresPaywall($request, $certificationLevel);
+    }
+
+    public function previewActionsUsed(Request $request, string $certificationLevel): int
+    {
+        if ($this->isUnlocked($request, $certificationLevel)) {
+            return 0;
+        }
+
+        return $this->guests->previewActionsUsed($request, $certificationLevel);
+    }
+
+    public function requiresStudyClub(Request $request, string $certificationLevel): bool
+    {
+        if ($this->isUnlocked($request, $certificationLevel)) {
+            return false;
+        }
+
+        if (! $this->hasAccess($request, $certificationLevel)) {
+            return false;
+        }
+
+        if ($this->previewActionsUsed($request, $certificationLevel) < self::STUDY_PASS_ACTIONS_REQUIRED) {
+            return false;
+        }
+
+        return ! app(StudyClubService::class)->hasJoined($request);
     }
 
     public function remainingMinutes(Request $request, string $certificationLevel): int

@@ -178,6 +178,10 @@
         </footer>
     </div>
 
+    @if ($requiresStudyClubJoin ?? false)
+        <x-study-club-modal :email="auth()->user()?->email" />
+    @endif
+
     <x-cookie-consent />
 
     @isset($platformSections)

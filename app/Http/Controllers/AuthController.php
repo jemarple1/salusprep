@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\GuestService;
 use App\Services\LogSnagService;
 use App\Services\SignupGeoService;
+use App\Services\StudyClubService;
 use App\Support\CertificationLevel;
 use App\Support\SectionPricing;
 use App\Support\UserAvatar;
@@ -28,6 +29,7 @@ class AuthController extends Controller
         private GuestService $guests,
         private SignupGeoService $signupGeo,
         private LogSnagService $logSnag,
+        private StudyClubService $studyClub,
     ) {}
 
     public function showRegister(Request $request): View
@@ -59,6 +61,7 @@ class AuthController extends Controller
             'sectionOptions' => $sectionOptions,
             'defaultSectionSlug' => $sectionSlug,
             'unlockPrice' => SectionPricing::formatted(),
+            'studyClubEmail' => $this->studyClub->emailForRequest($request),
         ]);
     }
 
@@ -86,6 +89,9 @@ class AuthController extends Controller
         ]);
 
         Auth::login($user);
+
+        $this->studyClub->linkUserByEmail($user);
+        $this->studyClub->syncDeviceMembership($request, $user->email, $user->id);
 
         Mail::to($user->email)->send(new WelcomeMail($user));
 

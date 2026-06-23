@@ -57,6 +57,19 @@
                     <dd class="font-semibold text-white">{{ $guest->landing_path ? '/'.$guest->landing_path : '—' }}</dd>
                 </div>
                 <div class="flex justify-between gap-4 border-b border-white/5 pb-3">
+                    <dt class="text-slate-400">Study Pass</dt>
+                    <dd class="max-w-[16rem] text-right font-semibold text-ems-light">
+                        @if ($guest->activeStudyClubMembers->isNotEmpty())
+                            {{ $guest->activeStudyClubMembers->pluck('email')->unique()->implode(', ') }}
+                            <span class="mt-0.5 block text-xs font-normal text-slate-500">
+                                Joined {{ $guest->activeStudyClubMembers->first()->joined_at->format('M j, Y') }}
+                            </span>
+                        @else
+                            <span class="text-slate-500">Not joined</span>
+                        @endif
+                    </dd>
+                </div>
+                <div class="flex justify-between gap-4 border-b border-white/5 pb-3">
                     <dt class="text-slate-400">Visits (7d / 30d)</dt>
                     <dd class="font-semibold text-white">{{ number_format($profile['visits_7d']) }} / {{ number_format($profile['visits_30d']) }}</dd>
                 </div>

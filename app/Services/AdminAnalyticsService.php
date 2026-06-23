@@ -6,6 +6,7 @@ use App\Models\ExamSession;
 use App\Models\GuestDevice;
 use App\Models\Payment;
 use App\Models\SectionAccess;
+use App\Models\StudyClubMember;
 use App\Models\User;
 use App\Support\CertificationLevel;
 use Carbon\Carbon;
@@ -85,6 +86,7 @@ class AdminAnalyticsService
             ->with([
                 'convertedUser:id,name,email',
                 'sectionProgress:device_id,certification_level,preview_started_at',
+                'activeStudyClubMembers:device_id,email,joined_at,unsubscribed_at',
             ])
             ->withCount([
                 'sectionProgress as platforms_count',
@@ -276,6 +278,26 @@ class AdminAnalyticsService
     {
         return $this->marketingEmailSubscribers()
             ->pluck('email')
+            ->implode(', ');
+    }
+
+    /** @return Collection<int, StudyClubMember> */
+    public function studyClubMembers(): Collection
+    {
+        return StudyClubMember::query()
+            ->with('guestDevice:device_id,display_name')
+            ->whereNull('unsubscribed_at')
+            ->orderBy('email')
+            ->get();
+    }
+
+    public function studyClubEmailsExport(): string
+    {
+        return StudyClubMember::query()
+            ->whereNull('unsubscribed_at')
+            ->orderBy('email')
+            ->pluck('email')
+            ->unique()
             ->implode(', ');
     }
 

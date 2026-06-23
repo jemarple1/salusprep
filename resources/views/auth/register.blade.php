@@ -28,8 +28,11 @@
 
                     <div>
                         <label for="email" class="mb-1 block text-sm font-medium text-slate-300">Email</label>
-                        <input id="email" name="email" type="email" value="{{ old('email') }}" required
+                        <input id="email" name="email" type="email" value="{{ old('email', $studyClubEmail ?? '') }}" required
                             class="w-full rounded-xl border border-white/10 bg-navy px-4 py-3 text-white outline-none focus:ring-2 focus:ring-safety">
+                        @if ($studyClubEmail ?? null)
+                            <p class="mt-1.5 text-xs text-slate-500">Pre-filled from your Study Pass signup — change it here if you prefer a different address.</p>
+                        @endif
                     </div>
 
                     <div>

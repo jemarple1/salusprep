@@ -182,6 +182,7 @@
                 <thead class="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
                     <tr>
                         <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="visitor" label="Visitor" /></th>
+                        <th class="px-3 py-3 font-semibold">Study Pass</th>
                         <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="location" label="Location" /></th>
                         <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="referral" label="Referred from" /></th>
                         <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="platforms" label="Platforms" /></th>
@@ -215,6 +216,13 @@
                                 </a>
                                 @if ($guest->first_ip)
                                     <span class="mt-0.5 block font-mono text-[11px] text-slate-500">{{ $guest->first_ip }}</span>
+                                @endif
+                            </td>
+                            <td class="px-3 py-3 text-xs text-slate-300">
+                                @if ($guest->studyClubEmailsLabel() !== '—')
+                                    <span class="font-medium text-ems-light">{{ $guest->studyClubEmailsLabel() }}</span>
+                                @else
+                                    <span class="text-slate-500">—</span>
                                 @endif
                             </td>
                             <td class="px-3 py-3 whitespace-nowrap">
@@ -260,7 +268,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="12" class="px-3 py-8 text-center text-slate-500">No guest visitors tracked yet.</td>
+                            <td colspan="13" class="px-3 py-8 text-center text-slate-500">No guest visitors tracked yet.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -408,6 +416,61 @@
     <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80 p-5 sm:p-6">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
             <div>
+                <h2 class="text-lg font-bold text-white">Study Pass emails</h2>
+                <p class="mt-1 text-sm text-slate-400">Preview guests who joined the free Study Pass newsletter.</p>
+            </div>
+            <p class="text-sm font-semibold text-ems-light">{{ number_format($studyClubMembers->count()) }} active</p>
+        </div>
+
+        @if ($studyClubMembers->isNotEmpty())
+            <div class="mb-6 overflow-x-auto">
+                <table class="min-w-full text-left text-sm">
+                    <thead class="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
+                        <tr>
+                            <th class="px-3 py-3 font-semibold">Email</th>
+                            <th class="px-3 py-3 font-semibold">Guest</th>
+                            <th class="px-3 py-3 font-semibold">Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        @foreach ($studyClubMembers as $member)
+                            <tr class="text-slate-300">
+                                <td class="px-3 py-3 font-medium text-white">{{ $member->email }}</td>
+                                <td class="px-3 py-3">
+                                    @if ($member->guestDevice)
+                                        <a href="{{ route('admin.guests.show', $member->guestDevice) }}" class="font-medium capitalize text-medic-light hover:underline">
+                                            {{ $member->guestDevice->displayName() }}
+                                        </a>
+                                    @else
+                                        <span class="text-slate-500">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-3 whitespace-nowrap">{{ $member->joined_at->format('M j, Y') }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <div>
+                <div class="mb-2 flex items-center justify-between gap-4">
+                    <label for="study-club-emails-export" class="text-sm font-semibold text-slate-300">Export (comma-separated)</label>
+                    <button type="button" id="copy-study-club-emails"
+                        class="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold text-ems-light hover:border-ems/40 hover:text-ems">
+                        Copy to clipboard
+                    </button>
+                </div>
+                <textarea id="study-club-emails-export" readonly rows="4"
+                    class="w-full rounded-xl border border-white/10 bg-navy px-4 py-3 text-sm text-slate-300 outline-none focus:ring-2 focus:ring-ems">{{ $studyClubEmailsExport }}</textarea>
+            </div>
+        @else
+            <p class="text-sm text-slate-500">No Study Pass members yet.</p>
+        @endif
+    </div>
+
+    <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80 p-5 sm:p-6">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
+            <div>
                 <h2 class="text-lg font-bold text-white">Marketing email subscribers</h2>
                 <p class="mt-1 text-sm text-slate-400">Users who opted in to resources and emails at signup.</p>
             </div>
@@ -451,6 +514,29 @@
             <p class="text-sm text-slate-500">No marketing subscribers yet.</p>
         @endif
     </div>
+
+    @if ($studyClubMembers->isNotEmpty())
+        @push('scripts')
+            <script>
+                document.getElementById('copy-study-club-emails')?.addEventListener('click', async () => {
+                    const textarea = document.getElementById('study-club-emails-export');
+                    if (!textarea) return;
+
+                    try {
+                        await navigator.clipboard.writeText(textarea.value);
+                    } catch {
+                        textarea.select();
+                        document.execCommand('copy');
+                    }
+
+                    const button = document.getElementById('copy-study-club-emails');
+                    const original = button.textContent;
+                    button.textContent = 'Copied!';
+                    setTimeout(() => { button.textContent = original; }, 2000);
+                });
+            </script>
+        @endpush
+    @endif
 
     @if ($marketingSubscribers->isNotEmpty())
         @push('scripts')

@@ -37,6 +37,8 @@ class AdminDashboardController extends Controller
             ),
             'marketingSubscribers' => $this->analytics->marketingEmailSubscribers(),
             'marketingEmailsExport' => $this->analytics->marketingEmailsExport(),
+            'studyClubMembers' => $this->analytics->studyClubMembers(),
+            'studyClubEmailsExport' => $this->analytics->studyClubEmailsExport(),
             'certificationLevels' => CertificationLevel::labels(),
         ]);
     }
