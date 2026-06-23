@@ -3,8 +3,13 @@
 @section('title', $concept['title'])
 
 @section('content')
-    <div class="mb-6">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
         <a href="{{ route('review.index', $sectionSlug) }}" class="text-sm font-semibold text-medic-light hover:text-medic hover:underline">← All basic concepts</a>
+        @if (! empty($concept['exercise_slug']) && \App\Support\PlatformExercise::find($sectionLevel, $concept['exercise_slug']))
+            <a href="{{ route('exercises.show', [$sectionSlug, $concept['exercise_slug']]) }}" class="text-sm font-semibold text-ems-light hover:text-ems hover:underline">
+                Practice this skill →
+            </a>
+        @endif
     </div>
 
     <article class="overflow-hidden rounded-2xl border border-white/10 bg-navy-light/50">
@@ -31,6 +36,18 @@
                 @endforeach
             @endforeach
         </div>
+
+        @if ($linkedExercise ?? null)
+            <div class="border-t border-white/10 bg-navy-light/40 px-6 py-8 sm:px-10">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Practice this skill</h2>
+                <p class="mt-2 max-w-2xl text-sm text-slate-400">
+                    Apply what you read with a hands-on {{ $linkedExercise['title'] }} drill — instant feedback on every scenario.
+                </p>
+                <div class="mt-6 max-w-md">
+                    <x-exercise-card :exercise="$linkedExercise" variant="grid" />
+                </div>
+            </div>
+        @endif
 
         <footer class="border-t border-white/10 bg-[#0f172a]/60 px-6 py-8 sm:px-10">
             <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Sources</h2>

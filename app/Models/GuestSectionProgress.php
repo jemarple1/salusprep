@@ -12,6 +12,14 @@ class GuestSectionProgress extends Model
         'device_id',
         'guest_token',
         'certification_level',
+        'preview_started_at',
         'preview_actions_used',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'preview_started_at' => 'datetime',
+        ];
+    }
 }

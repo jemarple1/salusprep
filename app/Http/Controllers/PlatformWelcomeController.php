@@ -9,9 +9,12 @@ use App\Services\CategoryProficiencyService;
 use App\Services\ExamCountdownService;
 use App\Services\FocusCategoryService;
 use App\Services\FocusExamService;
+use App\Services\SectionExamDateService;
 use App\Services\StripeCheckoutService;
 use App\Services\StudyService;
+use App\Services\WelcomeDailyPlanService;
 use App\Support\PlatformExercise;
+use App\Support\WelcomeReturn;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -26,6 +29,8 @@ class PlatformWelcomeController extends Controller
         private FocusExamService $focusExams,
         private StudyService $study,
         private ExamCountdownService $countdown,
+        private WelcomeDailyPlanService $dailyPlan,
+        private SectionExamDateService $examDates,
     ) {}
 
     public function show(Request $request): View|RedirectResponse
@@ -65,6 +70,10 @@ class PlatformWelcomeController extends Controller
         $firstName = trim(explode(' ', $user->name)[0] ?? '');
         [$trackPurchaseConversion, $purchaseTransactionId] = $this->purchaseConversionContext($request, $user, $level);
 
+        $dailyPlan = $this->dailyPlan->forUser($request, $user, $level, $access, $focusOption);
+
+        WelcomeReturn::clear($request, $slug);
+
         return view('platform.welcome', [
             'access' => $access,
             'examCountdown' => $this->countdown->forDate($access->exam_date),
@@ -77,6 +86,7 @@ class PlatformWelcomeController extends Controller
             'exercises' => array_slice($exercises, 0, 4),
             'exerciseCount' => count($exercises),
             'hasExercises' => $exercises !== [],
+            'dailyPlan' => $dailyPlan,
             'trackPurchaseConversion' => $trackPurchaseConversion,
             'purchaseTransactionId' => $purchaseTransactionId,
         ]);
@@ -93,21 +103,13 @@ class PlatformWelcomeController extends Controller
 
         $access = $this->examService->sectionAccess($user, $level);
 
-        if ($request->input('exam_date') === '' || $request->input('exam_date') === null) {
-            $access->exam_date = null;
-            $access->save();
+        $this->examDates->update($access, $request->input('exam_date'));
 
+        if ($request->input('exam_date') === '' || $request->input('exam_date') === null) {
             return redirect()
                 ->route('platform.welcome', $slug)
                 ->with('success', 'Exam date cleared.');
         }
-
-        $validated = $request->validate([
-            'exam_date' => ['required', 'date', 'after_or_equal:today', 'before_or_equal:'.now()->addYears(2)->toDateString()],
-        ]);
-
-        $access->exam_date = $validated['exam_date'];
-        $access->save();
 
         return redirect()
             ->route('platform.welcome', $slug)

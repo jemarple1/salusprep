@@ -12,13 +12,15 @@ class RegisterUnlockTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_register_page_always_shows_full_access_option(): void
+    public function test_register_page_requires_full_access_checkout(): void
     {
         $this->get('/register')
             ->assertOk()
-            ->assertSee('Get Full Access now')
-            ->assertSee('Platform to unlock')
-            ->assertSee('20-minute preview');
+            ->assertSee('Full Access')
+            ->assertSee('Swipe to choose your platform')
+            ->assertSee('Create account &amp; checkout', false)
+            ->assertDontSee('Platform to unlock')
+            ->assertDontSee('Continue with my free preview');
     }
 
     public function test_register_page_preselects_section_from_session(): void
@@ -28,10 +30,11 @@ class RegisterUnlockTest extends TestCase
         ])
             ->get('/register')
             ->assertOk()
-            ->assertSee('value="nclex-pn"', false);
+            ->assertSee('value="nclex-pn"', false)
+            ->assertSee('Practical Nurse');
     }
 
-    public function test_register_with_unlock_redirects_to_stripe_checkout(): void
+    public function test_register_redirects_to_stripe_checkout(): void
     {
         $this->post('/register', [
             'name' => 'Alex Rivera',
@@ -39,7 +42,6 @@ class RegisterUnlockTest extends TestCase
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
             'terms' => '1',
-            'signup_plan' => 'unlock',
             'unlock_section' => 'emt-basic',
         ])
             ->assertRedirect(route('platform.checkout', 'emt-basic'));
@@ -47,21 +49,15 @@ class RegisterUnlockTest extends TestCase
         $this->assertAuthenticated();
     }
 
-    public function test_register_without_unlock_redirects_to_source_section(): void
+    public function test_register_requires_unlock_section(): void
     {
-        $this->withSession([
-            AuthController::REGISTER_SECTION_SESSION_KEY => 'nclex-pn',
+        $this->post('/register', [
+            'name' => 'Jordan Lee',
+            'email' => 'jordan@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'terms' => '1',
         ])
-            ->post('/register', [
-                'name' => 'Jordan Lee',
-                'email' => 'jordan@example.com',
-                'password' => 'Password123!',
-                'password_confirmation' => 'Password123!',
-                'terms' => '1',
-                'signup_plan' => 'free',
-            ])
-            ->assertRedirect(route('platform.home', 'nclex-pn'));
-
-        $this->assertAuthenticated();
+            ->assertSessionHasErrors('unlock_section');
     }
 }

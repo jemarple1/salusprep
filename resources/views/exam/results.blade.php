@@ -44,6 +44,64 @@
             :platform-correct-percents="$platformCorrectPercents"
         />
 
+        <section class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 sm:p-8">
+            @php
+                $examBlocked = (bool) ($activeExamSession ?? null);
+                $mockActive = $mockExamState['activeSession'] ?? null;
+                $mockBlocked = $examBlocked || (bool) $mockActive;
+                $regularQuizActive = $activeExamSession && ! $activeExamSession->isMockExam();
+            @endphp
+
+            <h2 class="text-lg font-bold text-white">What's next</h2>
+            @if ($focusOption)
+                <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
+                    You missed <strong class="text-white">{{ $focusOption->miss_count }}</strong>
+                    {{ $focusOption->miss_count === 1 ? 'question' : 'questions' }}
+                    in <strong class="text-white">{{ $focusOption->category }}</strong>.
+                    Drill that gap with a focus exam, mix topics with a general quiz, or try today's timed mock exam.
+                </p>
+            @else
+                <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
+                    Strong round — every answer was correct. Keep momentum with another adaptive quiz or today's timed mock exam.
+                </p>
+            @endif
+
+            <div @class([
+                'mt-6 grid gap-4',
+                $focusOption ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2',
+            ])>
+                @if ($focusOption)
+                    <x-focus-exam-card
+                        :category="$focusOption->category"
+                        :focus-category="$focusOption->focus_category"
+                        :accuracy="$focusOption->accuracy_percent"
+                        :is-general="false"
+                        :start-on-click="true"
+                        :disabled="$mockBlocked"
+                    />
+                @endif
+
+                <x-focus-exam-card
+                    :category="$generalExamOption->category"
+                    :focus-category="$generalExamOption->focus_category"
+                    :accuracy="$generalExamOption->accuracy_percent"
+                    :is-general="true"
+                    :start-on-click="true"
+                    :disabled="$mockBlocked"
+                />
+
+                <x-mock-exam-card
+                    :disabled="$examBlocked"
+                    :mock-active="$mockActive"
+                    :can-start="$mockExamState['canStart'] ?? false"
+                    :completed-today="$mockExamState['completedToday'] ?? false"
+                    :todays-outcome="$mockExamState['todaysOutcome'] ?? null"
+                    :has-access="$hasAccess ?? false"
+                    :regular-quiz-active="$regularQuizActive"
+                />
+            </div>
+        </section>
+
         @if ($suggestedExercises !== [])
             <section class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 sm:p-8">
                 <h2 class="text-lg font-bold text-white">Practice before your next quiz</h2>
@@ -105,11 +163,9 @@
                 <button type="submit" class="rounded-xl bg-medic px-5 py-3 font-bold text-white hover:bg-medic-dark">Start new quiz</button>
             </form>
         @endif
-        @auth
-            @if (($hasAccess ?? false) && $session->answers->where('is_correct', false)->isNotEmpty())
-                <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-xl border border-ems/40 bg-ems/10 px-5 py-3 font-bold text-ems-light hover:bg-ems/20">Review missed with flashcards</a>
-            @endif
-        @endauth
+        @if ($session->answers->where('is_correct', false)->isNotEmpty())
+            <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-xl border border-ems/40 bg-ems/10 px-5 py-3 font-bold text-ems-light hover:bg-ems/20">Review all missed flashcards</a>
+        @endif
         <a href="{{ route('platform.home', $sectionSlug) }}" class="rounded-xl border border-white/10 px-5 py-3 font-medium text-slate-200 hover:bg-white/5">Back to {{ $sectionLabel }}</a>
     </div>
 @endsection

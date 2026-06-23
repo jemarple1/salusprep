@@ -28,78 +28,88 @@ class MockExamService
     public function __construct(
         private AdaptiveExamService $examService,
         private PreviewAccessService $preview,
+        private GuestService $guests,
     ) {}
 
-    public function canStartToday(User $user, string $certificationLevel): bool
+    public function canStartToday(Request $request, string $certificationLevel): bool
     {
         if (! $this->schemaReady()) {
             return false;
         }
 
-        if ($this->activeSession($user, $certificationLevel) !== null) {
+        if ($this->activeSession($request, $certificationLevel) !== null) {
             return true;
         }
 
-        return ! $this->completedToday($user, $certificationLevel);
+        return ! $this->completedToday($request, $certificationLevel);
     }
 
-    public function completedToday(User $user, string $certificationLevel): bool
+    public function completedToday(Request $request, string $certificationLevel): bool
     {
         if (! $this->schemaReady()) {
             return false;
         }
 
-        return ExamSession::query()
-            ->where('user_id', $user->id)
+        $query = ExamSession::query()
             ->where('certification_level', $certificationLevel)
             ->where('exam_type', ExamSession::TYPE_MOCK)
             ->where('status', ExamSession::STATUS_COMPLETED)
-            ->whereDate('completed_at', today())
-            ->exists();
+            ->whereDate('completed_at', today());
+
+        $this->scopeToLearner($query, $request);
+
+        return $query->exists();
     }
 
-    public function todaysOutcome(User $user, string $certificationLevel): ?string
+    public function todaysOutcome(Request $request, string $certificationLevel): ?string
     {
         if (! $this->schemaReady()) {
             return null;
         }
 
-        return ExamSession::query()
-            ->where('user_id', $user->id)
+        $query = ExamSession::query()
             ->where('certification_level', $certificationLevel)
             ->where('exam_type', ExamSession::TYPE_MOCK)
             ->where('status', ExamSession::STATUS_COMPLETED)
             ->whereDate('completed_at', today())
-            ->latest('completed_at')
-            ->value('mock_outcome');
+            ->latest('completed_at');
+
+        $this->scopeToLearner($query, $request);
+
+        return $query->value('mock_outcome');
     }
 
-    public function activeSession(User $user, string $certificationLevel): ?ExamSession
+    public function activeSession(Request $request, string $certificationLevel): ?ExamSession
     {
         if (! $this->schemaReady()) {
             return null;
         }
 
-        return ExamSession::query()
-            ->where('user_id', $user->id)
+        $query = ExamSession::query()
             ->where('certification_level', $certificationLevel)
             ->where('exam_type', ExamSession::TYPE_MOCK)
             ->where('status', ExamSession::STATUS_IN_PROGRESS)
-            ->latest()
-            ->first();
+            ->latest();
+
+        $this->scopeToLearner($query, $request);
+
+        return $query->first();
     }
 
-    public function start(Request $request, User $user, string $certificationLevel): ExamSession
+    public function start(Request $request, string $certificationLevel): ExamSession
     {
         if (! $this->schemaReady()) {
             throw new RuntimeException('Mock exams are temporarily unavailable. Please try again in a few minutes.');
         }
 
         if ($this->preview->requiresPaywall($request, $certificationLevel)) {
-            throw new RuntimeException('Unlock this section to start the daily mock exam.');
+            throw new RuntimeException('Your preview has ended. Unlock Full Access to keep taking mock exams.');
         }
 
-        $active = $user->activeExamSession($certificationLevel);
+        $user = $request->user();
+        $active = $user !== null
+            ? $user->activeExamSession($certificationLevel)
+            : $this->guests->activeExamSession($this->guests->token($request), $certificationLevel);
 
         if ($active !== null) {
             if ($active->isMockExam()) {
@@ -109,12 +119,11 @@ class MockExamService
             throw new RuntimeException('Finish or continue your current quiz before starting a mock exam.');
         }
 
-        if ($this->completedToday($user, $certificationLevel)) {
+        if ($this->completedToday($request, $certificationLevel)) {
             throw new RuntimeException('You have already completed today\'s mock exam. Come back tomorrow.');
         }
 
-        return ExamSession::create([
-            'user_id' => $user->id,
+        $attributes = [
             'certification_level' => $certificationLevel,
             'exam_type' => ExamSession::TYPE_MOCK,
             'focus_category' => null,
@@ -122,7 +131,16 @@ class MockExamService
             'ability_estimate' => 0.5,
             'expires_at' => now()->addSeconds(self::TIME_LIMIT_SECONDS),
             'status' => ExamSession::STATUS_IN_PROGRESS,
-        ]);
+        ];
+
+        if ($user !== null) {
+            $attributes['user_id'] = $user->id;
+        } else {
+            $attributes['guest_token'] = $this->guests->token($request);
+            $attributes['device_id'] = $this->guests->activityDeviceId($request);
+        }
+
+        return ExamSession::create($attributes);
     }
 
     public function remainingSeconds(ExamSession $session): int
@@ -228,6 +246,33 @@ class MockExamService
         $ability = (float) ($session->ability_estimate ?? 0.5);
 
         return $ability >= self::PASS_ABILITY ? ExamSession::MOCK_PASS : ExamSession::MOCK_FAIL;
+    }
+
+    public function sessionOwnedBy(Request $request, ExamSession $session): bool
+    {
+        $user = $request->user();
+
+        if ($user !== null) {
+            return $session->user_id === $user->id;
+        }
+
+        return $session->user_id === null
+            && $session->guest_token === $this->guests->token($request);
+    }
+
+    /** @param  \Illuminate\Database\Eloquent\Builder<ExamSession>  $query */
+    private function scopeToLearner($query, Request $request): void
+    {
+        $user = $request->user();
+
+        if ($user !== null) {
+            $query->where('user_id', $user->id);
+
+            return;
+        }
+
+        $query->whereNull('user_id')
+            ->where('guest_token', $this->guests->token($request));
     }
 
     private function updateAbilityEstimate(ExamSession $session, bool $isCorrect, int $difficulty): void

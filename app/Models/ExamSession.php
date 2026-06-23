@@ -31,6 +31,7 @@ class ExamSession extends Model
     protected $fillable = [
         'user_id',
         'guest_token',
+        'device_id',
         'certification_level',
         'exam_type',
         'focus_category',

@@ -88,7 +88,7 @@
                 timer.setAttribute(
                     'aria-label',
                     remainingSeconds > 0
-                        ? 'Preview ends in ' + minutes + ' minute' + (minutes === 1 ? '' : 's') + ' — view unlock options'
+                        ? 'Preview ends in ' + minutes + ' minute' + (minutes === 1 ? '' : 's')
                         : 'Preview ended — view unlock options'
                 );
             }

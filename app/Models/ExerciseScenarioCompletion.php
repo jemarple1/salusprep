@@ -10,6 +10,7 @@ class ExerciseScenarioCompletion extends Model
     protected $fillable = [
         'user_id',
         'guest_token',
+        'device_id',
         'certification_level',
         'exercise_slug',
         'exercise_level',

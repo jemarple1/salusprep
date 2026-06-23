@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ExamSession;
+use App\Models\GuestDevice;
 use App\Models\Payment;
 use App\Models\SectionAccess;
 use App\Models\User;
@@ -32,7 +33,108 @@ class AdminAnalyticsService
             'unlocked_sections' => SectionAccess::query()->whereNotNull('unlocked_at')->count(),
             'completed_quizzes' => ExamSession::query()->where('status', ExamSession::STATUS_COMPLETED)->count(),
             'active_users_7d' => User::query()->where('last_login_at', '>=', $now->copy()->subDays(7))->count(),
+            'total_guests' => GuestDevice::query()->count(),
+            'active_guests_7d' => GuestDevice::query()->where('last_seen_at', '>=', $now->copy()->subDays(7))->count(),
+            'guest_conversions' => GuestDevice::query()->whereNotNull('converted_user_id')->count(),
         ];
+    }
+
+    /** @return array<string, int|float|string> */
+    public function guestSummary(): array
+    {
+        $now = now();
+
+        return [
+            'total_guests' => GuestDevice::query()->count(),
+            'active_guests_7d' => GuestDevice::query()->where('last_seen_at', '>=', $now->copy()->subDays(7))->count(),
+            'guests_30d' => GuestDevice::query()->where('first_seen_at', '>=', $now->copy()->subDays(30))->count(),
+            'guest_questions_answered' => (int) ExamSession::query()
+                ->whereNotNull('device_id')
+                ->sum('questions_answered'),
+            'guest_quizzes_completed' => ExamSession::query()
+                ->whereNotNull('device_id')
+                ->where('status', ExamSession::STATUS_COMPLETED)
+                ->count(),
+            'guest_conversions' => GuestDevice::query()->whereNotNull('converted_user_id')->count(),
+            'guest_avg_active_seconds' => (int) round((float) GuestDevice::query()->avg('total_active_seconds')),
+        ];
+    }
+
+    /** @return list<array{label: string, date: string, value: int}> */
+    public function guestVisitChart(int $days = 30): array
+    {
+        $start = now()->subDays($days - 1)->startOfDay();
+
+        $counts = GuestDevice::query()
+            ->selectRaw('DATE(first_seen_at) as day, COUNT(*) as total')
+            ->where('first_seen_at', '>=', $start)
+            ->groupBy('day')
+            ->orderBy('day')
+            ->pluck('total', 'day');
+
+        return $this->fillDailySeries($start, $days, $counts);
+    }
+
+    /** @return \Illuminate\Contracts\Pagination\LengthAwarePaginator<int, GuestDevice> */
+    public function guestsPaginated(int $perPage = 25)
+    {
+        return GuestDevice::query()
+            ->with([
+                'convertedUser:id,name,email',
+                'sectionProgress:device_id,certification_level,preview_started_at',
+            ])
+            ->withCount([
+                'examSessions as quizzes_count',
+                'examSessions as completed_quizzes_count' => fn ($query) => $query
+                    ->where('status', ExamSession::STATUS_COMPLETED),
+                'studySessions',
+                'exerciseCompletions',
+            ])
+            ->withSum('examSessions as questions_answered', 'questions_answered')
+            ->orderByDesc('last_seen_at')
+            ->paginate($perPage, ['*'], 'guest_page');
+    }
+
+    /** @return list<array{id: string, lat: float, lon: float, label: string, country: ?string}> */
+    public function guestGeoPoints(int $limit = 500): array
+    {
+        $geo = app(SignupGeoService::class);
+
+        return GuestDevice::query()
+            ->where(function ($query) {
+                $query->where(function ($inner) {
+                    $inner->whereNotNull('latitude')
+                        ->whereNotNull('longitude');
+                })->orWhereNotNull('country_code');
+            })
+            ->latest('first_seen_at')
+            ->limit($limit)
+            ->get([
+                'device_id',
+                'country_code',
+                'country_name',
+                'latitude',
+                'longitude',
+                'first_ip',
+            ])
+            ->map(function (GuestDevice $device) use ($geo) {
+                $point = $geo->mapPointForGuestDevice($device);
+
+                if ($point === null) {
+                    return null;
+                }
+
+                return [
+                    'id' => $device->device_id,
+                    'lat' => $point['lat'],
+                    'lon' => $point['lon'],
+                    'label' => 'Guest · '.($device->first_ip ?? substr($device->device_id, 0, 8)),
+                    'country' => $point['country'],
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 
     /** @return list<array{label: string, date: string, value: int}> */

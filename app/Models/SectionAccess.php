@@ -10,6 +10,7 @@ class SectionAccess extends Model
     protected $fillable = [
         'user_id',
         'certification_level',
+        'preview_started_at',
         'preview_actions_used',
         'unlocked_at',
         'pinned_focus_category',
@@ -19,6 +20,7 @@ class SectionAccess extends Model
     protected function casts(): array
     {
         return [
+            'preview_started_at' => 'datetime',
             'unlocked_at' => 'datetime',
             'exam_date' => 'date',
         ];

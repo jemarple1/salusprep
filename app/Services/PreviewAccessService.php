@@ -29,14 +29,14 @@ class PreviewAccessService
         return $user !== null && $user->hasSectionAccess($certificationLevel);
     }
 
-    public function previewStartedAt(Request $request): CarbonInterface
+    public function previewStartedAt(Request $request, string $certificationLevel): CarbonInterface
     {
-        return $this->guests->previewStartedAt($request);
+        return $this->guests->previewStartedAt($request, $certificationLevel);
     }
 
-    public function previewExpiresAt(Request $request): CarbonInterface
+    public function previewExpiresAt(Request $request, string $certificationLevel): CarbonInterface
     {
-        return $this->previewStartedAt($request)->copy()->addMinutes($this->minutesLimit());
+        return $this->previewStartedAt($request, $certificationLevel)->copy()->addMinutes($this->minutesLimit());
     }
 
     public function hasAccess(Request $request, string $certificationLevel): bool
@@ -45,7 +45,7 @@ class PreviewAccessService
             return true;
         }
 
-        return now()->lt($this->previewExpiresAt($request));
+        return now()->lt($this->previewExpiresAt($request, $certificationLevel));
     }
 
     public function requiresPaywall(Request $request, string $certificationLevel): bool
@@ -61,22 +61,35 @@ class PreviewAccessService
         return $this->requiresPaywall($request, $certificationLevel);
     }
 
-    public function remainingMinutes(Request $request): int
+    public function remainingMinutes(Request $request, string $certificationLevel): int
     {
-        if (now()->gte($this->previewExpiresAt($request))) {
-            return 0;
-        }
+        $seconds = $this->remainingSeconds($request, $certificationLevel);
 
-        return max(0, (int) ceil(now()->diffInSeconds($this->previewExpiresAt($request), false) / 60));
+        return max(0, (int) ceil($seconds / 60));
     }
 
-    public function remainingSeconds(Request $request): int
+    public function remainingSeconds(Request $request, string $certificationLevel): int
     {
-        if (now()->gte($this->previewExpiresAt($request))) {
+        if ($this->isUnlocked($request, $certificationLevel)) {
             return 0;
         }
 
-        return max(0, (int) now()->diffInSeconds($this->previewExpiresAt($request), false));
+        $expiresAt = $this->previewExpiresAt($request, $certificationLevel);
+
+        if (now()->gte($expiresAt)) {
+            return 0;
+        }
+
+        return max(0, (int) now()->diffInSeconds($expiresAt, false));
+    }
+
+    public function expiresAt(Request $request, string $certificationLevel): ?CarbonInterface
+    {
+        if ($this->isUnlocked($request, $certificationLevel)) {
+            return null;
+        }
+
+        return $this->previewExpiresAt($request, $certificationLevel);
     }
 
     public function totalSeconds(): int
@@ -84,7 +97,7 @@ class PreviewAccessService
         return $this->minutesLimit() * 60;
     }
 
-    public function progressPercent(Request $request): float
+    public function progressPercent(Request $request, string $certificationLevel): float
     {
         $total = $this->totalSeconds();
 
@@ -92,6 +105,6 @@ class PreviewAccessService
             return 0;
         }
 
-        return min(100, max(0, ($this->remainingSeconds($request) / $total) * 100));
+        return min(100, max(0, ($this->remainingSeconds($request, $certificationLevel) / $total) * 100));
     }
 }

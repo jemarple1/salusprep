@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Terms of Service')
+@section('meta_title', 'Terms of Service — SalusPrep')
+@section('meta_description', 'SalusPrep terms of service for NREMT® and NCLEX-PN™ exam preparation, subscriptions, and platform use.')
+@section('meta_robots', 'noindex, follow')
 
 @section('content')
     <article class="mx-auto max-w-3xl">

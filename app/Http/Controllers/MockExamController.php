@@ -7,6 +7,7 @@ use App\Models\Question;
 use App\Services\AdaptiveExamService;
 use App\Services\MockExamService;
 use App\Services\PreviewAccessService;
+use App\Support\WelcomeReturn;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -22,18 +23,23 @@ class MockExamController extends Controller
 
     public function start(Request $request): RedirectResponse
     {
-        $user = $request->user();
-        abort_unless($user !== null, 403);
-
         $slug = $request->attributes->get('section_slug');
         $level = $request->attributes->get('certification_level');
 
         try {
-            $session = $this->mockExam->start($request, $user, $level);
+            $session = $this->mockExam->start($request, $level);
         } catch (RuntimeException $exception) {
+            $redirectRoute = $request->user() !== null
+                ? route('platform.dashboard', $slug)
+                : route('platform.home', $slug);
+
             return redirect()
-                ->route('platform.dashboard', $slug)
+                ->to($redirectRoute)
                 ->withErrors(['mock_exam' => $exception->getMessage()]);
+        }
+
+        if ($request->input(WelcomeReturn::QUERY_PARAM) === WelcomeReturn::QUERY_VALUE) {
+            WelcomeReturn::mark($request, $slug);
         }
 
         return redirect()->route('mock-exam.show', [$slug, $session]);
@@ -114,10 +120,7 @@ class MockExamController extends Controller
             $session->certification_level === $request->attributes->get('certification_level'),
             403,
         );
-
-        $user = $request->user();
-        abort_unless($user !== null && $session->user_id === $user->id, 403);
-
+        abort_unless($this->mockExam->sessionOwnedBy($request, $session), 403);
         abort_unless($this->preview->hasAccess($request, $session->certification_level), 403);
     }
 }

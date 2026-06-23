@@ -6,7 +6,6 @@ use App\Mail\WelcomeMail;
 use App\Models\User;
 use App\Services\GuestService;
 use App\Services\LogSnagService;
-use App\Services\PreviewAccessService;
 use App\Services\SignupGeoService;
 use App\Support\CertificationLevel;
 use App\Support\SectionPricing;
@@ -29,7 +28,6 @@ class AuthController extends Controller
         private GuestService $guests,
         private SignupGeoService $signupGeo,
         private LogSnagService $logSnag,
-        private PreviewAccessService $preview,
     ) {}
 
     public function showRegister(Request $request): View
@@ -52,7 +50,8 @@ class AuthController extends Controller
             ->map(fn (string $slug, string $level) => [
                 'slug' => $slug,
                 'label' => CertificationLevel::label($level),
-                'price' => SectionPricing::formatted(),
+                'examMark' => CertificationLevel::examMark($level),
+                'accent' => CertificationLevel::registerAccent($level),
             ])
             ->values();
 
@@ -60,8 +59,6 @@ class AuthController extends Controller
             'sectionOptions' => $sectionOptions,
             'defaultSectionSlug' => $sectionSlug,
             'unlockPrice' => SectionPricing::formatted(),
-            'previewMinutes' => $this->preview->minutesLimit(),
-            'preselectUnlock' => $request->boolean('unlock'),
         ]);
     }
 
@@ -73,9 +70,10 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', Password::defaults()],
             'terms' => ['required', 'accepted'],
             'marketing_emails_opt_in' => ['sometimes', 'boolean'],
-            'signup_plan' => ['required', 'in:free,unlock'],
-            'unlock_section' => ['required_if:signup_plan,unlock', 'string'],
+            'unlock_section' => ['required', 'string'],
         ]);
+
+        abort_unless(CertificationLevel::isValidSlug($validated['unlock_section']), 422);
 
         $user = User::create([
             'name' => $validated['name'],
@@ -93,7 +91,7 @@ class AuthController extends Controller
 
         $this->logSnag->notifySignup($user);
 
-        return $this->redirectAfterAuth($request, $user);
+        return $this->redirectAfterAuth($request, $user, $validated['unlock_section']);
     }
 
     public function showLogin(): View
@@ -131,25 +129,27 @@ class AuthController extends Controller
         return redirect()->route('platform.home', 'emt-basic');
     }
 
-    private function redirectAfterAuth(Request $request, User $user): RedirectResponse
+    private function redirectAfterAuth(Request $request, User $user, ?string $unlockSectionSlug = null): RedirectResponse
     {
         $this->guests->mergeIntoUser($request, $user);
 
-        if ($request->input('signup_plan') === 'unlock') {
+        $sectionSlug = $unlockSectionSlug;
+
+        if (! is_string($sectionSlug) || $sectionSlug === '') {
             $sectionSlug = $request->input('unlock_section');
+        }
 
-            if (is_string($sectionSlug) && $sectionSlug !== '') {
-                $level = CertificationLevel::fromSlug($sectionSlug);
+        if (is_string($sectionSlug) && $sectionSlug !== '') {
+            $level = CertificationLevel::fromSlug($sectionSlug);
 
-                if ($level !== null && ! $user->hasSectionAccess($level)) {
-                    return redirect()->route('platform.checkout', $sectionSlug);
-                }
+            if ($level !== null && ! $user->hasSectionAccess($level)) {
+                return redirect()->route('platform.checkout', $sectionSlug);
+            }
 
-                if ($level !== null && $user->hasSectionAccess($level)) {
-                    return redirect()
-                        ->route('platform.welcome', $sectionSlug)
-                        ->with('success', CertificationLevel::label($level).' is already unlocked.');
-                }
+            if ($level !== null && $user->hasSectionAccess($level)) {
+                return redirect()
+                    ->route('platform.welcome', $sectionSlug)
+                    ->with('success', CertificationLevel::label($level).' is already unlocked.');
             }
         }
 

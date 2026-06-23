@@ -86,7 +86,7 @@ class StudyController extends Controller
         try {
             $session = $user !== null
                 ? $this->study->startSession($user, $level)
-                : $this->study->startSessionForGuest($guestToken, $level);
+                : $this->study->startSessionForGuest($guestToken, $level, null, $this->guests->activityDeviceId($request));
         } catch (RuntimeException $exception) {
             return redirect()
                 ->route('study.index', $slug)
@@ -114,7 +114,7 @@ class StudyController extends Controller
         try {
             $session = $user !== null
                 ? $this->study->startSession($user, $level, $category)
-                : $this->study->startSessionForGuest($guestToken, $level, $category);
+                : $this->study->startSessionForGuest($guestToken, $level, $category, $this->guests->activityDeviceId($request));
         } catch (RuntimeException $exception) {
             return redirect()
                 ->route('study.index', $slug)

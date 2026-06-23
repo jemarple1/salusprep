@@ -31,7 +31,11 @@
 
             <div class="space-y-3">
                 <h2 class="text-2xl font-bold tracking-tight text-white sm:text-[1.75rem]">
-                    @if ($firstName)
+                    @if ($previewExpired && $firstName)
+                        {{ $firstName }}, unlock and keep going
+                    @elseif ($previewExpired)
+                        Unlock and keep going
+                    @elseif ($firstName)
                         {{ $firstName }}, keep your progress going
                     @else
                         Keep your progress going
@@ -39,12 +43,18 @@
                 </h2>
 
                 <p class="max-w-lg text-base leading-relaxed text-slate-300">
-                    @if ($topWeakCategory)
+                    @if ($previewExpired && $topWeakCategory)
+                        Your next step is <strong class="text-white">{{ $topWeakCategory->category }}</strong> — plus every gap Preview already found.
+                    @elseif ($previewExpired && $totalMissed > 0)
+                        <strong class="text-white">{{ number_format($totalMissed) }} flashcards</strong> are waiting, plus unlimited quizzes and skills with no timer.
+                    @elseif ($previewExpired)
+                        One unlock. Unlimited practice. Your progress stays with you through every recertification.
+                    @elseif ($topWeakCategory)
                         Pick up with <strong class="text-white">{{ $topWeakCategory->category }}</strong> and every topic Preview mapped for you.
                     @elseif ($totalMissed > 0)
                         Your <strong class="text-white">{{ number_format($totalMissed) }} missed questions</strong> are ready as flashcards — plus unlimited quizzes and skills.
                     @else
-                        Unlimited quizzes, flashcards, skills, and Test Center — tailored to how you learn.
+                        Unlimited quizzes, flashcards, skills, and Test Center — built around how you actually test.
                     @endif
                 </p>
             </div>

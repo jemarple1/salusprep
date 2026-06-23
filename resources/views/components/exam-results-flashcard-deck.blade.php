@@ -4,7 +4,10 @@
 ])
 
 @php
-    $cards = collect($answers)->values()->map(function ($answer, $index) use ($platformCorrectPercents) {
+    $cards = collect($answers)
+        ->filter(fn ($answer) => ! $answer->is_correct)
+        ->values()
+        ->map(function ($answer, $index) use ($platformCorrectPercents) {
         $question = $answer->question;
 
         return [
@@ -32,12 +35,17 @@
     >
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-6 py-4">
             <div>
-                <h2 class="text-lg font-bold text-white">Review deck</h2>
-                <p class="mt-1 text-sm text-slate-400">Flip through each question before reading the full answer list below.</p>
+                <h2 class="text-lg font-bold text-white">Missed questions</h2>
+                <p class="mt-1 text-sm text-slate-400">Flip through the questions you got wrong on this quiz.</p>
             </div>
-            <p class="text-sm font-semibold text-slate-400">
-                Card <span id="results-deck-current">1</span> of {{ $total }}
-            </p>
+            <div class="flex flex-wrap items-center gap-3">
+                <p class="text-sm font-semibold text-slate-400">
+                    Card <span id="results-deck-current">1</span> of {{ $total }}
+                </p>
+                <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-xl border border-ems/40 bg-ems/10 px-4 py-2 text-sm font-bold text-ems-light hover:bg-ems/20">
+                    Open flashcards →
+                </a>
+            </div>
         </div>
 
         <div class="p-6 sm:p-8">

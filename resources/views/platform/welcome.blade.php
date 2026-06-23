@@ -11,14 +11,30 @@
                     Full Access unlocked
                 </p>
                 <h1 class="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                    @if ($firstName)
-                        You're in, {{ $firstName }} — let's get you exam-ready
+                    @if ($dailyPlan['isFirstDay'] ?? false)
+                        @if ($firstName)
+                            You're in, {{ $firstName }} — start today's plan
+                        @else
+                            You're in — start today's plan
+                        @endif
+                    @elseif ($firstName)
+                        Welcome back, {{ $firstName }}
                     @else
-                        You're in — let's get you exam-ready
+                        Welcome back
                     @endif
                 </h1>
                 <p class="mt-4 max-w-xl text-base leading-relaxed text-slate-300">
-                    Your {{ $sectionLabel }} platform is fully unlocked. Set your exam date, then dive into your personalized study plan — focus quizzes, flashcards from your misses, and hands-on skills.
+                    @if ($dailyPlan['isFirstDay'] ?? false)
+                        Your welcome page is your daily home base. Work through today's checklist below, then come back here tomorrow for a fresh plan — use the
+                        @if ($examCountdown ?? null)
+                            <span class="inline-flex items-center gap-1 font-semibold text-medic-light"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg> calendar button</span>
+                        @else
+                            <span class="inline-flex items-center gap-1 font-semibold text-medic-light"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" /></svg> checklist button</span>
+                        @endif
+                        at the top of the page to jump back anytime.
+                    @else
+                        Your welcome page updates every day with a fresh checklist. Complete three skill drills, two adaptive quizzes, and today's mock exam to stay on track.
+                    @endif
                 </p>
                 <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-medic-light hover:text-medic hover:underline">
                     Open Test Center →
@@ -30,160 +46,154 @@
         </div>
     </section>
 
-    {{-- Exam date --}}
-    <section class="mb-10 rounded-2xl border border-white/10 bg-navy-light/80 p-6 sm:p-8">
-        <div class="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+    {{-- Exam date (only before first save) --}}
+    @unless ($access->exam_date)
+        <section class="mb-10 rounded-2xl border border-white/10 bg-navy-light/80 p-6 sm:p-8">
             <div>
                 <h2 class="text-xl font-bold text-white">When is your exam?</h2>
                 <p class="mt-2 text-sm text-slate-400">
-                    Add your test date and we'll keep a countdown in the header so you always know how much time you have left.
+                    Add your test date and we'll keep a countdown in the header so you always know how much time you have left. You can change it later in account settings.
                 </p>
             </div>
-            @if ($examCountdown)
-                <div class="rounded-xl border border-medic/30 bg-medic/10 px-5 py-3 text-center lg:min-w-[10rem]">
-                    <p class="text-3xl font-bold text-medic-light">
-                        @if ($examCountdown['is_past'])
-                            —
-                        @elseif ($examCountdown['is_today'])
-                            Today
-                        @else
-                            {{ $examCountdown['days'] }}
-                        @endif
-                    </p>
-                    <p class="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                        @if ($examCountdown['is_past'])
-                            Date passed
-                        @elseif ($examCountdown['is_today'])
-                            Exam day
-                        @else
-                            days left
-                        @endif
-                    </p>
-                </div>
-            @endif
-        </div>
 
-        <form method="POST" action="{{ route('platform.welcome.exam-date', $sectionSlug) }}" class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end">
-            @csrf
-            <div class="flex-1">
-                <label for="exam_date" class="mb-2 block text-sm font-semibold text-slate-300">Exam date</label>
-                <input
-                    type="date"
-                    id="exam_date"
-                    name="exam_date"
-                    value="{{ old('exam_date', $access->exam_date?->toDateString()) }}"
-                    min="{{ now()->toDateString() }}"
-                    max="{{ now()->addYears(2)->toDateString() }}"
-                    class="w-full rounded-xl border border-white/10 bg-navy px-4 py-3 text-white focus:border-medic/50 focus:outline-none focus:ring-2 focus:ring-medic/30"
-                >
-            </div>
-            <div class="flex flex-wrap gap-3">
+            <form method="POST" action="{{ route('platform.welcome.exam-date', $sectionSlug) }}" class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end">
+                @csrf
+                <div class="flex-1">
+                    <label for="exam_date" class="mb-2 block text-sm font-semibold text-slate-300">Exam date</label>
+                    <input
+                        type="date"
+                        id="exam_date"
+                        name="exam_date"
+                        value="{{ old('exam_date') }}"
+                        min="{{ now()->toDateString() }}"
+                        max="{{ now()->addYears(2)->toDateString() }}"
+                        class="w-full rounded-xl border border-white/10 bg-navy px-4 py-3 text-white focus:border-medic/50 focus:outline-none focus:ring-2 focus:ring-medic/30"
+                    >
+                </div>
                 <button type="submit" class="rounded-xl bg-medic px-6 py-3 font-bold text-white hover:bg-medic-dark">
                     Save date
                 </button>
-                @if ($access->exam_date)
-                    <button
-                        type="submit"
-                        name="exam_date"
-                        value=""
-                        class="rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-slate-400 hover:bg-white/5 hover:text-slate-200"
-                    >
-                        Clear
-                    </button>
-                @endif
-            </div>
-        </form>
-    </section>
+            </form>
+        </section>
+    @endunless
 
-    {{-- Next steps --}}
-    <section class="mb-10">
-        <h2 class="text-2xl font-bold text-white">Your next steps</h2>
-        <p class="mt-1 text-sm text-slate-400">Start with what matters most — we've already picked your focus based on Preview.</p>
+    <x-welcome-daily-checklist
+        :plan="$dailyPlan"
+        :section-slug="$sectionSlug"
+        :active-exam-session="$activeExamSession"
+        :is-first-day="$dailyPlan['isFirstDay'] ?? false"
+        :has-exam-countdown="($examCountdown ?? null) !== null"
+    />
 
-        <div class="mt-6 grid gap-6 lg:grid-cols-2">
-            {{-- Focus exam --}}
-            @if ($focusOption)
-                <div class="flex h-full flex-col rounded-2xl border border-white/10 bg-navy-light/60 p-6">
-                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Step 1 · Test your knowledge</p>
-                    <h3 class="mt-2 text-lg font-bold text-white">Start your focus exam</h3>
-                    <p class="mt-2 text-sm text-slate-400">
-                        @if ($focusOption->is_general)
-                            A balanced 25-question quiz across every topic — great for your first full pass.
-                        @else
-                            25 questions weighted to <strong class="text-white">{{ $focusOption->category }}</strong> — the topic you chose to focus on.
+    @if ($dailyPlan['isFirstDay'] ?? false)
+        {{-- Next steps (day one only) --}}
+        <section class="mb-10">
+            <h2 class="text-2xl font-bold text-white">Your next steps</h2>
+            <p class="mt-1 text-sm text-slate-400">Start with what matters most — we've already picked your focus based on Preview.</p>
+
+            <div class="mt-6 grid gap-6 lg:grid-cols-2">
+                {{-- Focus exam --}}
+                @if ($focusOption)
+                    <div class="flex h-full flex-col rounded-2xl border border-white/10 bg-navy-light/60 p-6">
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Step 1 · Test your knowledge</p>
+                        <h3 class="mt-2 text-lg font-bold text-white">Start your focus exam</h3>
+                        <p class="mt-2 text-sm text-slate-400">
+                            @if ($focusOption->is_general)
+                                A balanced 25-question quiz across every topic — great for your first full pass.
+                            @else
+                                25 questions weighted to <strong class="text-white">{{ $focusOption->category }}</strong> — the topic you chose to focus on.
+                            @endif
+                        </p>
+                        <div class="mt-5 flex-1">
+                            <x-focus-exam-card
+                                :category="$focusOption->category"
+                                :focus-category="$focusOption->focus_category"
+                                :accuracy="$focusOption->accuracy_percent"
+                                :is-general="$focusOption->is_general"
+                                :start-on-click="true"
+                                :disabled="$activeExamSession !== null"
+                                :from-welcome="true"
+                            />
+                        </div>
+                        @if ($activeExamSession)
+                            <p class="mt-3 text-xs text-slate-500">Finish or resume your current quiz before starting another.</p>
                         @endif
-                    </p>
-                    <div class="mt-5 flex-1">
-                        <x-focus-exam-card
-                            :category="$focusOption->category"
-                            :focus-category="$focusOption->focus_category"
-                            :accuracy="$focusOption->accuracy_percent"
-                            :is-general="$focusOption->is_general"
-                            :start-on-click="true"
-                            :disabled="$activeExamSession !== null"
-                        />
                     </div>
-                    @if ($activeExamSession)
-                        <p class="mt-3 text-xs text-slate-500">Finish or resume your current quiz before starting another.</p>
-                    @endif
-                </div>
-            @endif
+                @endif
 
-            {{-- Flashcards --}}
-            <div class="flex h-full flex-col rounded-2xl border border-white/10 bg-navy-light/60 p-6">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Step 2 · Lock it in</p>
-                <h3 class="mt-2 text-lg font-bold text-white">Review with flashcards</h3>
-                <p class="mt-2 text-sm text-slate-400">
-                    Every question you miss becomes a flashcard with the full rationale on the back. Cards you struggle with come back sooner.
-                </p>
+                {{-- Flashcards --}}
+                <div class="flex h-full flex-col rounded-2xl border border-white/10 bg-navy-light/60 p-6">
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Step 2 · Lock it in</p>
+                    <h3 class="mt-2 text-lg font-bold text-white">Review with flashcards</h3>
+                    <p class="mt-2 text-sm text-slate-400">
+                        Every question you miss becomes a flashcard with the full rationale on the back. Cards you struggle with come back sooner.
+                    </p>
 
-                <div class="mt-5 flex flex-1 flex-col justify-between rounded-2xl border border-ems/30 bg-ems/10 p-5">
-                    @if ($activeStudySession)
-                        <div>
-                            <p class="text-2xl font-bold text-ems-light">{{ $activeStudySession->remainingCount() }}</p>
-                            <p class="text-sm text-slate-400">cards left in your current session</p>
-                        </div>
-                        <a href="{{ route('study.show', [$sectionSlug, $activeStudySession]) }}" class="mt-6 inline-block rounded-xl bg-ems px-6 py-3 text-center font-bold text-white hover:bg-ems-dark">
-                            Continue flashcards →
-                        </a>
-                    @elseif ($totalMissed > 0)
-                        <div>
-                            <p class="text-2xl font-bold text-ems-light">{{ $totalMissed }}</p>
-                            <p class="text-sm text-slate-400">missed questions ready to review</p>
-                        </div>
-                        <form method="POST" action="{{ route('study.start', $sectionSlug) }}" class="mt-6">
-                            @csrf
-                            <button type="submit" class="w-full rounded-xl bg-ems px-6 py-3 font-bold text-white hover:bg-ems-dark">
-                                Start flashcard session →
-                            </button>
-                        </form>
-                    @else
-                        <div>
-                            <p class="text-lg font-bold text-white">No cards yet</p>
-                            <p class="mt-1 text-sm text-slate-400">Complete a focus quiz first — missed questions become your personal deck.</p>
-                        </div>
-                        @if ($focusOption && ! $activeExamSession)
-                            <form method="POST" action="{{ route('exam.start', $sectionSlug) }}" class="mt-6">
+                    <div class="mt-5 flex flex-1 flex-col justify-between rounded-2xl border border-ems/30 bg-ems/10 p-5">
+                        @if ($activeStudySession)
+                            <div>
+                                <p class="text-2xl font-bold text-ems-light">{{ $activeStudySession->remainingCount() }}</p>
+                                <p class="text-sm text-slate-400">cards left in your current session</p>
+                            </div>
+                            <a href="{{ route('study.show', [$sectionSlug, $activeStudySession]) }}" class="mt-6 inline-block rounded-xl bg-ems px-6 py-3 text-center font-bold text-white hover:bg-ems-dark">
+                                Continue flashcards →
+                            </a>
+                        @elseif ($totalMissed > 0)
+                            <div>
+                                <p class="text-2xl font-bold text-ems-light">{{ $totalMissed }}</p>
+                                <p class="text-sm text-slate-400">missed questions ready to review</p>
+                            </div>
+                            <form method="POST" action="{{ route('study.start', $sectionSlug) }}" class="mt-6">
                                 @csrf
-                                @if ($focusOption->focus_category)
-                                    <input type="hidden" name="focus_category" value="{{ $focusOption->focus_category }}">
-                                @endif
-                                <button type="submit" class="w-full rounded-xl border border-ems/40 bg-ems/20 px-6 py-3 font-bold text-ems-light hover:bg-ems/30">
-                                    Take a quiz to build your deck →
+                                <button type="submit" class="w-full rounded-xl bg-ems px-6 py-3 font-bold text-white hover:bg-ems-dark">
+                                    Start flashcard session →
                                 </button>
                             </form>
+                        @else
+                            <div>
+                                <p class="text-lg font-bold text-white">No cards yet</p>
+                                <p class="mt-1 text-sm text-slate-400">Complete a focus quiz first — missed questions become your personal deck.</p>
+                            </div>
+                            @if ($focusOption && ! $activeExamSession)
+                                <form method="POST" action="{{ route('exam.start', $sectionSlug) }}" class="mt-6">
+                                    @csrf
+                                    <input type="hidden" name="from" value="welcome">
+                                    @if ($focusOption->focus_category)
+                                        <input type="hidden" name="focus_category" value="{{ $focusOption->focus_category }}">
+                                    @endif
+                                    <button type="submit" class="w-full rounded-xl border border-ems/40 bg-ems/20 px-6 py-3 font-bold text-ems-light hover:bg-ems/30">
+                                        Take a quiz to build your deck →
+                                    </button>
+                                </form>
+                            @endif
                         @endif
-                    @endif
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    @elseif ($totalMissed > 0)
+        <section class="mb-10 rounded-2xl border border-white/10 bg-navy-light/80 p-6 sm:p-8">
+            <h2 class="text-xl font-bold text-white">Flashcards from missed questions</h2>
+            <p class="mt-2 text-sm text-slate-400">
+                You have {{ $totalMissed }} missed question{{ $totalMissed === 1 ? '' : 's' }} saved for review.
+            </p>
+            <a href="{{ route('study.index', $sectionSlug) }}" class="mt-4 inline-flex rounded-lg bg-medic px-4 py-2 text-sm font-bold text-white hover:bg-medic-dark">
+                Open flashcards
+            </a>
+        </section>
+    @endif
 
     {{-- Skills --}}
     @if ($hasExercises)
         <section>
             <h2 class="text-2xl font-bold text-white">Sharpen your skills</h2>
-            <p class="mt-1 text-sm text-slate-400">Hands-on scenarios to round out your studying — charting, triage, assessments, and more.</p>
+            <p class="mt-1 text-sm text-slate-400">
+                @if ($dailyPlan['isFirstDay'] ?? false)
+                    Today's checklist includes three skill drills — or browse all scenarios below.
+                @else
+                    Hands-on scenarios to round out your studying — charting, triage, assessments, and more.
+                @endif
+            </p>
 
             <div class="mt-6 grid gap-4 sm:grid-cols-2">
                 @foreach ($exercises as $exercise)
@@ -219,7 +229,6 @@
             gtag('event', 'conversion', {
                 'send_to': 'AW-18250454039/JED9COKs58EcEJeov_5D',
                 'transaction_id': @json($purchaseTransactionId ?? '')
-                // 'new_customer': true /* calculate dynamically, populate with true/false */,
             });
         </script>
     @endif

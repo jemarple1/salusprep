@@ -77,10 +77,16 @@ class ExamResultsReviewTest extends TestCase
         $this->withSession([GuestService::SESSION_KEY => $guestToken])
             ->get(route('exam.results', ['emt-basic', $session]))
             ->assertOk()
-            ->assertSee('Review deck')
+            ->assertSee('Missed questions')
+            ->assertSee('What')
+            ->assertSee('next')
+            ->assertSee('General knowledge')
+            ->assertSee('Daily mock exam')
+            ->assertSee('Pharmacology')
+            ->assertSee('Open flashcards')
             ->assertSee('Practice before your next quiz')
             ->assertSee('Answer review')
             ->assertSee('Which medication is contraindicated?')
-            ->assertSee('Best airway maneuver?');
+            ->assertSee('Card <span id="results-deck-current">1</span> of 1', false);
     }
 }

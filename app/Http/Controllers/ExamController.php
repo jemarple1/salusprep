@@ -7,9 +7,11 @@ use App\Models\Question;
 use App\Services\AdaptiveExamService;
 use App\Services\FocusCategoryService;
 use App\Services\GuestService;
+use App\Services\MockExamService;
 use App\Services\PreviewAccessService;
 use App\Services\StudyService;
 use App\Support\ExamReviewRecommendations;
+use App\Support\WelcomeReturn;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -98,6 +100,10 @@ class ExamController extends Controller
                 ->back()
                 ->withInput()
                 ->withErrors(['exam' => $exception->getMessage()]);
+        }
+
+        if ($request->input(WelcomeReturn::QUERY_PARAM) === WelcomeReturn::QUERY_VALUE) {
+            WelcomeReturn::mark($request, $slug);
         }
 
         return redirect()->route('exam.show', [$slug, $session]);
@@ -214,6 +220,7 @@ class ExamController extends Controller
             return redirect()->route('mock-exam.outcome', [$section, $session]);
         }
 
+        $level = $session->certification_level;
         $session->load(['answers.question']);
 
         $platformCorrectPercents = Question::platformCorrectPercentsFor(
@@ -221,17 +228,42 @@ class ExamController extends Controller
         );
 
         $weakCategories = ExamReviewRecommendations::weakCategories($session);
+        $focusOption = ExamReviewRecommendations::focusOptionForSession($session);
+        $generalExamOption = ExamReviewRecommendations::generalExamOption($session);
         $suggestedExercises = ExamReviewRecommendations::suggestedExercises(
-            $session->certification_level,
+            $level,
             $weakCategories,
         );
+
+        $hasAccess = $this->preview->hasAccess($request, $level);
+        $activeExamSession = $this->activeExamSessionFor($request);
+
+        $mockExamState = [
+            'canStart' => false,
+            'activeSession' => null,
+            'completedToday' => false,
+            'todaysOutcome' => null,
+        ];
+
+        if ($hasAccess) {
+            $mockExam = app(MockExamService::class);
+            $mockExamState = [
+                'canStart' => $mockExam->canStartToday($request, $level),
+                'activeSession' => $mockExam->activeSession($request, $level),
+                'completedToday' => $mockExam->completedToday($request, $level),
+                'todaysOutcome' => $mockExam->todaysOutcome($request, $level),
+            ];
+        }
 
         return view('exam.results', [
             'session' => $session,
             'platformCorrectPercents' => $platformCorrectPercents,
-            'activeExamSession' => $this->activeExamSessionFor($request),
-            'hasAccess' => $this->preview->hasAccess($request, $session->certification_level),
+            'activeExamSession' => $activeExamSession,
+            'hasAccess' => $hasAccess,
             'weakCategories' => $weakCategories,
+            'focusOption' => $focusOption,
+            'generalExamOption' => $generalExamOption,
+            'mockExamState' => $mockExamState,
             'suggestedExercises' => $suggestedExercises,
         ]);
     }

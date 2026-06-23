@@ -33,7 +33,7 @@ class LogSnagSignupTest extends TestCase
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
             'terms' => '1',
-            'signup_plan' => 'free',
+            'unlock_section' => 'emt-basic',
         ])->assertRedirect();
 
         Http::assertSent(function ($request) {
@@ -64,7 +64,7 @@ class LogSnagSignupTest extends TestCase
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
             'terms' => '1',
-            'signup_plan' => 'free',
+            'unlock_section' => 'emt-basic',
         ])->assertRedirect();
 
         Http::assertNothingSent();

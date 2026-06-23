@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $sectionLabel.' Flashcards')
+@section('meta_title', \App\Support\PageSeo::platformPageTitle($sectionLevel, 'Flashcards'))
 
 @section('content')
     <div class="mb-8">

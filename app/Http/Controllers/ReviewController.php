@@ -27,6 +27,9 @@ class ReviewController extends Controller
 
         return view('review.show', [
             'concept' => $meta,
+            'linkedExercise' => ReviewContent::linkedExercise($level, $meta),
+            'pageMetaTitle' => \App\Support\PageSeo::platformPageTitle($level, $meta['title']),
+            'pageMetaDescription' => $meta['excerpt'] ?? \App\Support\CertificationLevel::seoDescription($level),
         ]);
     }
 }

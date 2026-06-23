@@ -244,7 +244,7 @@ class StudyService
         ]);
     }
 
-    public function startSessionForGuest(string $guestToken, string $certificationLevel, ?string $category = null): StudySession
+    public function startSessionForGuest(string $guestToken, string $certificationLevel, ?string $category = null, ?string $deviceId = null): StudySession
     {
         $deck = $this->wrongQuestionIdsForGuest($guestToken, $certificationLevel, $category);
 
@@ -266,6 +266,7 @@ class StudyService
 
         return StudySession::create([
             'guest_token' => $guestToken,
+            'device_id' => $deviceId,
             'certification_level' => $certificationLevel,
             'filter_category' => $category,
             'deck' => $deck,

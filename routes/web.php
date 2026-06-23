@@ -14,17 +14,23 @@ use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\PlatformPaywallController;
 use App\Http\Controllers\PaywallFocusController;
 use App\Http\Controllers\PlatformWelcomeController;
+use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\StudyController;
 use App\Http\Middleware\ResolveSection;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/emt-basic');
 
+require __DIR__.'/seo.php';
+
 Route::get('/terms', [LegalController::class, 'terms'])->name('legal.terms');
 Route::get('/privacy', [LegalController::class, 'privacy'])->name('legal.privacy');
 Route::get('/about', [LegalController::class, 'about'])->name('legal.about');
 
 Route::post('/stripe/webhook', [PaymentController::class, 'webhook'])->name('stripe.webhook');
+
+Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('auth.social.redirect');
+Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('auth.social.callback');
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
@@ -45,6 +51,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings', [AccountSettingsController::class, 'edit'])->name('settings.edit');
     Route::put('/settings/profile', [AccountSettingsController::class, 'updateProfile'])->name('settings.profile.update');
     Route::put('/settings/password', [AccountSettingsController::class, 'updatePassword'])->name('settings.password.update');
+    Route::put('/settings/exam-date/{sectionSlug}', [AccountSettingsController::class, 'updateExamDate'])->name('settings.exam-date.update');
     Route::delete('/settings/account', [AccountSettingsController::class, 'destroy'])->name('settings.account.destroy');
 });
 
@@ -90,12 +97,10 @@ Route::prefix('{section}')
             Route::get('/skills', [ExerciseController::class, 'index'])->name('skills.index');
             Route::get('/dashboard', DashboardController::class)->name('platform.dashboard');
 
-            Route::middleware('auth')->group(function () {
-                Route::post('/mock-exam/start', [MockExamController::class, 'start'])->name('mock-exam.start');
-                Route::get('/mock-exam/{session}/outcome', [MockExamController::class, 'outcome'])->name('mock-exam.outcome');
-                Route::get('/mock-exam/{session}', [MockExamController::class, 'show'])->name('mock-exam.show');
-                Route::post('/mock-exam/{session}/questions/{question}/answer', [MockExamController::class, 'answer'])->name('mock-exam.answer');
-            });
+            Route::post('/mock-exam/start', [MockExamController::class, 'start'])->name('mock-exam.start');
+            Route::get('/mock-exam/{session}/outcome', [MockExamController::class, 'outcome'])->name('mock-exam.outcome');
+            Route::get('/mock-exam/{session}', [MockExamController::class, 'show'])->name('mock-exam.show');
+            Route::post('/mock-exam/{session}/questions/{question}/answer', [MockExamController::class, 'answer'])->name('mock-exam.answer');
 
             Route::get('/exercises/{exercise}', [ExerciseController::class, 'show'])->name('exercises.show');
             Route::post('/exercises/{exercise}/check', [ExerciseController::class, 'check'])->name('exercises.check');

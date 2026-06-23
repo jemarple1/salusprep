@@ -9,6 +9,7 @@ use App\Services\GuestService;
 use App\Services\PreviewAccessService;
 use App\Services\StudyService;
 use App\Support\PlatformExercise;
+use App\Support\PlatformPaywallInsights;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -59,6 +60,9 @@ class PlatformPaywallController extends Controller
             $request->session()->put(AuthController::PAYWALL_CHECKOUT_SESSION_KEY, $slug);
         }
 
+        $hasPersonalData = $categoryStats->isNotEmpty() || $totalMissed > 0;
+        $platformInsights = $hasPersonalData ? null : PlatformPaywallInsights::forLevel($level);
+
         return view('platform.paywall', [
             'categoryStats' => $categoryStats,
             'weakCategories' => $weakCategories,
@@ -71,11 +75,12 @@ class PlatformPaywallController extends Controller
             'requiresAuth' => $user === null,
             'learnerName' => $user?->name,
             'pinnedFocus' => $pinnedFocus,
-            'previewRemainingMinutes' => $this->preview->remainingMinutes($request),
-            'previewRemainingSeconds' => $this->preview->remainingSeconds($request),
+            'platformInsights' => $platformInsights,
+            'previewRemainingMinutes' => $this->preview->remainingMinutes($request, $level),
+            'previewRemainingSeconds' => $this->preview->remainingSeconds($request, $level),
             'previewExpired' => $this->preview->requiresPaywall($request, $level),
             'previewMinutesLimit' => $this->preview->minutesLimit(),
-            'previewExpiresAt' => $this->preview->previewExpiresAt($request)->toIso8601String(),
+            'previewExpiresAt' => $this->preview->previewExpiresAt($request, $level)->toIso8601String(),
         ]);
     }
 }

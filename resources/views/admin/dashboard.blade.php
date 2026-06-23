@@ -97,6 +97,173 @@
         />
     </div>
 
+    <div class="mb-8 border-t border-white/10 pt-8">
+        <h2 class="text-2xl font-bold text-white">Guest visitors</h2>
+        <p class="mt-2 text-sm text-slate-400">Anonymous preview users — activity, location, and referral source before signup.</p>
+    </div>
+
+    <div class="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-xl border border-white/10 bg-navy-light/80 p-5">
+            <p class="text-3xl font-bold text-white">{{ number_format($guestSummary['total_guests']) }}</p>
+            <p class="mt-1 text-sm text-slate-400">Total guest devices</p>
+        </div>
+        <div class="rounded-xl border border-white/10 bg-navy-light/80 p-5">
+            <p class="text-3xl font-bold text-ems-light">{{ number_format($guestSummary['active_guests_7d']) }}</p>
+            <p class="mt-1 text-sm text-slate-400">Active guests (7d)</p>
+        </div>
+        <div class="rounded-xl border border-white/10 bg-navy-light/80 p-5">
+            <p class="text-3xl font-bold text-safety-light">{{ number_format($guestSummary['guest_questions_answered']) }}</p>
+            <p class="mt-1 text-sm text-slate-400">Questions answered · {{ number_format($guestSummary['guest_quizzes_completed']) }} quizzes done</p>
+        </div>
+        <div class="rounded-xl border border-white/10 bg-navy-light/80 p-5">
+            <p class="text-3xl font-bold text-medic-light">{{ number_format($guestSummary['guest_conversions']) }}</p>
+            <p class="mt-1 text-sm text-slate-400">Converted to accounts · {{ number_format($guestSummary['guests_30d']) }} new (30d)</p>
+        </div>
+    </div>
+
+    <div class="mb-8 grid gap-6 lg:grid-cols-2">
+        <x-admin.line-chart title="New guest devices (30 days)" :points="$guestVisitChart" value-label="guests" stroke="#c084fc" fill="rgba(192, 132, 252, 0.12)" />
+        <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-5">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Guest engagement</h3>
+            <dl class="mt-4 space-y-4 text-sm">
+                <div class="flex items-center justify-between gap-4 border-b border-white/5 pb-3">
+                    <dt class="text-slate-400">Avg. active time</dt>
+                    <dd class="font-semibold text-white">
+                        @php
+                            $avgSeconds = (int) ($guestSummary['guest_avg_active_seconds'] ?? 0);
+                            $avgMinutes = intdiv($avgSeconds, 60);
+                        @endphp
+                        @if ($avgMinutes > 0)
+                            {{ $avgMinutes }} min
+                        @else
+                            {{ $avgSeconds }} sec
+                        @endif
+                    </dd>
+                </div>
+                <div class="flex items-center justify-between gap-4 border-b border-white/5 pb-3">
+                    <dt class="text-slate-400">Completed guest quizzes</dt>
+                    <dd class="font-semibold text-white">{{ number_format($guestSummary['guest_quizzes_completed']) }}</dd>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <dt class="text-slate-400">Signup conversion rate</dt>
+                    <dd class="font-semibold text-white">
+                        @if ($guestSummary['total_guests'] > 0)
+                            {{ number_format(($guestSummary['guest_conversions'] / $guestSummary['total_guests']) * 100, 1) }}%
+                        @else
+                            —
+                        @endif
+                    </dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    <div class="mb-8">
+        <x-admin.signup-map
+            title="Guest geography"
+            :points="$guestGeoPoints"
+            :total-signups="$guestSummary['total_guests']"
+        />
+    </div>
+
+    <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80 p-5 sm:p-6">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h2 class="text-lg font-bold text-white">All guest visitors</h2>
+                <p class="mt-1 text-sm text-slate-400">Tracked by device cookie — includes location, referral, quiz activity, and time on site.</p>
+            </div>
+            <p class="text-sm text-slate-400">{{ number_format($guests->total()) }} total</p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-[72rem] w-full text-left text-sm">
+                <thead class="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
+                    <tr>
+                        <th class="px-3 py-3 font-semibold">Device</th>
+                        <th class="px-3 py-3 font-semibold">Location</th>
+                        <th class="px-3 py-3 font-semibold">Referred from</th>
+                        <th class="px-3 py-3 font-semibold">Platforms</th>
+                        <th class="px-3 py-3 font-semibold">Questions</th>
+                        <th class="px-3 py-3 font-semibold">Quizzes</th>
+                        <th class="px-3 py-3 font-semibold">Study</th>
+                        <th class="px-3 py-3 font-semibold">Skills</th>
+                        <th class="px-3 py-3 font-semibold">Time spent</th>
+                        <th class="px-3 py-3 font-semibold">First seen</th>
+                        <th class="px-3 py-3 font-semibold">Last seen</th>
+                        <th class="px-3 py-3 font-semibold">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    @forelse ($guests as $guest)
+                        @php
+                            $platformLabels = $guest->sectionProgress
+                                ->pluck('certification_level')
+                                ->unique()
+                                ->map(fn (string $level) => \App\Support\CertificationLevel::label($level))
+                                ->values();
+                        @endphp
+                        <tr class="text-slate-300">
+                            <td class="px-3 py-3 font-mono text-xs text-white" title="{{ $guest->device_id }}">
+                                {{ Str::limit($guest->device_id, 13, '…') }}
+                                @if ($guest->first_ip)
+                                    <span class="mt-0.5 block font-sans text-[11px] text-slate-500">{{ $guest->first_ip }}</span>
+                                @endif
+                            </td>
+                            <td class="px-3 py-3 whitespace-nowrap">
+                                @if ($guest->country_name)
+                                    {{ $guest->country_name }}
+                                @else
+                                    <span class="text-slate-500">Unknown</span>
+                                @endif
+                            </td>
+                            <td class="max-w-[12rem] px-3 py-3">
+                                <span class="line-clamp-2" title="{{ $guest->referrer ?? $guest->referralLabel() }}">
+                                    {{ $guest->referralLabel() }}
+                                </span>
+                                @if ($guest->landing_path)
+                                    <span class="mt-0.5 block text-[11px] text-slate-500">/{{ $guest->landing_path }}</span>
+                                @endif
+                            </td>
+                            <td class="px-3 py-3">
+                                @if ($platformLabels->isNotEmpty())
+                                    <span class="text-xs">{{ $platformLabels->implode(', ') }}</span>
+                                @else
+                                    <span class="text-slate-500">—</span>
+                                @endif
+                            </td>
+                            <td class="px-3 py-3">{{ number_format((int) ($guest->questions_answered ?? 0)) }}</td>
+                            <td class="px-3 py-3">
+                                {{ number_format($guest->completed_quizzes_count) }}
+                                <span class="text-slate-500">/ {{ number_format($guest->quizzes_count) }}</span>
+                            </td>
+                            <td class="px-3 py-3">{{ number_format($guest->study_sessions_count) }}</td>
+                            <td class="px-3 py-3">{{ number_format($guest->exercise_completions_count) }}</td>
+                            <td class="px-3 py-3 whitespace-nowrap">{{ $guest->formattedActiveTime() }}</td>
+                            <td class="px-3 py-3 whitespace-nowrap">{{ $guest->first_seen_at->format('M j, Y g:i A') }}</td>
+                            <td class="px-3 py-3 whitespace-nowrap">{{ $guest->last_seen_at->diffForHumans() }}</td>
+                            <td class="px-3 py-3">
+                                @if ($guest->convertedUser)
+                                    <span class="rounded-full bg-medic/15 px-2 py-0.5 text-xs font-semibold text-medic-light">Signed up</span>
+                                    <span class="mt-0.5 block text-[11px] text-slate-500">{{ $guest->convertedUser->email }}</span>
+                                @else
+                                    <span class="rounded-full bg-white/5 px-2 py-0.5 text-xs font-semibold text-slate-400">Guest</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="12" class="px-3 py-8 text-center text-slate-500">No guest visitors tracked yet.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-6">
+            {{ $guests->links() }}
+        </div>
+    </div>
+
     <div class="mb-8 grid gap-6 lg:grid-cols-3">
         <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-5">
             <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Recent signups</h2>

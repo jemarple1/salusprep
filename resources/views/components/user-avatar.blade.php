@@ -15,8 +15,8 @@
 @endphp
 
 <span
-    {{ $attributes->merge(['class' => "inline-flex {$sizeClass} shrink-0 items-center justify-center rounded-full {$palette['bg']} ring-1 {$palette['ring']} {$palette['text']}"]) }}
+    {{ $attributes->merge(['class' => "inline-flex {$sizeClass} shrink-0 items-center justify-center rounded-full border border-white/40 {$palette['bg']} ring-2 {$palette['ring']} {$palette['text']} shadow-inner"]) }}
     aria-hidden="true"
 >
-    {{ $palette['symbol'] }}
+    <span class="drop-shadow-[0_1px_1px_rgba(15,23,42,0.12)]">{{ $palette['symbol'] }}</span>
 </span>

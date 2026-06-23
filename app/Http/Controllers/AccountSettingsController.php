@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ExamCountdownService;
+use App\Services\SectionExamDateService;
+use App\Support\CertificationLevel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,10 +14,33 @@ use Illuminate\View\View;
 
 class AccountSettingsController extends Controller
 {
+    public function __construct(
+        private ExamCountdownService $countdown,
+        private SectionExamDateService $examDates,
+    ) {}
+
     public function edit(Request $request): View
     {
+        $user = $request->user();
+
+        $examDateSections = $user->sectionAccesses()
+            ->whereNotNull('unlocked_at')
+            ->orderBy('certification_level')
+            ->get()
+            ->map(function ($access) {
+                $level = $access->certification_level;
+
+                return [
+                    'access' => $access,
+                    'slug' => CertificationLevel::slug($level),
+                    'label' => CertificationLevel::labels()[$level] ?? $level,
+                    'examCountdown' => $this->countdown->forDate($access->exam_date),
+                ];
+            });
+
         return view('settings.edit', [
-            'user' => $request->user(),
+            'user' => $user,
+            'examDateSections' => $examDateSections,
         ]);
     }
 
@@ -48,6 +74,35 @@ class AccountSettingsController extends Controller
         ]);
 
         return back()->with('success', 'Password updated.');
+    }
+
+    public function updateExamDate(Request $request, string $sectionSlug): RedirectResponse
+    {
+        $level = CertificationLevel::fromSlug($sectionSlug);
+
+        abort_unless($level !== null, 404);
+
+        $user = $request->user();
+
+        abort_unless($user->hasSectionAccess($level), 403);
+
+        $access = $user->sectionAccessFor($level);
+
+        abort_unless($access !== null, 404);
+
+        $this->examDates->update($access, $request->input('exam_date'));
+
+        $label = CertificationLevel::labels()[$level] ?? 'section';
+
+        if ($request->input('exam_date') === '' || $request->input('exam_date') === null) {
+            return redirect()
+                ->route('settings.edit')
+                ->with('success', "{$label} exam date cleared.");
+        }
+
+        return redirect()
+            ->route('settings.edit')
+            ->with('success', "{$label} exam date saved.");
     }
 
     public function destroy(Request $request): RedirectResponse

@@ -8,13 +8,63 @@ class ReviewContent
     public static function forLevel(string $level): array
     {
         $path = config_path("review/{$level}.php");
+        $articles = is_file($path) ? require $path : [];
 
-        if (! is_file($path)) {
-            return [];
+        $exercisePath = config_path("review/exercises/{$level}.php");
+        if (is_file($exercisePath)) {
+            /** @var list<array<string, mixed>> $exerciseArticles */
+            $exerciseArticles = require $exercisePath;
+            $articles = array_merge($articles, $exerciseArticles);
         }
 
         /** @var list<array<string, mixed>> */
-        return require $path;
+        return $articles;
+    }
+
+    /** @return array<string, mixed>|null */
+    public static function forExercise(string $level, string $exerciseSlug): ?array
+    {
+        $reviewSlug = PlatformExercise::reviewSlug($level, $exerciseSlug);
+
+        return self::find($level, $reviewSlug);
+    }
+
+    /** @return array<string, mixed>|null */
+    public static function linkedExercise(string $level, array $concept): ?array
+    {
+        $slug = $concept['exercise_slug'] ?? null;
+
+        if ($slug === null) {
+            foreach (PlatformExercise::forLevel($level) as $exercise) {
+                $meta = PlatformExercise::find($level, $exercise['slug']);
+                if ($meta === null) {
+                    continue;
+                }
+
+                if (($meta['review_slug'] ?? $exercise['slug']) === ($concept['slug'] ?? '')) {
+                    $slug = $exercise['slug'];
+                    break;
+                }
+            }
+        }
+
+        if ($slug === null) {
+            return null;
+        }
+
+        $exercise = PlatformExercise::find($level, $slug);
+
+        if ($exercise === null) {
+            return null;
+        }
+
+        return [
+            ...$exercise,
+            'url' => route('exercises.show', [
+                'section' => CertificationLevel::slug($level),
+                'exercise' => $slug,
+            ]),
+        ];
     }
 
     public static function hasArticles(string $level): bool

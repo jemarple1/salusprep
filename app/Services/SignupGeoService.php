@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\GuestDevice;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -12,12 +13,29 @@ class SignupGeoService
     /** @return array{signup_country_code: ?string, signup_country_name: ?string, signup_latitude: ?float, signup_longitude: ?float} */
     public function fromRequest(Request $request): array
     {
-        $empty = [
-            'signup_country_code' => null,
-            'signup_country_name' => null,
-            'signup_latitude' => null,
-            'signup_longitude' => null,
+        $geo = $this->geoFromRequest($request);
+
+        return [
+            'signup_country_code' => $geo['country_code'],
+            'signup_country_name' => $geo['country_name'],
+            'signup_latitude' => $geo['latitude'],
+            'signup_longitude' => $geo['longitude'],
         ];
+    }
+
+    /** @return array{country_code: ?string, country_name: ?string, latitude: ?float, longitude: ?float, ip: ?string} */
+    public function geoFromRequest(Request $request): array
+    {
+        $empty = [
+            'country_code' => null,
+            'country_name' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'ip' => null,
+        ];
+
+        $ip = (string) $request->ip();
+        $empty['ip'] = $ip !== '' ? $ip : null;
 
         $countryCode = strtoupper((string) ($request->header('CF-IPCountry') ?? $request->server('HTTP_CF_IPCOUNTRY') ?? ''));
 
@@ -25,14 +43,13 @@ class SignupGeoService
             [$lat, $lon] = $this->countryCentroid($countryCode);
 
             return [
-                'signup_country_code' => $countryCode,
-                'signup_country_name' => $this->countryName($countryCode),
-                'signup_latitude' => $lat,
-                'signup_longitude' => $lon,
+                'country_code' => $countryCode,
+                'country_name' => $this->countryName($countryCode),
+                'latitude' => $lat,
+                'longitude' => $lon,
+                'ip' => $empty['ip'],
             ];
         }
-
-        $ip = (string) $request->ip();
 
         if ($ip === '' || $this->isPrivateIp($ip)) {
             return $empty;
@@ -71,10 +88,37 @@ class SignupGeoService
         }
 
         return [
-            'signup_country_code' => $lookup['country_code'],
-            'signup_country_name' => $lookup['country_name'] !== '' ? $lookup['country_name'] : $this->countryName($lookup['country_code']),
-            'signup_latitude' => $lookup['latitude'],
-            'signup_longitude' => $lookup['longitude'],
+            'country_code' => $lookup['country_code'],
+            'country_name' => $lookup['country_name'] !== '' ? $lookup['country_name'] : $this->countryName($lookup['country_code']),
+            'latitude' => $lookup['latitude'],
+            'longitude' => $lookup['longitude'],
+            'ip' => $empty['ip'],
+        ];
+    }
+
+    /** @return array{lat: float, lon: float, country: ?string}|null */
+    public function mapPointForGuestDevice(GuestDevice $device): ?array
+    {
+        if ($device->latitude !== null && $device->longitude !== null) {
+            return [
+                'lat' => (float) $device->latitude,
+                'lon' => (float) $device->longitude,
+                'country' => $device->country_name,
+            ];
+        }
+
+        $countryCode = strtoupper((string) ($device->country_code ?? ''));
+
+        if ($countryCode === '') {
+            return null;
+        }
+
+        [$lat, $lon] = $this->countryCentroid($countryCode);
+
+        return [
+            'lat' => $lat,
+            'lon' => $lon,
+            'country' => $device->country_name ?: $this->countryName($countryCode),
         ];
     }
 

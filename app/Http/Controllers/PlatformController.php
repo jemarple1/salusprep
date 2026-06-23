@@ -93,12 +93,12 @@ class PlatformController extends Controller
             'todaysOutcome' => null,
         ];
 
-        if ($user !== null && $hasAccess) {
+        if ($hasAccess) {
             $mockExamState = [
-                'canStart' => $this->mockExam->canStartToday($user, $level),
-                'activeSession' => $this->mockExam->activeSession($user, $level),
-                'completedToday' => $this->mockExam->completedToday($user, $level),
-                'todaysOutcome' => $this->mockExam->todaysOutcome($user, $level),
+                'canStart' => $this->mockExam->canStartToday($request, $level),
+                'activeSession' => $this->mockExam->activeSession($request, $level),
+                'completedToday' => $this->mockExam->completedToday($request, $level),
+                'todaysOutcome' => $this->mockExam->todaysOutcome($request, $level),
             ];
         }
 
@@ -110,7 +110,12 @@ class PlatformController extends Controller
             'exercises' => PlatformExercise::cardsForLevel($level),
             'pinnedFocus' => $pinnedFocus,
             'previewQuestion' => $showPreviewQuestion
-                ? $this->examService->landingPreviewQuestion($level, $pinnedFocus)
+                ? $this->examService->landingPreviewQuestion(
+                    $level,
+                    $pinnedFocus,
+                    $user,
+                    $user === null ? $this->guests->token($request) : null,
+                )
                 : null,
             'previewQuestionNumber' => 1,
             'previewQuestionTotal' => CertificationLevel::QUIZ_QUESTIONS,

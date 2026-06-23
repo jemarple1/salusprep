@@ -95,6 +95,7 @@ class AdaptiveExamService
 
         return ExamSession::create([
             'guest_token' => $guestToken,
+            'device_id' => $this->guests->activityDeviceId($request),
             'certification_level' => $certificationLevel,
             'focus_category' => $focusCategory,
             'current_difficulty' => 2,
@@ -112,7 +113,7 @@ class AdaptiveExamService
             return null;
         }
 
-        $answeredIds = $session->answers()->pluck('question_id');
+        $answeredIds = $this->seenQuestionIds($session);
         $pickFocus = $session->hasFocusCategory() && $this->shouldPickFocusCategory($session);
 
         $question = $this->pickQuestion(
@@ -136,6 +137,77 @@ class AdaptiveExamService
         return $this->pickQuestion($session, $answeredIds, null, strictCategory: false);
     }
 
+    /** @return \Illuminate\Support\Collection<int, int> */
+    public function seenQuestionIds(ExamSession $session): \Illuminate\Support\Collection
+    {
+        return $this->seenQuestionIdsForLearner(
+            $session->certification_level,
+            $session->user_id !== null ? User::query()->find($session->user_id) : null,
+            $session->guest_token,
+        );
+    }
+
+    /** @return \Illuminate\Support\Collection<int, int> */
+    public function seenQuestionIdsForLearner(string $certificationLevel, ?User $user, ?string $guestToken): \Illuminate\Support\Collection
+    {
+        if ($user === null && ($guestToken === null || $guestToken === '')) {
+            return collect();
+        }
+
+        $sessionIds = ExamSession::query()
+            ->where('certification_level', $certificationLevel)
+            ->when(
+                $user !== null,
+                fn ($query) => $query->where('user_id', $user->id),
+                fn ($query) => $query
+                    ->whereNull('user_id')
+                    ->where('guest_token', $guestToken),
+            )
+            ->pluck('id');
+
+        if ($sessionIds->isEmpty()) {
+            return collect();
+        }
+
+        return ExamAnswer::query()
+            ->whereIn('exam_session_id', $sessionIds)
+            ->distinct()
+            ->pluck('question_id');
+    }
+
+    public function landingPreviewQuestion(string $certificationLevel, ?string $focusCategory = null, ?User $user = null, ?string $guestToken = null): ?Question
+    {
+        if (Question::query()->where('certification_level', $certificationLevel)->doesntExist()) {
+            return null;
+        }
+
+        $excludeIds = $this->seenQuestionIdsForLearner($certificationLevel, $user, $guestToken);
+
+        $query = Question::query()
+            ->where('certification_level', $certificationLevel)
+            ->where('difficulty', 2)
+            ->whereNotIn('id', $excludeIds);
+
+        if ($focusCategory !== null) {
+            $query->where('category', $focusCategory);
+        }
+
+        $question = $query->inRandomOrder()->first();
+
+        if ($question !== null) {
+            return $question;
+        }
+
+        $fallback = Question::query()
+            ->where('certification_level', $certificationLevel)
+            ->whereNotIn('id', $excludeIds);
+
+        if ($focusCategory !== null) {
+            $fallback->where('category', $focusCategory);
+        }
+
+        return $fallback->inRandomOrder()->first();
+    }
     /** @param  \Illuminate\Support\Collection<int, int>|list<int>  $answeredIds */
     private function pickQuestion(
         ExamSession $session,
@@ -174,36 +246,6 @@ class AdaptiveExamService
             ->orderByRaw('ABS(difficulty - ?)', [$session->current_difficulty])
             ->inRandomOrder()
             ->first();
-    }
-
-    public function landingPreviewQuestion(string $certificationLevel, ?string $focusCategory = null): ?Question
-    {
-        if (Question::query()->where('certification_level', $certificationLevel)->doesntExist()) {
-            return null;
-        }
-
-        $query = Question::query()
-            ->where('certification_level', $certificationLevel)
-            ->where('difficulty', 2);
-
-        if ($focusCategory !== null) {
-            $query->where('category', $focusCategory);
-        }
-
-        $question = $query->inRandomOrder()->first();
-
-        if ($question !== null) {
-            return $question;
-        }
-
-        $fallback = Question::query()
-            ->where('certification_level', $certificationLevel);
-
-        if ($focusCategory !== null) {
-            $fallback->where('category', $focusCategory);
-        }
-
-        return $fallback->inRandomOrder()->first();
     }
 
     private function shouldPickFocusCategory(ExamSession $session): bool

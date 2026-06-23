@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Unlock '.$sectionLabel)
+@section('meta_robots', 'noindex, follow')
+@section('meta_title', \App\Support\PageSeo::platformPageTitle($sectionLevel, 'Full Access'))
 
 @section('content')
     @php
@@ -14,7 +15,7 @@
             <div class="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
                 <div>
                     @if ($previewExpired)
-                        <p class="text-sm font-semibold text-safety-light">{{ $sectionLabel }} · Preview ended</p>
+                        <p class="text-sm font-semibold text-safety-light">{{ $sectionLabel }} · Free preview ended</p>
                     @elseif ($previewRemainingMinutes > 0)
                         <p class="text-sm font-semibold text-ems-light">
                             {{ $sectionLabel }} · Preview ends in
@@ -26,22 +27,40 @@
                     @endif
 
                     <h1 class="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                        @if ($firstName)
-                            {{ $firstName }}, continue studying with personalized resources
+                        @if ($previewExpired)
+                            @if ($topWeakCategory && $firstName)
+                                {{ $firstName }}, start with {{ $topWeakCategory->category }}
+                            @elseif ($topWeakCategory)
+                                Start with {{ $topWeakCategory->category }}
+                            @elseif ($firstName)
+                                {{ $firstName }}, don&rsquo;t lose your momentum
+                            @else
+                                You&rsquo;re not starting from scratch
+                            @endif
+                        @elseif ($firstName)
+                            {{ $firstName }}, keep building while Preview is open
                         @else
-                            Continue studying with personalized resources
+                            Keep building while Preview is open
                         @endif
                     </h1>
 
                     <p class="mt-4 text-base leading-relaxed text-slate-300">
                         @if (! $previewExpired && $previewRemainingMinutes > 0)
-                            You still have free preview time left on SalusPrep. When your {{ $previewMinutesLimit }}-minute preview window ends, you'll need Full Access to keep practicing {{ $sectionLabel }}.
+                            You still have free preview time on SalusPrep. When your {{ $previewMinutesLimit }}-minute window ends, Full Access is how you keep unlimited {{ $sectionLabel }} practice — quizzes, flashcards, skills, and Test Center.
+                        @elseif ($previewExpired && $topWeakCategory)
+                            Preview showed where {{ $sectionLabel }} will test you hardest: <strong class="text-white">{{ $topWeakCategory->category }}</strong>. Full Access turns that into focus exams weighted to your gaps, flashcards from every miss, and skills drills — the same adaptive loop you&rsquo;ll face on exam day.
+                        @elseif ($previewExpired && $totalMissed > 0)
+                            <strong class="text-white">{{ number_format($totalMissed) }} missed questions</strong> are already in your flashcard deck. Unlock Full Access to keep reviewing them, add focus exams on your weak categories, and practice without a timer running out.
+                        @elseif ($previewExpired && $platformInsights)
+                            {{ $platformInsights['struggle_intro'] }} Full Access keeps your prep going — unlimited adaptive quizzes, flashcards built from your misses, focus exams on weak topics, and hands-on skills. One payment, no subscription, prep until you&rsquo;re ready.
+                        @elseif ($previewExpired)
+                            SalusPrep already started mapping how you test under pressure. Full Access keeps that progress going — unlimited adaptive quizzes, flashcards built from your misses, focus exams on weak topics, and hands-on skills. One payment, no subscription, prep until you&rsquo;re ready.
                         @elseif ($topWeakCategory)
-                            Your Preview mapped your strengths and gaps — we'll keep building from where you left off, starting with <strong class="text-white">{{ $topWeakCategory->category }}</strong>. Pick a focus exam below, review with flashcards, and practice skills until you're exam-ready.
+                            Preview mapped a clear starting point: <strong class="text-white">{{ $topWeakCategory->category }}</strong>. Pick a focus exam below, review with flashcards, and practice skills until you&rsquo;re exam-ready.
                         @elseif ($totalMissed > 0)
-                            Your missed questions become flashcards, your weak categories become focus exams, and your progress stays with you through every recertification. Unlock Full Access to keep going without limits.
+                            Your missed questions are already saved as flashcards, and your weak categories are queued for focus exams. Unlock Full Access to keep that momentum through every recertification.
                         @else
-                            Flashcards from your misses, focus exams weighted to your weak topics, and hands-on skills — all tailored to how you learn. Unlock Full Access to pick up right where Preview left off.
+                            Take a quick quiz during Preview and SalusPrep will map your strengths, your gaps, and the focus exams worth doing next.
                         @endif
                     </p>
                 </div>
@@ -52,13 +71,47 @@
             </div>
         </div>
 
+        @if ($platformInsights)
+            <section class="mb-10">
+                <h2 class="text-2xl font-bold text-white">Where {{ $sectionLabel }} candidates struggle</h2>
+                <p class="mt-1 text-sm text-slate-400">{{ $platformInsights['struggle_intro'] }}</p>
+
+                <div class="mt-4 space-y-3">
+                    @foreach ($platformInsights['struggles'] as $struggle)
+                        <div class="rounded-lg border border-white/10 bg-navy px-4 py-3">
+                            <p class="text-sm font-semibold text-white">{{ $struggle['topic'] }}</p>
+                            <p class="mt-1 text-sm text-slate-400">{{ $struggle['detail'] }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+
+            <section class="mb-10">
+                <h2 class="text-2xl font-bold text-white">How SalusPrep helps you succeed</h2>
+                <p class="mt-1 text-sm text-slate-400">{{ $platformInsights['help_intro'] }}</p>
+
+                <ul class="mt-4 space-y-3 text-sm text-slate-300">
+                    @foreach ($platformInsights['helps'] as $help)
+                        <li class="flex gap-3">
+                            <span class="mt-0.5 font-bold text-medic-light">✓</span>
+                            <span>{{ $help }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
+
         {{-- Category progress bars --}}
         <section class="mb-10">
             <h2 class="text-2xl font-bold text-white">What needs work</h2>
             <p class="mt-1 text-sm text-slate-400">Your category breakdown from Preview.</p>
 
             @if ($categoryStats->isEmpty())
-                <p class="mt-4 text-sm text-slate-400">Complete a quiz during Preview and we'll map your strengths and opportunities by topic.</p>
+                @if ($platformInsights)
+                    <p class="mt-4 text-sm text-slate-400">Take a quiz during Preview and we&rsquo;ll replace these platform insights with your personal category breakdown.</p>
+                @else
+                    <p class="mt-4 text-sm text-slate-400">Complete a quiz during Preview and we'll map your strengths and opportunities by topic.</p>
+                @endif
             @else
                 <div class="mt-4 space-y-2">
                     @foreach ($categoryStats as $stat)
@@ -129,10 +182,12 @@
             </div>
         </section>
 
+        <x-paywall-daily-checklist-demo :skill-labels="collect($exerciseCards)->pluck('title')->all()" />
+
         {{-- Focus exam selection --}}
         <section class="mb-10">
-            <h2 class="text-2xl font-bold text-white">Test what you've studied</h2>
-            <p class="mt-2 mb-8 max-w-2xl text-sm leading-relaxed text-slate-400">Choose one focus exam to start next. Each quiz is 25 questions — 75% from that topic, 25% mixed.</p>
+            <h2 class="text-2xl font-bold text-white">Let's choose your next quiz</h2>
+            <p class="mt-2 mb-8 max-w-2xl text-sm leading-relaxed text-slate-400">Pick a focus topic to start with. Each quiz is 25 questions — 75% from that topic, 25% mixed.</p>
 
             @if ($weakCategories->isNotEmpty())
                 <x-focus-exam-picker

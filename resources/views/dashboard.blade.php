@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $sectionLabel.' Test Center')
+@section('meta_title', \App\Support\PageSeo::platformPageTitle($sectionLevel, 'Test Center'))
 
 @section('content')
     <div class="mb-8 flex flex-wrap items-end justify-between gap-4">

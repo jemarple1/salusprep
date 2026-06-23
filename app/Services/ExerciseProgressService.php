@@ -77,7 +77,11 @@ class ExerciseProgressService
 
         ExerciseScenarioCompletion::query()->updateOrCreate(
             [...$attributes, 'guest_token' => $this->guests->token($request)],
-            ['user_id' => null, 'completed_at' => now()],
+            [
+                'user_id' => null,
+                'device_id' => $this->guests->activityDeviceId($request),
+                'completed_at' => now(),
+            ],
         );
     }
 

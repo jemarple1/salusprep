@@ -14,6 +14,41 @@ class MockExamTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_guest_can_start_mock_exam_during_preview(): void
+    {
+        Question::query()->create([
+            'source_key' => 'mock-guest-1',
+            'certification_level' => CertificationLevel::EMT_BASIC,
+            'category' => 'Airway',
+            'difficulty' => 3,
+            'initial_difficulty' => 3,
+            'stem' => 'Guest mock question',
+            'option_a' => 'A',
+            'option_b' => 'B',
+            'option_c' => 'C',
+            'option_d' => 'D',
+            'correct_option' => 'A',
+        ]);
+
+        $response = $this->post('/emt-basic/mock-exam/start');
+
+        $session = ExamSession::query()->first();
+        $this->assertNotNull($session);
+        $this->assertNull($session->user_id);
+        $this->assertNotNull($session->guest_token);
+        $this->assertSame(ExamSession::TYPE_MOCK, $session->exam_type);
+
+        $response->assertRedirect(route('mock-exam.show', ['emt-basic', $session]));
+    }
+
+    public function test_home_shows_mock_exam_start_for_guest_in_preview(): void
+    {
+        $this->get('/emt-basic')
+            ->assertOk()
+            ->assertSee('Start the daily mock exam')
+            ->assertSee(route('mock-exam.start', 'emt-basic'), false);
+    }
+
     public function test_dashboard_shows_accuracy_and_mock_exam_cards(): void
     {
         $user = User::factory()->create();

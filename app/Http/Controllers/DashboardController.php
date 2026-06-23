@@ -62,7 +62,12 @@ class DashboardController extends Controller
                 weakCategories: $weakCategories,
                 pinnedFocus: $focusCategory->resolvePinned($request, $level, $weakCategories),
                 focusExamOptions: $focusExamOptions,
-                mockExamState: [
+                mockExamState: $hasAccess ? [
+                    'canStart' => $mockExam->canStartToday($request, $level),
+                    'activeSession' => $mockExam->activeSession($request, $level),
+                    'completedToday' => $mockExam->completedToday($request, $level),
+                    'todaysOutcome' => $mockExam->todaysOutcome($request, $level),
+                ] : [
                     'canStart' => false,
                     'activeSession' => null,
                     'completedToday' => false,
@@ -115,10 +120,10 @@ class DashboardController extends Controller
 
         if ($hasAccess) {
             $mockExamState = [
-                'canStart' => $mockExam->canStartToday($user, $level),
-                'activeSession' => $mockExam->activeSession($user, $level),
-                'completedToday' => $mockExam->completedToday($user, $level),
-                'todaysOutcome' => $mockExam->todaysOutcome($user, $level),
+                'canStart' => $mockExam->canStartToday($request, $level),
+                'activeSession' => $mockExam->activeSession($request, $level),
+                'completedToday' => $mockExam->completedToday($request, $level),
+                'todaysOutcome' => $mockExam->todaysOutcome($request, $level),
             ];
         }
 

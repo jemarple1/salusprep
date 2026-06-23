@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $sectionLabel.' Mock Exam')
+@section('meta_title', \App\Support\PageSeo::platformPageTitle($sectionLevel, 'Daily Mock Exam'))
 
 @section('content')
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -50,6 +50,8 @@
     <p class="mt-6 text-center text-xs text-slate-500">
         Minimum 70 questions · up to 140 · 2-hour limit. The exam ends when competency is assessed or time expires.
     </p>
+
+    <x-welcome-return-link />
 
     <script>
         (function () {

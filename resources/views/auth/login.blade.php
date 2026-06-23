@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Log in')
+@section('meta_title', 'Log In — SalusPrep Exam Prep')
+@section('meta_description', 'Log in to SalusPrep to continue your NREMT® or NCLEX-PN™ adaptive practice, flashcards, and test center progress.')
+@section('meta_robots', 'noindex, follow')
 
 @section('content')
     <div class="mx-auto max-w-md">

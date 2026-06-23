@@ -7,6 +7,7 @@
     'completedCount' => 0,
     'exerciseLevel' => 1,
     'levelLinks' => [],
+    'reviewConcept' => null,
 ])
 
 <div class="mb-6">
@@ -15,6 +16,26 @@
     <h1 class="mt-1 text-3xl font-bold text-white">{{ $exercise['title'] }}</h1>
     <p class="mt-2 max-w-3xl text-slate-400">{{ $scenario['title'] ?? $exercise['description'] }}</p>
 </div>
+
+@if (! empty($exercise['how_to']) || $reviewConcept)
+    <div class="mb-6 grid gap-4 lg:grid-cols-2">
+        @if (! empty($exercise['how_to']))
+            <div class="rounded-2xl border border-white/10 bg-navy-light/80 p-5">
+                <p class="text-xs font-bold uppercase tracking-wider text-medic-light">How this exercise works</p>
+                <p class="mt-2 text-sm leading-relaxed text-slate-300">{{ $exercise['how_to'] }}</p>
+            </div>
+        @endif
+        @if ($reviewConcept)
+            <div class="rounded-2xl border border-ems/25 bg-ems/5 p-5">
+                <p class="text-xs font-bold uppercase tracking-wider text-ems-light">Fundamental concept</p>
+                <p class="mt-2 text-sm leading-relaxed text-slate-300">{{ $reviewConcept['excerpt'] }}</p>
+                <a href="{{ route('review.show', [$sectionSlug, $reviewConcept['slug']]) }}" class="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-ems-light hover:text-ems hover:underline">
+                    Read: {{ $reviewConcept['title'] }} →
+                </a>
+            </div>
+        @endif
+    </div>
+@endif
 
 <x-exercise-scenario-nav
     :scenario-links="$scenarioLinks"
@@ -36,6 +57,27 @@
 </div>
 
 <div id="exercise-feedback" class="mb-6 hidden rounded-2xl border px-6 py-5"></div>
+
+@if ($reviewConcept)
+    @push('structured_data')
+        <script type="application/ld+json">
+            {!! json_encode([
+                '@context' => 'https://schema.org',
+                '@type' => 'LearningResource',
+                'name' => $exercise['title'],
+                'description' => $exercise['description'] ?? '',
+                'learningResourceType' => 'interactive exercise',
+                'url' => url()->current(),
+                'isPartOf' => [
+                    '@type' => 'WebPage',
+                    'name' => \App\Support\PageSeo::platformPageTitle($sectionLevel, 'Skills & Exercises'),
+                    'url' => route('skills.index', $sectionSlug),
+                ],
+                'teaches' => $reviewConcept['title'] ?? null,
+            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+        </script>
+    @endpush
+@endif
 
 <script>
     window.SalusExercise = {
@@ -63,3 +105,7 @@
         },
     };
 </script>
+
+@push('page-footer')
+    <x-welcome-return-link />
+@endpush

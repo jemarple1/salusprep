@@ -6,8 +6,66 @@
     <div class="mx-auto max-w-2xl space-y-8">
         <div>
             <h1 class="text-3xl font-bold text-white">Account settings</h1>
-            <p class="mt-2 text-sm text-slate-400">Update your profile, change your password, or delete your account.</p>
+            <p class="mt-2 text-sm text-slate-400">Update your profile, exam dates, change your password, or delete your account.</p>
         </div>
+
+        @if ($examDateSections->isNotEmpty())
+            <section class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 sm:p-8">
+                <h2 class="text-lg font-bold text-white">Exam dates</h2>
+                <p class="mt-1 text-sm text-slate-400">
+                    Set or update your test date for each unlocked platform. The countdown appears in the header when a date is saved.
+                </p>
+
+                <div class="mt-6 space-y-6">
+                    @foreach ($examDateSections as $section)
+                        <div class="rounded-xl border border-white/10 bg-navy/40 p-5">
+                            <div class="flex flex-wrap items-start justify-between gap-4">
+                                <div>
+                                    <h3 class="text-base font-bold text-white">{{ $section['label'] }}</h3>
+                                    @if ($section['examCountdown'])
+                                        <p class="mt-1 text-sm text-medic-light">{{ $section['examCountdown']['label'] }}</p>
+                                    @else
+                                        <p class="mt-1 text-sm text-slate-500">No exam date set</p>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <form method="POST" action="{{ route('settings.exam-date.update', $section['slug']) }}" class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end">
+                                @csrf
+                                @method('PUT')
+                                <div class="flex-1">
+                                    <label for="exam_date_{{ $section['slug'] }}" class="mb-1 block text-sm font-medium text-slate-300">Exam date</label>
+                                    <input
+                                        id="exam_date_{{ $section['slug'] }}"
+                                        name="exam_date"
+                                        type="date"
+                                        value="{{ old('exam_date', $section['access']->exam_date?->toDateString()) }}"
+                                        min="{{ now()->toDateString() }}"
+                                        max="{{ now()->addYears(2)->toDateString() }}"
+                                        class="w-full rounded-xl border border-white/10 bg-navy px-4 py-3 text-white outline-none focus:ring-2 focus:ring-medic"
+                                    >
+                                </div>
+                                <div class="flex flex-wrap gap-3">
+                                    <button type="submit" class="rounded-xl bg-medic px-5 py-2.5 font-bold text-white hover:bg-medic-dark">
+                                        Save date
+                                    </button>
+                                    @if ($section['access']->exam_date)
+                                        <button
+                                            type="submit"
+                                            name="exam_date"
+                                            value=""
+                                            class="rounded-xl border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                                        >
+                                            Clear
+                                        </button>
+                                    @endif
+                                </div>
+                            </form>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
 
         <section class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 sm:p-8">
             <div class="flex items-center gap-4">

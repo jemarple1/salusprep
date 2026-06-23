@@ -3,7 +3,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title') — SalusPrep{{ isset($sectionLabel) ? ' '.$sectionLabel : '' }}</title>
+    <x-seo-meta
+        :page-meta-title="$pageMetaTitle ?? null"
+        :page-meta-description="$pageMetaDescription ?? null"
+    />
 
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
@@ -87,15 +90,18 @@
                         >
                             <div class="overflow-hidden rounded-xl border border-slate-600 bg-[#1e293b] shadow-2xl">
                             <p class="border-b border-slate-600 bg-[#0f172a] px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-400">Switch platform</p>
-                            @foreach ($platformSections as $platform)
-                                <a href="{{ route('platform.home', $platform['slug']) }}"
-                                   role="menuitem"
-                                   class="block px-4 py-3 text-sm hover:bg-slate-700 {{ $platform['active'] ? 'bg-medic/20 font-bold text-medic-light' : 'text-slate-200' }}">
-                                    {{ $platform['label'] }}
-                                    @if ($platform['active'])
-                                        <span class="ml-1 text-xs text-medic-light">●</span>
-                                    @endif
-                                </a>
+                            @foreach ($platformSwitcherGroups ?? [] as $group)
+                                <p class="border-b border-slate-600/60 bg-[#0f172a]/80 px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-500">{{ $group['title'] }}</p>
+                                @foreach ($group['items'] as $platform)
+                                    <a href="{{ route('platform.home', $platform['slug']) }}"
+                                       role="menuitem"
+                                       class="block px-4 py-3 text-sm hover:bg-slate-700 {{ $platform['active'] ? 'bg-medic/20 font-bold text-medic-light' : 'text-slate-200' }}">
+                                        {{ $platform['label'] }}
+                                        @if ($platform['active'])
+                                            <span class="ml-1 text-xs text-medic-light">●</span>
+                                        @endif
+                                    </a>
+                                @endforeach
                             @endforeach
                             </div>
                         </div>
@@ -113,6 +119,7 @@
                 <nav class="hidden items-center gap-2 text-sm md:flex">
                     @isset($sectionSlug)
                         <x-exam-countdown />
+                        <x-welcome-nav-link :link="$welcomeNavLink ?? null" />
                         <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-medic-light">Test Center</a>
                         <a href="{{ route('skills.index', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-safety-light">Skills</a>
                         <a href="{{ route('study.index', $sectionSlug) }}" class="rounded-lg px-3 py-2 font-medium text-slate-300 hover:bg-white/5 hover:text-ems-light">Flashcards</a>
@@ -148,6 +155,7 @@
             @endif
 
             @yield('content')
+            @stack('page-footer')
         </main>
 
         <footer class="theme-footer relative z-10 border-t border-white/10 bg-[#1e293b]">

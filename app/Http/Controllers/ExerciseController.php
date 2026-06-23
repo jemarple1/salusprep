@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Services\ExerciseProgressService;
 use App\Services\PreviewAccessService;
 use App\Support\BurnRegion;
+use App\Support\PageSeo;
 use App\Support\PlatformExercise;
+use App\Support\ReviewContent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,6 +26,8 @@ class ExerciseController extends Controller
 
         return view('exercises.index', [
             'exercises' => PlatformExercise::cardsForLevel($level),
+            'pageMetaTitle' => PageSeo::platformPageTitle($level, 'Skills & Exercises'),
+            'pageMetaDescription' => PageSeo::skillsIndexDescription($level),
         ]);
     }
 
@@ -105,6 +109,9 @@ class ExerciseController extends Controller
             'levelLinks' => $levelLinks,
             'maxUnlockedLevel' => $maxUnlockedLevel,
             'completedLevels' => $completedLevels,
+            'reviewConcept' => ReviewContent::forExercise($level, $exercise),
+            'pageMetaTitle' => PageSeo::exercisePageTitle($level, $meta),
+            'pageMetaDescription' => PageSeo::exercisePageDescription($level, $meta),
         ]);
     }
 

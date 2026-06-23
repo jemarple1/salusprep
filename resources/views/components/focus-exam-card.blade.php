@@ -6,6 +6,7 @@
     'startOnClick' => false,
     'disabled' => false,
     'isGeneral' => false,
+    'fromWelcome' => false,
 ])
 
 @php
@@ -24,6 +25,9 @@
         @csrf
         @if ($focusCategory)
             <input type="hidden" name="focus_category" value="{{ $focusCategory }}">
+        @endif
+        @if ($fromWelcome)
+            <input type="hidden" name="from" value="welcome">
         @endif
         <button
             type="submit"

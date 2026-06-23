@@ -11,11 +11,22 @@ class ReviewTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_each_platform_has_five_review_concepts(): void
+    public function test_each_platform_has_foundational_and_exercise_review_concepts(): void
     {
+        $expectedMinimum = [
+            CertificationLevel::EMT_BASIC => 19,
+            CertificationLevel::EMT_ADVANCED => 5,
+            CertificationLevel::NCLEX_PN => 12,
+            CertificationLevel::PARAMEDIC => 20,
+        ];
+
         foreach (CertificationLevel::all() as $level) {
             $concepts = ReviewContent::forLevel($level);
-            $this->assertCount(5, $concepts, "Expected 5 review concepts for {$level}");
+            $this->assertGreaterThanOrEqual(
+                $expectedMinimum[$level],
+                count($concepts),
+                "Expected at least {$expectedMinimum[$level]} review concepts for {$level}",
+            );
         }
     }
 
@@ -61,6 +72,26 @@ class ReviewTest extends TestCase
         $response->assertOk();
         $response->assertSee('Infection Prevention');
         $response->assertSee('Medication Safety');
+    }
+
+    public function test_review_show_links_exercise_card_for_exercise_concepts(): void
+    {
+        $response = $this->get('/emt-basic/review/soap-charting');
+
+        $response->assertOk();
+        $response->assertSee('Practice this skill');
+        $response->assertSee('SOAP Exercise');
+        $response->assertSee('/emt-basic/exercises/soap-charting', false);
+    }
+
+    public function test_review_show_links_exercise_card_for_reused_review_slug(): void
+    {
+        $response = $this->get('/nclex-pn/review/medication-rights');
+
+        $response->assertOk();
+        $response->assertSee('Practice this skill');
+        $response->assertSee('Medication Rights');
+        $response->assertSee('/nclex-pn/exercises/medication-rights', false);
     }
 
     public function test_learn_urls_redirect_or_are_gone(): void

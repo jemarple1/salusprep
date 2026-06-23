@@ -22,11 +22,27 @@ class PlatformExercise
     {
         foreach (self::forLevel($level) as $exercise) {
             if ($exercise['slug'] === $slug) {
-                return $exercise;
+                $guide = config("exercise_guides.{$level}.{$slug}", []);
+
+                return array_merge($exercise, is_array($guide) ? $guide : []);
             }
         }
 
         return null;
+    }
+
+    public static function reviewSlug(string $level, string $slug): string
+    {
+        $exercise = self::find($level, $slug);
+
+        return $exercise['review_slug'] ?? $slug;
+    }
+
+    public static function howTo(string $level, string $slug): ?string
+    {
+        $exercise = self::find($level, $slug);
+
+        return $exercise['how_to'] ?? null;
     }
 
     /** @return array<string, mixed>|null */

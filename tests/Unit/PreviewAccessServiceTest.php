@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Models\PreviewDevice;
+use App\Models\GuestSectionProgress;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\GuestService;
@@ -25,11 +25,14 @@ class PreviewAccessServiceTest extends TestCase
         Carbon::setTestNow('2026-06-01 12:00:00');
 
         $service = app(PreviewAccessService::class);
+        $guests = app(GuestService::class);
         $deviceId = (string) Str::uuid();
 
         $request = Request::create('/emt-basic/exam/start', 'POST');
         $request->setLaravelSession($this->app['session.store']);
         $request->cookies->set(GuestService::DEVICE_COOKIE_KEY, $deviceId);
+
+        $guests->ensureSectionPreview($request, CertificationLevel::EMT_BASIC);
 
         $this->assertTrue($service->hasAccess($request, CertificationLevel::EMT_BASIC));
 
@@ -39,7 +42,12 @@ class PreviewAccessServiceTest extends TestCase
         Carbon::setTestNow('2026-06-01 12:20:00');
         $this->assertTrue($service->requiresPaywall($request, CertificationLevel::EMT_BASIC));
 
-        $this->assertNotNull(PreviewDevice::query()->where('device_id', $deviceId)->value('preview_started_at'));
+        $this->assertNotNull(
+            GuestSectionProgress::query()
+                ->where('device_id', $deviceId)
+                ->where('certification_level', CertificationLevel::EMT_BASIC)
+                ->value('preview_started_at')
+        );
 
         Carbon::setTestNow();
     }
@@ -51,6 +59,7 @@ class PreviewAccessServiceTest extends TestCase
         Carbon::setTestNow('2026-06-01 12:00:00');
 
         $service = app(PreviewAccessService::class);
+        $guests = app(GuestService::class);
         $deviceId = (string) Str::uuid();
 
         $requestOne = Request::create('/emt-basic/exam/start', 'POST');
@@ -58,7 +67,7 @@ class PreviewAccessServiceTest extends TestCase
         $requestOne->cookies->set(GuestService::DEVICE_COOKIE_KEY, $deviceId);
         $requestOne->session()->put(GuestService::SESSION_KEY, (string) Str::uuid());
 
-        $service->hasAccess($requestOne, CertificationLevel::EMT_BASIC);
+        $guests->ensureSectionPreview($requestOne, CertificationLevel::EMT_BASIC);
 
         Carbon::setTestNow('2026-06-01 12:25:00');
 
@@ -71,6 +80,35 @@ class PreviewAccessServiceTest extends TestCase
         $requestTwo->session()->put(GuestService::SESSION_KEY, (string) Str::uuid());
 
         $this->assertTrue($service->requiresPaywall($requestTwo, CertificationLevel::EMT_BASIC));
+
+        Carbon::setTestNow();
+    }
+
+    public function test_preview_is_tracked_independently_per_platform(): void
+    {
+        Setting::set(PreviewAccessService::MINUTES_KEY, '20');
+
+        Carbon::setTestNow('2026-06-01 12:00:00');
+
+        $service = app(PreviewAccessService::class);
+        $guests = app(GuestService::class);
+        $deviceId = (string) Str::uuid();
+
+        $emtRequest = Request::create('/emt-basic', 'GET');
+        $emtRequest->setLaravelSession($this->app['session.store']);
+        $emtRequest->cookies->set(GuestService::DEVICE_COOKIE_KEY, $deviceId);
+        $guests->ensureSectionPreview($emtRequest, CertificationLevel::EMT_BASIC);
+
+        Carbon::setTestNow('2026-06-01 12:25:00');
+        $this->assertTrue($service->requiresPaywall($emtRequest, CertificationLevel::EMT_BASIC));
+
+        $paramedicRequest = Request::create('/paramedic', 'GET');
+        $paramedicRequest->setLaravelSession($this->app['session.store']);
+        $paramedicRequest->cookies->set(GuestService::DEVICE_COOKIE_KEY, $deviceId);
+        $guests->ensureSectionPreview($paramedicRequest, CertificationLevel::PARAMEDIC);
+
+        $this->assertTrue($service->hasAccess($paramedicRequest, CertificationLevel::PARAMEDIC));
+        $this->assertFalse($service->hasAccess($paramedicRequest, CertificationLevel::EMT_BASIC));
 
         Carbon::setTestNow();
     }

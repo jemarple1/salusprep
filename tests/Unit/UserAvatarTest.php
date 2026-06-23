@@ -26,7 +26,7 @@ class UserAvatarTest extends TestCase
             'password' => 'password123',
             'password_confirmation' => 'password123',
             'terms' => '1',
-            'signup_plan' => 'free',
+            'unlock_section' => 'emt-basic',
         ])->assertRedirect();
 
         $user = User::query()->where('email', 'avatar-test@example.com')->first();
@@ -40,7 +40,7 @@ class UserAvatarTest extends TestCase
 
         $html = view('components.user-avatar', ['user' => $user])->render();
 
-        $this->assertStringContainsString('🩺', $html);
-        $this->assertStringContainsString('text-ems-light', $html);
+        $this->assertStringContainsString(UserAvatar::SYMBOL, $html);
+        $this->assertStringContainsString('bg-[#cce5f3]', $html);
     }
 }

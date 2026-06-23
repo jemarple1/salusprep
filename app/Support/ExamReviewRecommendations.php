@@ -39,6 +39,57 @@ class ExamReviewRecommendations
     }
 
     /**
+     * @return object{
+     *     category: string,
+     *     focus_category: string,
+     *     is_general: bool,
+     *     accuracy_percent: ?int,
+     *     miss_count: int,
+     * }|null
+     */
+    public static function focusOptionForSession(ExamSession $session): ?object
+    {
+        $weak = self::weakCategories($session);
+
+        if ($weak->isEmpty()) {
+            return null;
+        }
+
+        $topCategory = $weak->keys()->first();
+        $answersInCategory = $session->answers->filter(
+            fn ($answer) => $answer->question->category === $topCategory,
+        );
+        $correct = $answersInCategory->where('is_correct', true)->count();
+        $total = $answersInCategory->count();
+
+        return (object) [
+            'category' => $topCategory,
+            'focus_category' => $topCategory,
+            'is_general' => false,
+            'accuracy_percent' => $total > 0 ? (int) round(($correct / $total) * 100) : null,
+            'miss_count' => (int) $weak->first(),
+        ];
+    }
+
+    /**
+     * @return object{
+     *     category: string,
+     *     focus_category: null,
+     *     is_general: bool,
+     *     accuracy_percent: int,
+     * }
+     */
+    public static function generalExamOption(ExamSession $session): object
+    {
+        return (object) [
+            'category' => \App\Services\FocusExamService::GENERAL_LABEL,
+            'focus_category' => null,
+            'is_general' => true,
+            'accuracy_percent' => $session->scorePercent(),
+        ];
+    }
+
+    /**
      * @return list<array{exercise: array<string, mixed>, matched_category: string, miss_count: int}>
      */
     public static function suggestedExercises(string $level, Collection $weakCategories, int $limit = 3): array

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $sectionLabel.' Quiz')
+@section('meta_title', \App\Support\PageSeo::platformPageTitle($sectionLevel, 'Adaptive Quiz'))
 
 @section('content')
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -120,4 +120,6 @@
             @endif
         </div>
     @endif
+
+    <x-welcome-return-link />
 @endsection

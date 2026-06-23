@@ -44,7 +44,7 @@ class PlatformHomeTest extends TestCase
 
         $this->get('/emt-basic')
             ->assertOk()
-            ->assertSee('Try the real mock exam')
+            ->assertSee('Start the daily mock exam')
             ->assertSee('once per day')
             ->assertDontSee('Use the ⛨ menu')
             ->assertSee('25-question focus')

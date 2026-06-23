@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
-@section('title', $sectionLabel)
+@push('structured_data')
+    <script type="application/ld+json">
+        @json(\App\Support\PageSeo::platformStructuredData($sectionLevel, url()->current()))
+    </script>
+@endpush
 
 @section('content')
     <section class="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
@@ -38,28 +42,24 @@
                     <a href="{{ route('mock-exam.show', [$sectionSlug, $mockActive]) }}" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">
                         Continue mock exam
                     </a>
-                @elseif (auth()->check() && $hasAccess && $mockCanStart)
+                @elseif ($hasAccess && $mockCanStart)
                     <form method="POST" action="{{ route('mock-exam.start', $sectionSlug) }}">
                         @csrf
                         <button type="submit" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">
-                            Try the real mock exam
+                            Start the daily mock exam
                         </button>
                     </form>
-                @elseif (auth()->check() && $mockCompletedToday)
+                @elseif ($mockCompletedToday)
                     <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-xl bg-safety/40 px-6 py-3 font-bold text-slate-300">
                         Mock exam complete today
                     </a>
-                @elseif (! auth()->check())
-                    <a href="{{ route('register', ['section' => $sectionSlug]) }}" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">
-                        Try the real mock exam
-                    </a>
                 @elseif (! $hasAccess)
                     <a href="{{ route('platform.paywall', $sectionSlug) }}" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">
-                        Try the real mock exam
+                        Start the daily mock exam
                     </a>
                 @else
                     <a href="{{ route('platform.dashboard', $sectionSlug) }}" class="rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">
-                        Try the real mock exam
+                        Start the daily mock exam
                     </a>
                 @endif
             </div>
@@ -89,11 +89,11 @@
                 />
             @elseif (! $hasAccess)
                 <div class="rounded-2xl border border-safety/30 bg-safety/5 p-6 ring-1 ring-safety/20">
-                    <p class="text-sm font-bold uppercase tracking-wider text-safety-light">Preview ended</p>
-                    <p class="mt-3 text-lg font-bold text-white">Unlock to keep practicing</p>
-                    <p class="mt-2 text-sm text-slate-400">Your free preview time has ended. Get Full Access to keep practicing.</p>
+                    <p class="text-sm font-bold uppercase tracking-wider text-safety-light">Free preview ended</p>
+                    <p class="mt-3 text-lg font-bold text-white">Your prep already started — don&rsquo;t reset now</p>
+                    <p class="mt-2 text-sm text-slate-400">See what Preview mapped for you and unlock Full Access to keep practicing without limits.</p>
                     <a href="{{ route('platform.paywall', $sectionSlug) }}" class="mt-6 inline-flex rounded-xl bg-safety px-6 py-3 font-bold text-navy hover:bg-safety-light">
-                        Get Full Access
+                        View your study plan
                     </a>
                 </div>
             @else

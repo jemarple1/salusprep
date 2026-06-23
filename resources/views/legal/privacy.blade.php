@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Privacy Policy')
+@section('meta_title', 'Privacy Policy — SalusPrep')
+@section('meta_description', 'How SalusPrep collects, uses, and protects your data when you use our NREMT® and NCLEX-PN™ exam prep platform.')
+@section('meta_robots', 'noindex, follow')
 
 @section('content')
     <article class="mx-auto max-w-3xl">

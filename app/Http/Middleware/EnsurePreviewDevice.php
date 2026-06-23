@@ -13,7 +13,7 @@ class EnsurePreviewDevice
 
     public function handle(Request $request, Closure $next): Response
     {
-        $this->guests->deviceId($request);
+        $this->guests->trackDeviceVisit($request);
 
         return $next($request);
     }
