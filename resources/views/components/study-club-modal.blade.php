@@ -26,18 +26,18 @@
         </div>
 
         <div class="px-8 py-7 sm:px-10">
-            <div class="grid gap-3 sm:grid-cols-3">
-                <div class="rounded-2xl border border-white/8 bg-navy/40 px-3 py-3 text-center">
+            <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                <div class="rounded-2xl border border-white/8 bg-navy/40 px-2 py-3 text-center sm:px-3">
                     <p class="text-lg" aria-hidden="true">🎯</p>
                     <p class="mt-1 text-xs font-semibold leading-snug text-white">Keep practicing</p>
                     <p class="mt-0.5 text-[11px] leading-snug text-slate-400">Quizzes, flashcards &amp; skills</p>
                 </div>
-                <div class="rounded-2xl border border-white/8 bg-navy/40 px-3 py-3 text-center">
+                <div class="rounded-2xl border border-white/8 bg-navy/40 px-2 py-3 text-center sm:px-3">
                     <p class="text-lg" aria-hidden="true">📬</p>
                     <p class="mt-1 text-xs font-semibold leading-snug text-white">Helpful emails</p>
                     <p class="mt-0.5 text-[11px] leading-snug text-slate-400">Free tips &amp; study resources</p>
                 </div>
-                <div class="rounded-2xl border border-white/8 bg-navy/40 px-3 py-3 text-center">
+                <div class="rounded-2xl border border-white/8 bg-navy/40 px-2 py-3 text-center sm:px-3">
                     <p class="text-lg" aria-hidden="true">✨</p>
                     <p class="mt-1 text-xs font-semibold leading-snug text-white">Member perks</p>
                     <p class="mt-0.5 text-[11px] leading-snug text-slate-400">Early access &amp; updates</p>
