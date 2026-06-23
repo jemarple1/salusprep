@@ -17,6 +17,7 @@ class StudySession extends Model
         'device_id',
         'certification_level',
         'filter_category',
+        'public_deck_key',
         'deck',
         'initial_deck_size',
         'cards_studied',

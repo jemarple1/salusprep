@@ -6,6 +6,7 @@ use App\Models\StudySession;
 use App\Services\CategoryProficiencyService;
 use App\Services\GuestService;
 use App\Services\PreviewAccessService;
+use App\Services\PublicFlashcardDeckService;
 use App\Services\StudyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ class StudyController extends Controller
         private CategoryProficiencyService $proficiency,
         private PreviewAccessService $preview,
         private GuestService $guests,
+        private PublicFlashcardDeckService $publicDecks,
     ) {}
 
     public function index(Request $request): View
@@ -35,21 +37,59 @@ class StudyController extends Controller
             'wrongByCategory' => [],
             'categoryStats' => collect(),
             'activeStudySession' => null,
+            'activeStudySessions' => collect(),
+            'activePublicSessions' => collect(),
+            'activePersonalSessions' => collect(),
+            'activeAllDeckSession' => null,
             'activeExamSession' => $user !== null
                 ? $user->activeExamSession($level)
                 : ($guestToken !== null ? $this->guests->activeExamSession($guestToken, $level) : null),
+            'publicDecks' => collect(),
         ];
 
         if ($hasAccess) {
             if ($user !== null) {
                 $data['wrongByCategory'] = $this->study->wrongCountsByCategory($user, $level);
                 $data['categoryStats'] = $this->proficiency->forUser($user, $level);
-                $data['activeStudySession'] = $this->study->activeSession($user, $level);
+                $activeSessions = $this->study->activeSessions($user, $level);
+                $data['activeStudySessions'] = $activeSessions;
+                $data['activeStudySession'] = $activeSessions->first();
+                $data['activePublicSessions'] = $activeSessions
+                    ->filter(fn (StudySession $session) => $session->public_deck_key !== null)
+                    ->keyBy('public_deck_key');
+                $data['activePersonalSessions'] = $activeSessions
+                    ->filter(fn (StudySession $session) => $session->public_deck_key === null && $session->filter_category !== null)
+                    ->keyBy('filter_category');
+                $data['activeAllDeckSession'] = $this->study->activePersonalSession($user, $level);
                 $data['totalMissed'] = count($this->study->wrongQuestionIds($user, $level));
+                $data['publicDecks'] = $this->publicDecks
+                    ->recommendedDecks($request, $level, $data['categoryStats'])
+                    ->map(function ($deck) use ($data) {
+                        $deck->active_session = $data['activePublicSessions']->get($deck->key);
+
+                        return $deck;
+                    });
             } elseif ($guestToken !== null) {
                 $data['wrongByCategory'] = $this->study->wrongCountsByCategoryForGuest($guestToken, $level);
                 $data['totalMissed'] = count($this->study->wrongQuestionIdsForGuest($guestToken, $level));
-                $data['activeStudySession'] = $this->study->activeSessionForGuest($guestToken, $level);
+                $activeSessions = $this->study->activeSessionsForGuest($guestToken, $level);
+                $data['activeStudySessions'] = $activeSessions;
+                $data['activeStudySession'] = $activeSessions->first();
+                $data['activePublicSessions'] = $activeSessions
+                    ->filter(fn (StudySession $session) => $session->public_deck_key !== null)
+                    ->keyBy('public_deck_key');
+                $data['activePersonalSessions'] = $activeSessions
+                    ->filter(fn (StudySession $session) => $session->public_deck_key === null && $session->filter_category !== null)
+                    ->keyBy('filter_category');
+                $data['activeAllDeckSession'] = $this->study->activePersonalSessionForGuest($guestToken, $level);
+                $data['categoryStats'] = $this->proficiency->forGuest($guestToken, $level);
+                $data['publicDecks'] = $this->publicDecks
+                    ->recommendedDecks($request, $level, $data['categoryStats'])
+                    ->map(function ($deck) use ($data) {
+                        $deck->active_session = $data['activePublicSessions']->get($deck->key);
+
+                        return $deck;
+                    });
             }
         }
 
@@ -111,10 +151,62 @@ class StudyController extends Controller
 
         $category = $validated['category'] ?? null;
 
+        $existing = $user !== null
+            ? $this->study->activePersonalSession($user, $level, $category)
+            : $this->study->activePersonalSessionForGuest($guestToken, $level, $category);
+
+        if ($existing !== null) {
+            return redirect()->route('study.show', [$slug, $existing]);
+        }
+
         try {
             $session = $user !== null
                 ? $this->study->startSession($user, $level, $category)
                 : $this->study->startSessionForGuest($guestToken, $level, $category, $this->guests->activityDeviceId($request));
+        } catch (RuntimeException $exception) {
+            return redirect()
+                ->route('study.index', $slug)
+                ->withErrors(['study' => $exception->getMessage()]);
+        }
+
+        return redirect()->route('study.show', [$slug, $session]);
+    }
+
+    public function startPublic(Request $request): RedirectResponse
+    {
+        $level = $request->attributes->get('certification_level');
+        $slug = $request->attributes->get('section_slug');
+        $user = $request->user();
+        $guestToken = $user === null ? $this->guests->token($request) : null;
+
+        $this->requirePlatformAccess($request, $level);
+
+        $validated = $request->validate([
+            'deck_key' => ['required', 'string', 'max:100'],
+        ]);
+
+        abort_unless(
+            $this->publicDecks->isValidDeckKey($level, $validated['deck_key']),
+            404,
+        );
+
+        $existing = $user !== null
+            ? $this->study->activePublicSession($user, $level, $validated['deck_key'])
+            : $this->study->activePublicSessionForGuest($guestToken, $level, $validated['deck_key']);
+
+        if ($existing !== null) {
+            return redirect()->route('study.show', [$slug, $existing]);
+        }
+
+        try {
+            $session = $user !== null
+                ? $this->study->startPublicSession($user, $level, $validated['deck_key'])
+                : $this->study->startPublicSessionForGuest(
+                    $guestToken,
+                    $level,
+                    $validated['deck_key'],
+                    $this->guests->activityDeviceId($request),
+                );
         } catch (RuntimeException $exception) {
             return redirect()
                 ->route('study.index', $slug)

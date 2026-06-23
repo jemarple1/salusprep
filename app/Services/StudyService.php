@@ -124,6 +124,7 @@ class StudyService
             ->where('user_id', $user->id)
             ->where('certification_level', $certificationLevel)
             ->whereNull('filter_category')
+            ->whereNull('public_deck_key')
             ->where('status', StudySession::STATUS_IN_PROGRESS)
             ->latest()
             ->first();
@@ -136,6 +137,7 @@ class StudyService
             ->whereNull('user_id')
             ->where('certification_level', $certificationLevel)
             ->whereNull('filter_category')
+            ->whereNull('public_deck_key')
             ->where('status', StudySession::STATUS_IN_PROGRESS)
             ->latest()
             ->first();
@@ -194,6 +196,85 @@ class StudyService
             ->all();
     }
 
+    /** @return \Illuminate\Support\Collection<int, StudySession> */
+    public function activeSessions(User $user, string $certificationLevel): \Illuminate\Support\Collection
+    {
+        return StudySession::query()
+            ->where('user_id', $user->id)
+            ->where('certification_level', $certificationLevel)
+            ->where('status', StudySession::STATUS_IN_PROGRESS)
+            ->latest()
+            ->get();
+    }
+
+    /** @return \Illuminate\Support\Collection<int, StudySession> */
+    public function activeSessionsForGuest(string $guestToken, string $certificationLevel): \Illuminate\Support\Collection
+    {
+        return StudySession::query()
+            ->where('guest_token', $guestToken)
+            ->whereNull('user_id')
+            ->where('certification_level', $certificationLevel)
+            ->where('status', StudySession::STATUS_IN_PROGRESS)
+            ->latest()
+            ->get();
+    }
+
+    public function activePublicSession(User $user, string $certificationLevel, string $deckKey): ?StudySession
+    {
+        return StudySession::query()
+            ->where('user_id', $user->id)
+            ->where('certification_level', $certificationLevel)
+            ->where('public_deck_key', $deckKey)
+            ->where('status', StudySession::STATUS_IN_PROGRESS)
+            ->latest()
+            ->first();
+    }
+
+    public function activePublicSessionForGuest(string $guestToken, string $certificationLevel, string $deckKey): ?StudySession
+    {
+        return StudySession::query()
+            ->where('guest_token', $guestToken)
+            ->whereNull('user_id')
+            ->where('certification_level', $certificationLevel)
+            ->where('public_deck_key', $deckKey)
+            ->where('status', StudySession::STATUS_IN_PROGRESS)
+            ->latest()
+            ->first();
+    }
+
+    public function activePersonalSession(User $user, string $certificationLevel, ?string $category = null): ?StudySession
+    {
+        return StudySession::query()
+            ->where('user_id', $user->id)
+            ->where('certification_level', $certificationLevel)
+            ->whereNull('public_deck_key')
+            ->when(
+                $category === null,
+                fn ($query) => $query->whereNull('filter_category'),
+                fn ($query) => $query->where('filter_category', $category),
+            )
+            ->where('status', StudySession::STATUS_IN_PROGRESS)
+            ->latest()
+            ->first();
+    }
+
+    public function activePersonalSessionForGuest(string $guestToken, string $certificationLevel, ?string $category = null): ?StudySession
+    {
+        return StudySession::query()
+            ->where('guest_token', $guestToken)
+            ->whereNull('user_id')
+            ->where('certification_level', $certificationLevel)
+            ->whereNull('public_deck_key')
+            ->when(
+                $category === null,
+                fn ($query) => $query->whereNull('filter_category'),
+                fn ($query) => $query->where('filter_category', $category),
+            )
+            ->where('status', StudySession::STATUS_IN_PROGRESS)
+            ->latest()
+            ->first();
+    }
+
     public function activeSession(User $user, string $certificationLevel): ?StudySession
     {
         return StudySession::query()
@@ -225,15 +306,6 @@ class StudyService
 
         $deck = $this->orderDeckByConfidence($user, $certificationLevel, $deck);
 
-        StudySession::query()
-            ->where('user_id', $user->id)
-            ->where('certification_level', $certificationLevel)
-            ->where('status', StudySession::STATUS_IN_PROGRESS)
-            ->update([
-                'status' => StudySession::STATUS_COMPLETED,
-                'completed_at' => now(),
-            ]);
-
         return StudySession::create([
             'user_id' => $user->id,
             'certification_level' => $certificationLevel,
@@ -254,16 +326,6 @@ class StudyService
 
         shuffle($deck);
 
-        StudySession::query()
-            ->where('guest_token', $guestToken)
-            ->whereNull('user_id')
-            ->where('certification_level', $certificationLevel)
-            ->where('status', StudySession::STATUS_IN_PROGRESS)
-            ->update([
-                'status' => StudySession::STATUS_COMPLETED,
-                'completed_at' => now(),
-            ]);
-
         return StudySession::create([
             'guest_token' => $guestToken,
             'device_id' => $deviceId,
@@ -273,6 +335,79 @@ class StudyService
             'initial_deck_size' => count($deck),
             'status' => StudySession::STATUS_IN_PROGRESS,
         ]);
+    }
+
+    public function startPublicSession(User $user, string $certificationLevel, string $deckKey): StudySession
+    {
+        $category = $this->publicDeckCategory($deckKey);
+        $deck = $this->publicQuestionIds($certificationLevel, $category);
+
+        if ($deck === []) {
+            throw new RuntimeException('This flashcard deck is not available yet.');
+        }
+
+        shuffle($deck);
+
+        return StudySession::create([
+            'user_id' => $user->id,
+            'certification_level' => $certificationLevel,
+            'filter_category' => $category,
+            'public_deck_key' => $deckKey,
+            'deck' => $deck,
+            'initial_deck_size' => count($deck),
+            'status' => StudySession::STATUS_IN_PROGRESS,
+        ]);
+    }
+
+    public function startPublicSessionForGuest(
+        string $guestToken,
+        string $certificationLevel,
+        string $deckKey,
+        ?string $deviceId = null,
+    ): StudySession {
+        $category = $this->publicDeckCategory($deckKey);
+        $deck = $this->publicQuestionIds($certificationLevel, $category);
+
+        if ($deck === []) {
+            throw new RuntimeException('This flashcard deck is not available yet.');
+        }
+
+        shuffle($deck);
+
+        return StudySession::create([
+            'guest_token' => $guestToken,
+            'device_id' => $deviceId,
+            'certification_level' => $certificationLevel,
+            'filter_category' => $category,
+            'public_deck_key' => $deckKey,
+            'deck' => $deck,
+            'initial_deck_size' => count($deck),
+            'status' => StudySession::STATUS_IN_PROGRESS,
+        ]);
+    }
+
+    /** @return list<int> */
+    public function publicQuestionIds(string $certificationLevel, ?string $category = null, ?int $limit = null): array
+    {
+        $limit ??= PublicFlashcardDeckService::DECK_SIZE;
+
+        $query = Question::query()->where('certification_level', $certificationLevel);
+
+        if ($category !== null) {
+            $query->where('category', $category);
+        }
+
+        return $query
+            ->inRandomOrder()
+            ->limit($limit)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    private function publicDeckCategory(string $deckKey): ?string
+    {
+        return $deckKey === PublicFlashcardDeckService::GENERAL_KEY ? null : $deckKey;
     }
 
     public function advance(StudySession $session, string $action, User $user): void

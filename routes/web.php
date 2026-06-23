@@ -94,6 +94,7 @@ Route::prefix('{section}')
             Route::get('/study', [StudyController::class, 'index'])->name('study.index');
             Route::get('/study/deck', [StudyController::class, 'deck'])->name('study.deck');
             Route::post('/study/start', [StudyController::class, 'start'])->name('study.start');
+            Route::post('/study/public/start', [StudyController::class, 'startPublic'])->name('study.public.start');
             Route::get('/study/{studySession}', [StudyController::class, 'show'])->name('study.show');
             Route::post('/study/{studySession}/advance', [StudyController::class, 'advance'])->name('study.advance');
 
