@@ -41,4 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
         $schedule->command('questions:recalibrate-difficulty')->weeklyOn(1, '03:30');
+        $schedule->command('study:send-daily-emails')
+            ->dailyAt(config('daily_study_email.send_at', '09:00'))
+            ->timezone(config('daily_study_email.timezone', 'America/New_York'));
     })->create();

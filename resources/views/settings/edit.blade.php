@@ -6,8 +6,35 @@
     <div class="mx-auto max-w-2xl space-y-8">
         <div>
             <h1 class="text-3xl font-bold text-white">Account settings</h1>
-            <p class="mt-2 text-sm text-slate-400">Update your profile, exam dates, change your password, or delete your account.</p>
+            <p class="mt-2 text-sm text-slate-400">Update your profile, exam dates, email preferences, change your password, or delete your account.</p>
         </div>
+
+        @if ($user->sectionAccesses()->whereNotNull('unlocked_at')->exists())
+            <section class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 sm:p-8">
+                <h2 class="text-lg font-bold text-white">Daily study emails</h2>
+                <p class="mt-1 text-sm text-slate-400">
+                    A morning checklist at 9:00 AM Eastern with today's tasks, a skill spotlight, and a bite-sized review from your missed questions. Emails stop on your exam date.
+                </p>
+
+                <form method="POST" action="{{ route('settings.daily-study-email.update') }}" class="mt-6">
+                    @csrf
+                    @method('PUT')
+                    <label class="flex items-start gap-3 text-sm text-slate-300">
+                        <input
+                            type="checkbox"
+                            name="daily_study_email_opt_in"
+                            value="1"
+                            @checked(old('daily_study_email_opt_in', $user->daily_study_email_opt_in))
+                            class="mt-1 rounded border-white/20 bg-navy text-medic focus:ring-medic"
+                        >
+                        <span>Send me daily study checklist emails</span>
+                    </label>
+                    <button type="submit" class="mt-4 rounded-xl bg-medic px-5 py-2.5 font-bold text-white hover:bg-medic-dark">
+                        Save email preference
+                    </button>
+                </form>
+            </section>
+        @endif
 
         @if ($examDateSections->isNotEmpty())
             <section class="rounded-2xl border border-white/10 bg-navy-light/80 p-6 sm:p-8">

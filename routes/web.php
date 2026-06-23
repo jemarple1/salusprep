@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DailyStudyEmailController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\MockExamController;
 use App\Http\Controllers\ReviewController;
@@ -47,11 +48,16 @@ Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
+Route::get('/email/daily-study/unsubscribe/{user}', [DailyStudyEmailController::class, 'unsubscribe'])
+    ->name('email.daily-study.unsubscribe')
+    ->middleware('signed');
+
 Route::middleware('auth')->group(function () {
     Route::get('/settings', [AccountSettingsController::class, 'edit'])->name('settings.edit');
     Route::put('/settings/profile', [AccountSettingsController::class, 'updateProfile'])->name('settings.profile.update');
     Route::put('/settings/password', [AccountSettingsController::class, 'updatePassword'])->name('settings.password.update');
     Route::put('/settings/exam-date/{sectionSlug}', [AccountSettingsController::class, 'updateExamDate'])->name('settings.exam-date.update');
+    Route::put('/settings/daily-study-email', [AccountSettingsController::class, 'updateDailyStudyEmail'])->name('settings.daily-study-email.update');
     Route::delete('/settings/account', [AccountSettingsController::class, 'destroy'])->name('settings.account.destroy');
 });
 

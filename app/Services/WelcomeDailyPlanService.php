@@ -131,6 +131,41 @@ class WelcomeDailyPlanService
         return array_slice($rotated, 0, self::SKILLS_REQUIRED);
     }
 
+    /** @return list<array<string, mixed>> */
+    public function checklistItemsForEmail(User $user, string $level, SectionAccess $access): array
+    {
+        $daysSinceUnlock = $this->daysSinceUnlock($access, $user);
+        $recommendedSkills = $this->recommendedSkills($level, $daysSinceUnlock);
+        $slug = CertificationLevel::slug($level);
+        $items = [];
+
+        foreach ($recommendedSkills as $exercise) {
+            $items[] = [
+                'type' => 'skill',
+                'label' => $exercise['title'],
+                'description' => 'Complete at least one scenario in this skill drill.',
+            ];
+        }
+
+        for ($quizNumber = 1; $quizNumber <= self::QUIZZES_REQUIRED; $quizNumber++) {
+            $items[] = [
+                'type' => 'quiz',
+                'label' => 'Adaptive quiz '.$quizNumber,
+                'description' => $quizNumber === 1
+                    ? 'Take your first 25-question focus or adaptive quiz today.'
+                    : 'Take a second quiz to reinforce weak categories.',
+            ];
+        }
+
+        $items[] = [
+            'type' => 'mock',
+            'label' => 'Daily mock exam',
+            'description' => 'One timed pass/fail mock exam per day — same pressure as test day.',
+        ];
+
+        return $items;
+    }
+
     public function quizzesCompletedToday(User $user, string $level): int
     {
         return ExamSession::query()

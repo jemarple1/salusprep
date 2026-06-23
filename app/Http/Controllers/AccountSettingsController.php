@@ -105,6 +105,24 @@ class AccountSettingsController extends Controller
             ->with('success', "{$label} exam date saved.");
     }
 
+    public function updateDailyStudyEmail(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'daily_study_email_opt_in' => ['sometimes', 'boolean'],
+        ]);
+
+        $request->user()->update([
+            'daily_study_email_opt_in' => $request->boolean('daily_study_email_opt_in'),
+        ]);
+
+        return back()->with(
+            'success',
+            $request->boolean('daily_study_email_opt_in')
+                ? 'Daily study emails turned on.'
+                : 'Daily study emails turned off.',
+        );
+    }
+
     public function destroy(Request $request): RedirectResponse
     {
         $request->validate([

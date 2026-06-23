@@ -27,8 +27,7 @@ class PlatformWelcomeTest extends TestCase
             ->assertOk()
             ->assertSee('Full Access unlocked')
             ->assertSee('Your next steps')
-            ->assertSee('study checklist', false)
-            ->assertSee('Sharpen your skills');
+            ->assertSee('study checklist', false);
     }
 
     public function test_unlocked_user_without_exam_date_sees_checklist_nav_link(): void

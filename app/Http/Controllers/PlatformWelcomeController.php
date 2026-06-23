@@ -13,7 +13,6 @@ use App\Services\SectionExamDateService;
 use App\Services\StripeCheckoutService;
 use App\Services\StudyService;
 use App\Services\WelcomeDailyPlanService;
-use App\Support\PlatformExercise;
 use App\Support\WelcomeReturn;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,7 +64,6 @@ class PlatformWelcomeController extends Controller
         $totalMissed = count($this->study->wrongQuestionIds($user, $level));
         $activeStudySession = $this->study->activeSession($user, $level);
         $activeExamSession = $user->activeExamSession($level);
-        $exercises = PlatformExercise::cardsForLevel($level);
 
         $firstName = trim(explode(' ', $user->name)[0] ?? '');
         [$trackPurchaseConversion, $purchaseTransactionId] = $this->purchaseConversionContext($request, $user, $level);
@@ -83,9 +81,6 @@ class PlatformWelcomeController extends Controller
             'totalMissed' => $totalMissed,
             'activeStudySession' => $activeStudySession,
             'activeExamSession' => $activeExamSession,
-            'exercises' => array_slice($exercises, 0, 4),
-            'exerciseCount' => count($exercises),
-            'hasExercises' => $exercises !== [],
             'dailyPlan' => $dailyPlan,
             'trackPurchaseConversion' => $trackPurchaseConversion,
             'purchaseTransactionId' => $purchaseTransactionId,

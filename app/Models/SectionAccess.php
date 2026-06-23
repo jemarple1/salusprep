@@ -15,6 +15,7 @@ class SectionAccess extends Model
         'unlocked_at',
         'pinned_focus_category',
         'exam_date',
+        'last_daily_study_email_sent_on',
     ];
 
     protected function casts(): array
@@ -23,6 +24,7 @@ class SectionAccess extends Model
             'preview_started_at' => 'datetime',
             'unlocked_at' => 'datetime',
             'exam_date' => 'date',
+            'last_daily_study_email_sent_on' => 'date',
         ];
     }
 

@@ -183,46 +183,6 @@
         </section>
     @endif
 
-    {{-- Skills --}}
-    @if ($hasExercises)
-        <section>
-            <h2 class="text-2xl font-bold text-white">Sharpen your skills</h2>
-            <p class="mt-1 text-sm text-slate-400">
-                @if ($dailyPlan['isFirstDay'] ?? false)
-                    Today's checklist includes three skill drills — or browse all scenarios below.
-                @else
-                    Hands-on scenarios to round out your studying — charting, triage, assessments, and more.
-                @endif
-            </p>
-
-            <div class="mt-6 grid gap-4 sm:grid-cols-2">
-                @foreach ($exercises as $exercise)
-                    <a
-                        href="{{ $exercise['url'] }}"
-                        class="group flex flex-col rounded-2xl border border-safety/25 bg-safety/5 p-5 transition hover:border-safety/40 hover:bg-safety/10"
-                    >
-                        <span class="inline-block w-fit rounded-full bg-safety/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-safety-light">
-                            Skill exercise
-                        </span>
-                        <h3 class="mt-3 text-lg font-bold text-white group-hover:text-safety-light">{{ $exercise['title'] }}</h3>
-                        <p class="mt-2 flex-1 text-sm text-slate-400">{{ $exercise['description'] ?? 'Interactive practice scenarios.' }}</p>
-                        <span class="mt-4 text-sm font-semibold text-safety-light group-hover:underline">
-                            @if (($exercise['scenario_count'] ?? 0) > 0)
-                                {{ $exercise['scenario_count'] }} scenarios →
-                            @else
-                                Start training →
-                            @endif
-                        </span>
-                    </a>
-                @endforeach
-            </div>
-
-            <a href="{{ route('skills.index', $sectionSlug) }}" class="mt-5 inline-flex text-sm font-semibold text-safety-light hover:text-safety hover:underline">
-                View all {{ $exerciseCount }} skill exercises →
-            </a>
-        </section>
-    @endif
-
     @if ($trackPurchaseConversion ?? false)
         <!-- Event snippet for Purchase (1) conversion page -->
         <script>
