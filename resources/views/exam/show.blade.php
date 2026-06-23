@@ -19,7 +19,6 @@
         <div class="flex flex-wrap items-center gap-4 text-sm">
             <x-exam-difficulty-bar :difficulty="$session->current_difficulty" />
             <span class="rounded-full border border-medic/30 bg-medic/10 px-3 py-1 font-semibold text-medic-light">{{ $session->scorePercent() }}% correct</span>
-            <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-slate-300">{{ $session->questions_answered }}/{{ $totalQuestions }} answered</span>
         </div>
     </div>
 
