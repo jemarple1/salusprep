@@ -97,7 +97,7 @@ class AdminAnalyticsService
             ->withSum('examSessions as questions_answered', 'questions_answered');
 
         match ($sortKey) {
-            'device' => $query->orderBy('device_id', $direction),
+            'visitor' => $query->orderBy('display_name', $direction)->orderBy('device_id', $direction),
             'location' => $query->orderBy('country_name', $direction)->orderBy('country_code', $direction),
             'referral' => $query
                 ->orderBy('utm_source', $direction)
@@ -125,7 +125,7 @@ class AdminAnalyticsService
     }
 
     private const GUEST_SORT_COLUMNS = [
-        'device',
+        'visitor',
         'location',
         'referral',
         'platforms',
@@ -138,6 +138,26 @@ class AdminAnalyticsService
         'last_seen',
         'status',
     ];
+
+    /** @return array{unique_pages: int, visits_7d: int, visits_30d: int, most_visited_path: ?string} */
+    public function guestProfileSummary(GuestDevice $guest): array
+    {
+        $now = now();
+
+        $mostVisited = $guest->pageVisits()
+            ->selectRaw('path, COUNT(*) as total')
+            ->groupBy('path')
+            ->orderByDesc('total')
+            ->first();
+
+        return [
+            'unique_pages' => (int) $guest->pageVisits()->distinct()->count('path'),
+            'visits_7d' => $guest->pageVisits()->where('visited_at', '>=', $now->copy()->subDays(7))->count(),
+            'visits_30d' => $guest->pageVisits()->where('visited_at', '>=', $now->copy()->subDays(30))->count(),
+            'most_visited_path' => $mostVisited?->path,
+            'most_visited_count' => $mostVisited ? (int) $mostVisited->total : 0,
+        ];
+    }
 
     /** @return list<array{id: string, lat: float, lon: float, label: string, country: ?string}> */
     public function guestGeoPoints(int $limit = 500): array

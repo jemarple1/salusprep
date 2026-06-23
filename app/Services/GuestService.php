@@ -4,10 +4,12 @@ namespace App\Services;
 
 use App\Models\ExamSession;
 use App\Models\GuestDevice;
+use App\Models\GuestPageVisit;
 use App\Models\GuestSectionProgress;
 use App\Models\SectionAccess;
 use App\Models\StudySession;
 use App\Models\User;
+use App\Support\GuestNickname;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
@@ -65,6 +67,7 @@ class GuestService
 
             GuestDevice::query()->create([
                 'device_id' => $deviceId,
+                'display_name' => GuestNickname::fromDeviceId($deviceId),
                 'first_ip' => $geo['ip'],
                 'country_code' => $geo['country_code'],
                 'country_name' => $geo['country_name'],
@@ -80,6 +83,8 @@ class GuestService
                 'last_seen_at' => $now,
             ]);
 
+            $this->recordPageVisit($request, $deviceId, $now);
+
             return;
         }
 
@@ -89,6 +94,63 @@ class GuestService
             'last_seen_at' => $now,
             'total_active_seconds' => $device->total_active_seconds + $secondsSinceLast,
         ]);
+
+        if ($device->display_name === null) {
+            $device->update([
+                'display_name' => GuestNickname::fromDeviceId($deviceId),
+            ]);
+        }
+
+        $this->recordPageVisit($request, $deviceId, $now);
+    }
+
+    private function recordPageVisit(Request $request, string $deviceId, CarbonInterface $now): void
+    {
+        if (! $this->shouldRecordPageVisit($request)) {
+            return;
+        }
+
+        $path = Str::limit($request->path(), 512, '');
+
+        $recentDuplicate = GuestPageVisit::query()
+            ->where('device_id', $deviceId)
+            ->where('path', $path)
+            ->where('visited_at', '>=', $now->copy()->subSeconds(45))
+            ->exists();
+
+        if ($recentDuplicate) {
+            return;
+        }
+
+        GuestPageVisit::query()->create([
+            'device_id' => $deviceId,
+            'path' => $path,
+            'route_name' => $request->route()?->getName(),
+            'visited_at' => $now,
+        ]);
+    }
+
+    private function shouldRecordPageVisit(Request $request): bool
+    {
+        if ($request->user() !== null) {
+            return false;
+        }
+
+        if ($request->is('admin', 'admin/*')) {
+            return false;
+        }
+
+        if (! $request->isMethod('GET')) {
+            return false;
+        }
+
+        $path = $request->path();
+
+        if (in_array($path, ['up', 'favicon.ico', 'robots.txt'], true)) {
+            return false;
+        }
+
+        return true;
     }
 
     public function activityDeviceId(Request $request): string

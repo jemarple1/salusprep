@@ -166,11 +166,11 @@
         />
     </div>
 
-    <div class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80 p-5 sm:p-6">
+    <div id="guest-visitors" class="mb-8 rounded-2xl border border-white/10 bg-navy-light/80 p-5 sm:p-6">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
             <div>
                 <h2 class="text-lg font-bold text-white">All guest visitors</h2>
-                <p class="mt-1 text-sm text-slate-400">Tracked by device cookie — includes location, referral, quiz activity, and time on site.</p>
+                <p class="mt-1 text-sm text-slate-400">Each guest gets a random nickname — click to view their page visit history.</p>
             </div>
             <p class="text-sm text-slate-400">
                 {{ number_format($guests->total()) }} total · page {{ $guests->currentPage() }} of {{ $guests->lastPage() }}
@@ -181,7 +181,7 @@
             <table class="min-w-[72rem] w-full text-left text-sm">
                 <thead class="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
                     <tr>
-                        <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="device" label="Device" /></th>
+                        <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="visitor" label="Visitor" /></th>
                         <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="location" label="Location" /></th>
                         <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="referral" label="Referred from" /></th>
                         <th class="px-3 py-3 font-semibold"><x-admin.guest-sort-link column="platforms" label="Platforms" /></th>
@@ -205,10 +205,16 @@
                                 ->values();
                         @endphp
                         <tr class="text-slate-300">
-                            <td class="px-3 py-3 font-mono text-xs text-white" title="{{ $guest->device_id }}">
-                                {{ Str::limit($guest->device_id, 13, '…') }}
+                            <td class="px-3 py-3">
+                                <a
+                                    href="{{ route('admin.guests.show', $guest) }}"
+                                    class="font-semibold capitalize text-safety-light hover:text-safety hover:underline"
+                                    title="{{ $guest->device_id }}"
+                                >
+                                    {{ $guest->displayName() }}
+                                </a>
                                 @if ($guest->first_ip)
-                                    <span class="mt-0.5 block font-sans text-[11px] text-slate-500">{{ $guest->first_ip }}</span>
+                                    <span class="mt-0.5 block font-mono text-[11px] text-slate-500">{{ $guest->first_ip }}</span>
                                 @endif
                             </td>
                             <td class="px-3 py-3 whitespace-nowrap">

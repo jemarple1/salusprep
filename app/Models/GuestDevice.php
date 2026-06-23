@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\GuestNickname;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,6 +17,7 @@ class GuestDevice extends Model
 
     protected $fillable = [
         'device_id',
+        'display_name',
         'first_ip',
         'country_code',
         'country_name',
@@ -69,6 +71,16 @@ class GuestDevice extends Model
     public function exerciseCompletions(): HasMany
     {
         return $this->hasMany(ExerciseScenarioCompletion::class, 'device_id', 'device_id');
+    }
+
+    public function pageVisits(): HasMany
+    {
+        return $this->hasMany(GuestPageVisit::class, 'device_id', 'device_id');
+    }
+
+    public function displayName(): string
+    {
+        return $this->display_name ?? GuestNickname::fromDeviceId($this->device_id);
     }
 
     public function formattedActiveTime(): string
