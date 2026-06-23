@@ -14,7 +14,7 @@
     <div class="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-navy-light shadow-2xl shadow-black/40 sm:max-w-lg">
         <div class="border-b border-white/10 bg-gradient-to-br from-medic/20 via-ems/10 to-transparent px-8 pb-7 pt-8 text-center sm:px-10 sm:pt-10">
             <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-3xl shadow-inner ring-1 ring-white/15" aria-hidden="true">
-                📚
+                <span class="inline-block -rotate-12">🎟️</span>
             </div>
             <p class="text-sm font-semibold text-ems-light">You&rsquo;re on a roll — keep going</p>
             <h2 id="study-club-title" class="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">
