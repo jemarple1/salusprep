@@ -18,6 +18,52 @@ class StudyClubGateTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['study_pass.enabled' => true]);
+    }
+
+    public function test_study_pass_gate_is_skipped_when_disabled(): void
+    {
+        config(['study_pass.enabled' => false]);
+
+        Carbon::setTestNow('2026-06-01 12:00:00');
+
+        $guestToken = (string) Str::uuid();
+        $deviceId = (string) Str::uuid();
+        $questions = collect([
+            $this->createQuestion('disabled-1'),
+            $this->createQuestion('disabled-2'),
+            $this->createQuestion('disabled-3'),
+            $this->createQuestion('disabled-4'),
+        ]);
+
+        $studySession = StudySession::query()->create([
+            'guest_token' => $guestToken,
+            'device_id' => $deviceId,
+            'certification_level' => CertificationLevel::EMT_BASIC,
+            'deck' => $questions->pluck('id')->all(),
+            'initial_deck_size' => 4,
+            'status' => StudySession::STATUS_IN_PROGRESS,
+        ]);
+
+        $session = [GuestService::SESSION_KEY => $guestToken];
+
+        foreach ($questions as $question) {
+            $this->withSession($session)
+                ->withCookie(GuestService::DEVICE_COOKIE_KEY, $deviceId)
+                ->post("/emt-basic/study/{$studySession->id}/advance", ['action' => 'strong'])
+                ->assertRedirect()
+                ->assertSessionMissing('study_club_required');
+
+            $studySession->refresh();
+        }
+
+        Carbon::setTestNow();
+    }
+
     public function test_first_three_preview_actions_are_allowed_without_study_pass(): void
     {
         Carbon::setTestNow('2026-06-01 12:00:00');

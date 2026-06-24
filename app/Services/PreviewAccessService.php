@@ -80,6 +80,10 @@ class PreviewAccessService
 
     public function requiresStudyClub(Request $request, string $certificationLevel): bool
     {
+        if (! config('study_pass.enabled', false)) {
+            return false;
+        }
+
         if ($this->isUnlocked($request, $certificationLevel)) {
             return false;
         }
